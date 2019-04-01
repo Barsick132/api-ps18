@@ -11,7 +11,7 @@ function Basic(req, def, scopes, callback) {
             console.error(FILE, METHOD, '\n', err);
             req.error = err;
         } else {
-            if(data) console.log(FILE, METHOD, '\n', 'User Authentication');
+            if (data) console.log(FILE, METHOD, '\n', 'User Authentication');
             req.user = data.user;
         }
         callback();
@@ -27,7 +27,10 @@ function JWT(req, def, scopes, callback) {
             console.error(FILE, METHOD, '\n', err);
             req.error = err;
         } else {
-            if(data) console.log(FILE, METHOD, '\n', 'User Authentication');
+            if (info && info.message === 'jwt expired') {
+                req.error = 'JWT_EXPIRED'
+            }
+            if (data) console.log(FILE, METHOD, '\n', 'User Authentication');
             req.user = data.user;
         }
         callback();

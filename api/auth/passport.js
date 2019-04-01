@@ -38,8 +38,8 @@ passport.use(
 
                     console.log('Getting User Role');
                     if (res.length !== 0) {
-                        data.user.roles = res.map(items => {
-                            return items.role_name;
+                        data.user.roles = res.map(item => {
+                            return item.role_name;
                         });
                         return done(null, data);
                     } else {
@@ -79,8 +79,8 @@ passport.use(
                     if (res === undefined) return;
                     console.log('Getting User Role');
                     if (res.length && res.length !== 0) {
-                        data.user.roles = res.map(items => {
-                            return items.role_name;
+                        data.user.roles = res.map(item => {
+                            return item.role_name;
                         });
                         return done(null, data);
                     } else {

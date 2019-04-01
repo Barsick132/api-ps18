@@ -36,6 +36,16 @@ exports.checkRole = function (role_arr, role_name) {
     return role_arr.some(item => item === role_name);
 };
 
+// Функция проверки хотя бы одной роли в массиве ролей или
+// функция проверки вхождения элементов в массив
+exports.checkRoles = function (role_arr, input_role_arr) {
+    return role_arr.some(item => {
+        input_role_arr.forEach(i => {
+            return item === i;
+        });
+    });
+};
+
 /**
  *
  * Запросы к БД
@@ -164,6 +174,7 @@ exports.getUserToBeRec = (knex) => {
         .andWhere('rec.' + T.RECORDS.PEPL_ID, null);
 };
 
+// Получить список сотрудников с ролью Teacher
 exports.getTeachers = (knex) => {
     return knex({p: T.PEOPLE.NAME, e: T.EMPLOYEES.NAME, r: T.ROLE.NAME})
         .select()
@@ -172,8 +183,33 @@ exports.getTeachers = (knex) => {
         .andWhere('r.' + T.ROLE.ROLE_NAME, ROLE.TEACHER);
 };
 
-exports.getTeacherClasses = (knex, pepl_id_arr) => {
-    return knex()
+// Получить классного руководителя студента
+exports.getClassTeacher = (knex, std_id) => {
+    return knex({s: T.STUDENTS.NAME, p: T.PEOPLE.NAME, e: T.EMPLOYEES.NAME})
+        .select()
+        .where('s.' + T.STUDENTS.STD_ID, std_id)
+        .whereRaw('?? = ??', ['p.' + T.PEOPLE.PEPL_ID, 's.' + T.STUDENTS.EMP_ID])
+        .andWhereRaw('?? = ??', ['p.' + T.PEOPLE.PEPL_ID, 'e.' + T.EMPLOYEES.EMP_ID]);
+};
+
+// Получить классы, которые ведет учитель
+exports.getTeacherClasses = (knex, pepl_id) => {
+    return knex
+        .distinct([
+            T.STUDENTS.STD_DATE_RECEIPT,
+            T.STUDENTS.STD_STAYED_TWO_YEAR, T.STUDENTS.STD_CLASS_LETTER,
+            T.STUDENTS.STD_DATE_ISSUE])
+        .columns([T.STUDENTS.STD_DATE_RECEIPT,
+            T.STUDENTS.STD_STAYED_TWO_YEAR, T.STUDENTS.STD_CLASS_LETTER,
+            T.STUDENTS.STD_DATE_ISSUE])
+        .select()
+        .from(T.STUDENTS.NAME)
+        .where(T.STUDENTS.EMP_ID, pepl_id);
+};
+
+// Получить классы, которые ведут учителя
+exports.getTeachersClasses = (knex, pepl_id_arr) => {
+    return knex
         .distinct([
             T.STUDENTS.EMP_ID, T.STUDENTS.STD_DATE_RECEIPT,
             T.STUDENTS.STD_STAYED_TWO_YEAR, T.STUDENTS.STD_CLASS_LETTER,

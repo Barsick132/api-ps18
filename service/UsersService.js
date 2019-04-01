@@ -10,6 +10,175 @@ const FILE = './service/UsersService.js';
 
 /**
  *
+ * Метод получения данных классного
+ * руководителя по ID ученика
+ *
+ */
+
+exports.getClassTeacher = function (req, body) {
+    const METHOD = 'getClassTeacher()';
+    console.log(FILE, METHOD);
+
+    return new Promise(function (resolve, reject) {
+        const STATUS = {
+            NOT_FOUND_TEACHER_POSTS: 'NOT_FOUND_TEACHER_POSTS',
+            NOT_FOUND_TEACHER_ROLES: 'NOT_FOUND_TEACHER_ROLES',
+            NOT_FOUND_CLASS_TEACHER: 'NOT_FOUND_CLASS_TEACHER',
+            NOT_ACCESS: 'NOT_ACCESS',
+            NOT_AUTH: 'NOT_AUTH',
+            UNKNOWN_ERROR: 'UNKNOWN_ERROR',
+            OK: 'OK'
+        };
+
+        let result = {};
+        let payload = {};
+        let currentRole;
+
+        // Проверка аутентификации пользователя
+        if (!req.isAuthenticated()) {
+            console.error('Not Authenticated');
+            reject({status: STATUS.NOT_AUTH});
+            return;
+        }
+
+        // Проверка доступа по ролям
+        if (UsersReq.checkRole(req.user.roles, ROLE.ADMIN)) {
+            console.log('User Have ' + ROLE.ADMIN + ' Role');
+            currentRole = ROLE.ADMIN;
+        }
+        if (UsersReq.checkRole(req.user.roles, ROLE.PSYCHOLOGIST)) {
+            console.log('User Have ' + ROLE.PSYCHOLOGIST + ' Role');
+            currentRole = ROLE.PSYCHOLOGIST;
+        }
+        if (UsersReq.checkRole(req.user.roles, ROLE.PARENT)) {
+            console.log('User Have ' + ROLE.PARENT + ' Role');
+            currentRole = ROLE.PARENT;
+        }
+        if (!currentRole) {
+            console.error('Not Access');
+            reject({status: STATUS.NOT_ACCESS});
+            return;
+        }
+
+        UsersReq.getClassTeacher(knex, body.std_id)
+            .then((res) => {
+                if (res.length !== 1) {
+                    throw new Error(STATUS.NOT_FOUND_CLASS_TEACHER);
+                }
+
+                console.log('Class Teacher Found');
+                if (currentRole === ROLE.ADMIN) {
+                    payload = {
+                        pepl_id: res[0].pepl_id,
+                        pepl_login: res[0].pepl_login,
+                        pepl_data: {
+                            pepl_second_name: res[0].pepl_second_name,
+                            pepl_first_name: res[0].pepl_first_name,
+                            pepl_last_name: res[0].pepl_last_name,
+                            pepl_gender: res[0].pepl_gender,
+                            pepl_birthday: res[0].pepl_birthday,
+                            pepl_phone: res[0].pepl_phone,
+                            pepl_email: res[0].pepl_email
+                        },
+                        emp_data: {
+                            emp_skype: res[0].emp_skype,
+                            emp_discord: res[0].emp_discord,
+                            emp_hangouts: res[0].emp_hangouts,
+                            emp_viber: res[0].emp_viber,
+                            emp_vk: res[0].emp_vk,
+                            emp_date_enrollment: res[0].emp_date_enrollment
+                        }
+                    };
+                    return RolesReq.getUserRoles(knex, res[0].pepl_id);
+                }
+                if (currentRole === ROLE.PSYCHOLOGIST || currentRole === ROLE.PARENT) {
+                    result = {
+                        status: STATUS.OK,
+                        payload: {
+                            pepl_data: {
+                                pepl_second_name: res[0].pepl_second_name,
+                                pepl_first_name: res[0].pepl_first_name,
+                                pepl_last_name: res[0].pepl_last_name
+                            }
+                        }
+                    };
+                    resolve(result);
+                }
+            })
+            .then((res) => {
+                if (currentRole !== ROLE.ADMIN) {
+                    return;
+                }
+
+                if (res.length === 0) {
+                    throw new Error(STATUS.NOT_FOUND_TEACHER_ROLES);
+                }
+
+                console.log('Teacher Roles Found');
+                payload.role_array = res.map(item => {
+                    return item.role_name;
+                });
+
+                return PostsReq.getEmpPosts(knex, payload.pepl_id);
+            })
+            .then((res) => {
+                if (currentRole !== ROLE.ADMIN) {
+                    return;
+                }
+
+                if (res.length === 0) {
+                    throw new Error(STATUS.NOT_FOUND_TEACHER_POSTS);
+                }
+
+                console.log('Teacher Posts Found');
+                payload.pst_arr = res.map(item => {
+                    return item.pst_name;
+                });
+
+                return UsersReq.getTeacherClasses(knex, payload.pepl_id);
+            })
+            .then((res) => {
+                if (currentRole !== ROLE.ADMIN) {
+                    return;
+                }
+
+                if (res.length === 0) {
+                    console.log('Not Found Teacher Classes')
+                } else {
+                    console.log('Teacher Classes Found');
+                }
+
+                payload.class_arr = res.map(item => {
+                    return UsersReq.getParallel(
+                        item.std_date_receipt,
+                        item.std_stayed_two_year,
+                        item.std_date_issue
+                    ) + item.std_class_letter;
+                });
+
+                result = {
+                    status: STATUS.OK,
+                    payload: payload
+                };
+
+                resolve(result);
+            })
+            .catch((err) => {
+                console.error(err);
+                if (err.message === STATUS.NOT_FOUND_CLASS_TEACHER ||
+                    err.message === STATUS.NOT_FOUND_TEACHER_ROLES ||
+                    err.message === STATUS.NOT_FOUND_TEACHER_POSTS) {
+                    result = {status: err.message}
+                } else {
+                    result = {status: STATUS.UNKNOWN_ERROR}
+                }
+                reject(result);
+            });
+    });
+};
+
+/**
+ *
  * Получение данных Получение списка учителей
  * для назначения классного руководства (Admin)
  *
@@ -70,7 +239,7 @@ exports.getTeachers = function (req) {
                             emp_skype: item.emp_skype,
                             emp_discord: item.emp_discord,
                             emp_hangouts: item.emp_hangouts,
-                            emp_viber: item.emp_hangouts,
+                            emp_viber: item.emp_viber,
                             emp_vk: item.emp_vk,
                             emp_date_enrollment: item.emp_date_enrollment
                         }
@@ -114,13 +283,13 @@ exports.getTeachers = function (req) {
                     })
                 });
 
-                return UsersReq.getTeacherClasses(knex, pepl_id_arr);
+                return UsersReq.getTeachersClasses(knex, pepl_id_arr);
             })
             .then((res) => {
                 if (res.length === 0) {
-                    console.log('Not Found Teacher Classes')
+                    console.log('Not Found Teachers Classes')
                 } else {
-                    console.log('Teacher Classes Found');
+                    console.log('Teachers Classes Found');
                 }
 
                 payload.forEach(i => {
