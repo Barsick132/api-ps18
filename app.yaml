@@ -1,0 +1,10 @@
+runtime: nodejs
+
+env_variables:
+  SQL_USER: kkuxwjugparpmr
+  SQL_PASSWORD: ef268dd4fde63dc2b187fce4f5d3ff4e1ea79a9b7aa08324f90b6cfc68ea830c
+  SQL_DATABASE: dbr1bvu0d032fu
+  SQL_HOST: ec2-54-247-70-127.eu-west-1.compute.amazonaws.com
+  SQL_PORT: 5432
+  SQL_URI: postgres://kkuxwjugparpmr:ef268dd4fde63dc2b187fce4f5d3ff4e1ea79a9b7aa08324f90b6cfc68ea830c@ec2-54-247-70-127.eu-west-1.compute.amazonaws.com:5432/dbr1bvu0d032fu
+  SQL_SSL: true

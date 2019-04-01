@@ -1,0 +1,4903 @@
+---
+swagger: "2.0"
+info:
+  description: "Это API (swagger 2.0) системы автоматизации психолого-педагогическ\
+    ого сопровождения субъектов образовательной деятельности для школы №18."
+  version: "1.0.7"
+  title: "PsychoSys18"
+  contact:
+    email: "antony.nor@yandex.ru"
+host: "api-ps18.herokuapp.com"
+basePath: "/"
+tags:
+- name: "files"
+  description: "Запросы связанные с файлами"
+- name: "tests"
+  description: "Запросы связанные с тестированиями"
+- name: "records"
+  description: "Запросы относящиеся к записям"
+- name: "auth"
+  description: "Запросы связанные с авторизацией и регистрацией пользователей"
+- name: "users"
+  description: "Запросы связанные с пользователями"
+- name: "roles"
+  description: "Запросы связанные с ролями пользователей"
+- name: "posts"
+  description: "Запросы связанные с должностями"
+schemes:
+- "https"
+paths:
+  /downloadFiles:
+    post:
+      tags:
+      - "files"
+      summary: "Скачивание файлов"
+      operationId: "downloadFiles"
+      consumes:
+      - "application/json"
+      produces:
+      - "multipart/form-data"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Массив ID файлов"
+        required: true
+        schema:
+          type: "array"
+          items:
+            $ref: "#/definitions/body"
+      responses:
+        200:
+          description: "Статус запроса, файлы и дополнительная информация"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                type: "array"
+                items:
+                  $ref: "#/definitions/inline_response_200_payload"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Files"
+    x-swagger-router-controller: "files"
+  /getFiles:
+    post:
+      tags:
+      - "files"
+      summary: "Получение информации о файлах тестов/рез-ов тестирований/ИПК"
+      operationId: "getFiles"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Либо ID студента, либо ID рез. тестирования, либо ID самого\
+          \ тестирования"
+        required: true
+        schema:
+          $ref: "#/definitions/body_1"
+      responses:
+        200:
+          description: "Статус запроса и файлы с информацией о них"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                type: "array"
+                items:
+                  $ref: "#/definitions/inline_response_200_1_payload"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Files"
+    x-swagger-router-controller: "files"
+  /addFiles:
+    post:
+      tags:
+      - "files"
+      summary: "Добавление файлов тестов/рез-ов тестирований/ИПК"
+      operationId: "addFiles"
+      consumes:
+      - "multipart/form-data"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Либо ID студента, либо ID рез. тестирования, либо ID самого\
+          \ тестирования и файлы"
+        required: true
+        schema:
+          $ref: "#/definitions/body_2"
+      responses:
+        200:
+          description: "Статус запроса, имена файлов, которые удалось прикрепить и\
+            \ их ID"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                type: "array"
+                items:
+                  $ref: "#/definitions/inline_response_200_2_payload"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Files"
+    x-swagger-router-controller: "files"
+  /updFiles:
+    post:
+      tags:
+      - "files"
+      summary: "Изменение файлов тестов и/или рез-ов тестирований и/или ИПК"
+      operationId: "updFiles"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "ID файла, его имя и путь"
+        required: true
+        schema:
+          $ref: "#/definitions/body_3"
+      responses:
+        200:
+          description: "Статус запроса и обновленная информация о файле"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                $ref: "#/definitions/inline_response_200_1_payload"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Files"
+    x-swagger-router-controller: "files"
+  /delFiles:
+    post:
+      tags:
+      - "files"
+      summary: "Удаление файлов тестов и/или рез-ов тестирований и/или ИПК"
+      operationId: "delFiles"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Массив ID файлов"
+        required: true
+        schema:
+          type: "array"
+          items:
+            $ref: "#/definitions/body"
+      responses:
+        200:
+          description: "Статус запроса и рузультат удаления по каждому файлу"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                type: "array"
+                items:
+                  $ref: "#/definitions/inline_response_200_4_payload"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Files"
+    x-swagger-router-controller: "files"
+  /addTest:
+    post:
+      tags:
+      - "tests"
+      summary: "Добавить оффлайн тест"
+      operationId: "addTest"
+      consumes:
+      - "multipart/form-data"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Имя теста и файлы"
+        required: true
+        schema:
+          $ref: "#/definitions/body_4"
+      responses:
+        200:
+          description: "Статус запроса и ID добавленного теста"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                $ref: "#/definitions/inline_response_200_5_payload"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Tests"
+    x-swagger-router-controller: "tests"
+  /delTest:
+    post:
+      tags:
+      - "tests"
+      summary: "Удаление теста с файлами"
+      operationId: "delTest"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "ID теста"
+        required: true
+        schema:
+          $ref: "#/definitions/body_5"
+      responses:
+        200:
+          description: "Статус запроса"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Tests"
+    x-swagger-router-controller: "tests"
+  /getTest:
+    post:
+      tags:
+      - "tests"
+      summary: "Просмотр списка тестирований"
+      operationId: "getTest"
+      produces:
+      - "application/json"
+      parameters: []
+      responses:
+        200:
+          description: "Статус запроса и информация о тестах"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                type: "array"
+                items:
+                  $ref: "#/definitions/inline_response_200_7_payload"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Tests"
+    x-swagger-router-controller: "tests"
+  /changeTestName:
+    post:
+      tags:
+      - "tests"
+      summary: "Изменение названия теста"
+      operationId: "changeTestName"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "ID теста и его новое имя"
+        required: true
+        schema:
+          $ref: "#/definitions/body_6"
+      responses:
+        200:
+          description: "Статус запроса"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Tests"
+    x-swagger-router-controller: "tests"
+  /accessTest:
+    post:
+      tags:
+      - "tests"
+      summary: "Открытие/Закрытие доступа к тестам ученикам"
+      operationId: "accessTest"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "ID теста, ID студента и статус открытия доступа"
+        required: true
+        schema:
+          $ref: "#/definitions/body_7"
+      responses:
+        200:
+          description: "Статус запроса"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Tests"
+    x-swagger-router-controller: "tests"
+  /addTestResult:
+    post:
+      tags:
+      - "tests"
+      summary: "Добавление результатов тестирований"
+      operationId: "addTestResult"
+      consumes:
+      - "multipart/form-data"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "ID теста, ID студента и файлы с результатами"
+        required: true
+        schema:
+          $ref: "#/definitions/body_8"
+      responses:
+        200:
+          description: "Статус запроса и ID добавленного результата"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                $ref: "#/definitions/inline_response_200_8_payload"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Tests"
+    x-swagger-router-controller: "tests"
+  /getTestResult:
+    post:
+      tags:
+      - "tests"
+      summary: "Поиск результатов тестирований по по тестам и ученикам"
+      operationId: "getTestResult"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "ID теста и/или ID студента"
+        required: true
+        schema:
+          $ref: "#/definitions/body_9"
+      responses:
+        200:
+          description: "Статус запроса и ID найденных результатов тестирований"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                type: "array"
+                items:
+                  $ref: "#/definitions/inline_response_200_8_payload"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Tests"
+    x-swagger-router-controller: "tests"
+  /delTestResult:
+    post:
+      tags:
+      - "tests"
+      summary: "Удаление результатов тестирования вместе с фалами"
+      operationId: "delTestResult"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "ID результата тестирования"
+        required: true
+        schema:
+          $ref: "#/definitions/body_10"
+      responses:
+        200:
+          description: "Статус запроса"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Tests"
+    x-swagger-router-controller: "tests"
+  /getUserGraphic:
+    post:
+      tags:
+      - "records"
+      summary: "Получение график работы пользователя с записями"
+      operationId: "getUserGraphic"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "ID сотрудника"
+        required: true
+        schema:
+          $ref: "#/definitions/body_11"
+      responses:
+        200:
+          description: "Полный график работы, включая записи"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                type: "array"
+                items:
+                  $ref: "#/definitions/inline_response_200_10_payload"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Records"
+    x-swagger-router-controller: "records"
+  /setUserGraphic:
+    post:
+      tags:
+      - "records"
+      summary: "Установка график работы пользователя"
+      operationId: "setUserGraphic"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "ID сотрудника, массивы удаляемых и/или добавляемых и/или обн\
+          овляемых рабочих дней"
+        required: true
+        schema:
+          $ref: "#/definitions/body_12"
+      responses:
+        200:
+          description: "Статус запроса и рузультаты выполнения отдельных операций"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                $ref: "#/definitions/inline_response_200_11_payload"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Records"
+    x-swagger-router-controller: "records"
+  /setToRecord:
+    post:
+      tags:
+      - "records"
+      summary: "Записаться на прием к сотруднику"
+      operationId: "setToRecord"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "ID человека, ID записи, статус Онлайн, способ связи, личный\
+          \ контакт"
+        required: true
+        schema:
+          $ref: "#/definitions/body_13"
+      responses:
+        200:
+          description: "Статус запроса и общая информация"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                $ref: "#/definitions/inline_response_200_12_payload"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Records"
+    x-swagger-router-controller: "records"
+  /cancelRecord:
+    post:
+      tags:
+      - "records"
+      summary: "Отмена записи"
+      operationId: "cancelRecord"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "ID записи"
+        required: true
+        schema:
+          $ref: "#/definitions/body_14"
+      responses:
+        200:
+          description: "Статус выполнения запроса"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Records"
+    x-swagger-router-controller: "records"
+  /skipRecord:
+    post:
+      tags:
+      - "records"
+      summary: "Отметить, что клиент не явился по записи"
+      operationId: "skipRecord"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "ID записи"
+        required: true
+        schema:
+          $ref: "#/definitions/body_15"
+      responses:
+        200:
+          description: "Статус выполнения запроса"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Records"
+    x-swagger-router-controller: "records"
+  /moveRecord:
+    post:
+      tags:
+      - "records"
+      summary: "Перенос записи на другое время или день"
+      operationId: "moveRecord"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "ID записи и ID записи на которую переносим"
+        required: true
+        schema:
+          $ref: "#/definitions/body_16"
+      responses:
+        200:
+          description: "Статус запроса и информация о записи"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                $ref: "#/definitions/inline_response_200_12_payload"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Records"
+    x-swagger-router-controller: "records"
+  /changeRecord:
+    post:
+      tags:
+      - "records"
+      summary: "Изменить тип записи и контакты"
+      operationId: "changeRecord"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "ID записи и/или ID онлайн статуса и/или контактные данные"
+        required: true
+        schema:
+          $ref: "#/definitions/body_17"
+      responses:
+        200:
+          description: "Статус выполнения запроса"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Records"
+    x-swagger-router-controller: "records"
+  /getOneRecord:
+    post:
+      tags:
+      - "records"
+      summary: "Получение сведений об одной записи"
+      operationId: "getOneRecord"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "ID записи"
+        required: true
+        schema:
+          $ref: "#/definitions/body_18"
+      responses:
+        200:
+          description: "Статус запроса и данные о записи"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                $ref: "#/definitions/inline_response_200_12_payload"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Records"
+    x-swagger-router-controller: "records"
+  /getRecordsFromWD:
+    post:
+      tags:
+      - "records"
+      summary: "Получить зарегистрированные записи по рабочему дню"
+      operationId: "getRecordsFromWD"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "ID рабочего дня"
+        required: true
+        schema:
+          $ref: "#/definitions/body_19"
+      responses:
+        200:
+          description: "Статус запроса и данные о записях"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                type: "array"
+                items:
+                  $ref: "#/definitions/inline_response_200_13_payload"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Records"
+    x-swagger-router-controller: "records"
+  /setJournal:
+    post:
+      tags:
+      - "records"
+      summary: "Добавление/Удаление/Изменение записей в журнал посещений"
+      operationId: "setJournal"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Массив ID записей в журнале (визитов), которые нужно удалить\
+          \ и/или массив визитов, которые нужно добавить, и/или массив визитов, ко\
+          торые нужно отредактировать"
+        required: true
+        schema:
+          $ref: "#/definitions/body_20"
+      responses:
+        200:
+          description: "Статус запроса и результаты выполнения отдельных операций"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                $ref: "#/definitions/inline_response_200_14_payload"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Records"
+    x-swagger-router-controller: "records"
+  /getJournal:
+    post:
+      tags:
+      - "records"
+      summary: "Получение записей за период или последние N с шагом F"
+      operationId: "getJournal"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Либо получаем записи за период, либо фильтруем по количеству"
+        required: true
+        schema:
+          $ref: "#/definitions/body_21"
+      responses:
+        200:
+          description: "Статус запроса и список записей"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                type: "array"
+                items:
+                  $ref: "#/definitions/inline_response_200_15_payload"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Records"
+    x-swagger-router-controller: "records"
+  /signup:
+    post:
+      tags:
+      - "auth"
+      summary: "Регистрация пользователя (Admin, Parent)"
+      operationId: "signup"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Данные человека указываются для всех, к ним добавляются данн\
+          ые сотрудника или ученика или родителя"
+        required: true
+        schema:
+          $ref: "#/definitions/body_22"
+      responses:
+        200:
+          description: "Данные созданного пользователя."
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                $ref: "#/definitions/inline_response_200_16_payload"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Auth"
+    x-swagger-router-controller: "auth"
+  /login:
+    post:
+      tags:
+      - "auth"
+      summary: "Авторизация пользователей (ALL)"
+      operationId: "login"
+      produces:
+      - "application/json"
+      parameters: []
+      responses:
+        200:
+          description: "Данные пользователя и токен."
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                $ref: "#/definitions/Token"
+        401:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - Basic: []
+        JWT: []
+      x-swagger-router-controller: "Auth"
+    x-swagger-router-controller: "auth"
+  /registerEmployees:
+    post:
+      tags:
+      - "auth"
+      summary: "Регистрация сотрудников из xlsx"
+      operationId: "registerEmployees"
+      consumes:
+      - "application/octet-stream"
+      produces:
+      - "application/octet-stream"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Файл в base64"
+        required: true
+        schema:
+          type: "string"
+          format: "base64"
+      responses:
+        200:
+          description: "Статус запроса и файл с результатами регистрации."
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                $ref: "#/definitions/inline_response_200_18_payload"
+        401:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Auth"
+    x-swagger-router-controller: "auth"
+  /registerStudents:
+    post:
+      tags:
+      - "auth"
+      summary: "Регистрация учеников из xlsx"
+      operationId: "registerStudents"
+      consumes:
+      - "application/octet-stream"
+      produces:
+      - "application/octet-stream"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Файл в base64"
+        required: true
+        schema:
+          type: "string"
+          format: "base64"
+      responses:
+        200:
+          description: "Статус запроса и файл с результатами регистрации."
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                $ref: "#/definitions/inline_response_200_18_payload"
+        401:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Auth"
+    x-swagger-router-controller: "auth"
+  /confirmParentReg:
+    post:
+      tags:
+      - "auth"
+      summary: "Подтверждение регистрации родителей"
+      operationId: "confirmParentReg"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "ID родителя и статус подтверждения"
+        required: true
+        schema:
+          $ref: "#/definitions/body_23"
+      responses:
+        200:
+          description: "Статус выполнения запроса."
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Auth"
+    x-swagger-router-controller: "auth"
+  /getListConfirmReg:
+    post:
+      tags:
+      - "auth"
+      summary: "Получить список запросов на регистрацию"
+      operationId: "getListConfirmReg"
+      produces:
+      - "application/json"
+      parameters: []
+      responses:
+        200:
+          description: "Статус запроса и список запросов на регистрацию."
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                type: "array"
+                items:
+                  $ref: "#/definitions/inline_response_200_19_payload"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Auth"
+    x-swagger-router-controller: "auth"
+  /autoCheckParentReg:
+    post:
+      tags:
+      - "auth"
+      summary: "Автопроверка подтверждения регистрации"
+      operationId: "autoCheckParentReg"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "ID родителя"
+        required: true
+        schema:
+          type: "array"
+          items:
+            $ref: "#/definitions/body_24"
+      responses:
+        200:
+          description: "Статус запроса и результаты автопроверки подтверждения"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                type: "array"
+                items:
+                  $ref: "#/definitions/inline_response_200_20_payload"
+        401:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Auth"
+    x-swagger-router-controller: "auth"
+  /getTeachers:
+    post:
+      tags:
+      - "users"
+      summary: "Получение списка учителей для назначения классного руководства (Admin)"
+      operationId: "getTeachers"
+      produces:
+      - "application/json"
+      parameters: []
+      responses:
+        200:
+          description: "Статус запроса и массив преподавателей"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                type: "array"
+                items:
+                  $ref: "#/definitions/inline_response_200_21_payload"
+        401:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Users"
+    x-swagger-router-controller: "users"
+  /getPersonalData:
+    post:
+      tags:
+      - "users"
+      summary: "Получение персональных данных (ALL)"
+      operationId: "getPersonalData"
+      produces:
+      - "application/json"
+      parameters: []
+      responses:
+        200:
+          description: "Данные пользователя."
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                $ref: "#/definitions/inline_response_200_22_payload"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Users"
+    x-swagger-router-controller: "users"
+  /getPersonsToBeRec:
+    post:
+      tags:
+      - "users"
+      summary: "Получение списка сотрудников доступных для записи (ALL)"
+      operationId: "getPersonsToBeRec"
+      produces:
+      - "application/json"
+      parameters: []
+      responses:
+        200:
+          description: "Данные пользователя."
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                type: "array"
+                items:
+                  $ref: "#/definitions/inline_response_200_23_payload"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Users"
+    x-swagger-router-controller: "users"
+  /getUser:
+    post:
+      tags:
+      - "users"
+      summary: "Получение данных пользователя"
+      operationId: "getUser"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "ID пользователя"
+        required: true
+        schema:
+          $ref: "#/definitions/body_25"
+      responses:
+        200:
+          description: "Данные пользователя."
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                $ref: "#/definitions/inline_response_200_24_payload"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Users"
+    x-swagger-router-controller: "users"
+  /getStudent:
+    post:
+      tags:
+      - "users"
+      summary: "Поиск учеников с фильтрацией"
+      operationId: "getStudent"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "параметры поиска ученика"
+        required: true
+        schema:
+          $ref: "#/definitions/body_26"
+      responses:
+        200:
+          description: "Список учеников, удовлетворяющих критериям поиска"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                type: "array"
+                items:
+                  $ref: "#/definitions/inline_response_200_22_payload_prnt_data_prnt_childrens"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Users"
+    x-swagger-router-controller: "users"
+  /getEmployee:
+    post:
+      tags:
+      - "users"
+      summary: "Поиск сотрудников с фильтрацией"
+      operationId: "getEmployee"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Параметры поиска сотрудника"
+        required: true
+        schema:
+          $ref: "#/definitions/body_27"
+      responses:
+        200:
+          description: "Список сотрудников, удовлетворяющих критериям поиска"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                type: "array"
+                items:
+                  $ref: "#/definitions/inline_response_200_26_payload"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Users"
+    x-swagger-router-controller: "users"
+  /getParent:
+    post:
+      tags:
+      - "users"
+      summary: "Поиск родителей с фильтрацией"
+      operationId: "getParent"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Параметры поиска родителя"
+        required: true
+        schema:
+          $ref: "#/definitions/body_28"
+      responses:
+        200:
+          description: "Список родителей, удовлетворяющих критериям поиска"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                type: "array"
+                items:
+                  $ref: "#/definitions/inline_response_200_27_payload"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Users"
+    x-swagger-router-controller: "users"
+  /bindParentAndStud:
+    post:
+      tags:
+      - "users"
+      summary: "Привязка ученика к родителю"
+      operationId: "bindParentAndStud"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "ID ученика и родителя"
+        required: true
+        schema:
+          $ref: "#/definitions/body_29"
+      responses:
+        200:
+          description: "Статус выполнения запроса"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Users"
+    x-swagger-router-controller: "users"
+  /getRoles:
+    post:
+      tags:
+      - "roles"
+      summary: "Получение списка ролей"
+      operationId: "getRoles"
+      produces:
+      - "application/json"
+      parameters: []
+      responses:
+        200:
+          description: "Данные созданного пользователя."
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              role_array:
+                $ref: "#/definitions/Role"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Roles"
+    x-swagger-router-controller: "roles"
+  /getUserRoles:
+    post:
+      tags:
+      - "roles"
+      summary: "Получить список ролей пользователя"
+      operationId: "getUserRoles"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "ID пользователя"
+        required: true
+        schema:
+          $ref: "#/definitions/body_30"
+      responses:
+        200:
+          description: "Список ролей пользователя"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                $ref: "#/definitions/Role"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Roles"
+    x-swagger-router-controller: "roles"
+  /addUserRoles:
+    post:
+      tags:
+      - "roles"
+      summary: "Добавить роли пользователю"
+      operationId: "addUserRoles"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "ID пользователя и список ID ролей"
+        required: true
+        schema:
+          $ref: "#/definitions/body_31"
+      responses:
+        200:
+          description: "Статус выполнения запроса"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Roles"
+    x-swagger-router-controller: "roles"
+  /delUserRoles:
+    post:
+      tags:
+      - "roles"
+      summary: "Удалить роли у пользователя"
+      operationId: "delUserRoles"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "ID пользователя и список ID ролей"
+        required: true
+        schema:
+          $ref: "#/definitions/body_32"
+      responses:
+        200:
+          description: "Статус выполнения операции."
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Roles"
+    x-swagger-router-controller: "roles"
+  /getEmpPosts:
+    post:
+      tags:
+      - "posts"
+      summary: "Получить список должностей сотрудника"
+      operationId: "getEmpPosts"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "ID сотрудника"
+        required: true
+        schema:
+          $ref: "#/definitions/body_33"
+      responses:
+        200:
+          description: "Список должностей сотрудника"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                type: "array"
+                items:
+                  $ref: "#/definitions/Post"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Posts"
+    x-swagger-router-controller: "posts"
+  /addEmpPosts:
+    post:
+      tags:
+      - "posts"
+      summary: "Добавить должности сотруднику"
+      operationId: "addEmpPosts"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "ID сотрудника и список ID должностей"
+        required: true
+        schema:
+          $ref: "#/definitions/body_34"
+      responses:
+        200:
+          description: "Статус выполнения запроса"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Posts"
+    x-swagger-router-controller: "posts"
+  /delEmpPosts:
+    post:
+      tags:
+      - "posts"
+      summary: "Удалить должности сотрудника"
+      operationId: "delEmpPosts"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "ID сотрудника и список ID должностей"
+        required: true
+        schema:
+          $ref: "#/definitions/body_35"
+      responses:
+        200:
+          description: "Статус выполнения операции."
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Posts"
+    x-swagger-router-controller: "posts"
+  /getAllPosts:
+    post:
+      tags:
+      - "posts"
+      summary: "Получить список должностей"
+      operationId: "getAllPosts"
+      produces:
+      - "application/json"
+      parameters: []
+      responses:
+        200:
+          description: "Список должностей"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                type: "array"
+                items:
+                  $ref: "#/definitions/Post"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Posts"
+    x-swagger-router-controller: "posts"
+  /addPost:
+    post:
+      tags:
+      - "posts"
+      summary: "Добавить должности"
+      operationId: "addPost"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Список должностей"
+        required: true
+        schema:
+          type: "array"
+          items:
+            $ref: "#/definitions/body_36"
+      responses:
+        200:
+          description: "Статус выполнения запроса"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Posts"
+    x-swagger-router-controller: "posts"
+  /delPost:
+    post:
+      tags:
+      - "posts"
+      summary: "Удалить должности"
+      operationId: "delPost"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Список ID должностей"
+        required: true
+        schema:
+          type: "array"
+          items:
+            $ref: "#/definitions/signup_emp_data_pst_arr"
+      responses:
+        200:
+          description: "Статус выполнения операции."
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Posts"
+    x-swagger-router-controller: "posts"
+securityDefinitions:
+  Basic:
+    type: "basic"
+  JWT:
+    type: "apiKey"
+    name: "Authorization"
+    in: "header"
+definitions:
+  Token:
+    required:
+    - "pepl_first_name"
+    - "pepl_last_name"
+    - "pepl_login"
+    - "pepl_second_name"
+    - "role_array"
+    - "token"
+    properties:
+      pepl_login:
+        type: "string"
+        example: "Admin"
+      pepl_second_name:
+        type: "string"
+        example: "Иванов"
+      pepl_first_name:
+        type: "string"
+        example: "Иван"
+      pepl_last_name:
+        type: "string"
+        example: "Иванович"
+      role_array:
+        $ref: "#/definitions/Role"
+      token:
+        type: "string"
+        example: "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwZXBsX2lkIjoyLCJpYXQiOjE1NTI1ODAxMjgsImV4cCI6MTU1Mjc1MjkyOH0.crhNQROEcLRxLywh7-ROIAv48MgfRWywm-ohNSrxcy0"
+    example:
+      pepl_first_name: "Иван"
+      pepl_login: "Admin"
+      pepl_second_name: "Иванов"
+      pepl_last_name: "Иванович"
+      role_array: ""
+      token: "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwZXBsX2lkIjoyLCJpYXQiOjE1NTI1ODAxMjgsImV4cCI6MTU1Mjc1MjkyOH0.crhNQROEcLRxLywh7-ROIAv48MgfRWywm-ohNSrxcy0"
+  People:
+    type: "object"
+    required:
+    - "pepl_birthday"
+    - "pepl_first_name"
+    - "pepl_gender"
+    - "pepl_last_name"
+    - "pepl_second_name"
+    properties:
+      pepl_second_name:
+        type: "string"
+        example: "Иванов"
+      pepl_first_name:
+        type: "string"
+        example: "Иван"
+      pepl_last_name:
+        type: "string"
+        example: "Иванович"
+      pepl_gender:
+        type: "boolean"
+        example: true
+      pepl_birthday:
+        type: "string"
+        format: "date"
+        example: "1977-01-19"
+      pepl_phone:
+        type: "string"
+        example: "9568734554"
+      pepl_email:
+        type: "string"
+        example: "admin@mail.ru"
+    description: "Данные пользователя"
+    example:
+      pepl_first_name: "Иван"
+      pepl_gender: true
+      pepl_second_name: "Иванов"
+      pepl_last_name: "Иванович"
+      pepl_email: "admin@mail.ru"
+      pepl_phone: "9568734554"
+      pepl_birthday: "1977-01-19"
+  Employee:
+    type: "object"
+    properties:
+      emp_skype:
+        type: "string"
+        example: "emplAdmin"
+      emp_discord:
+        type: "string"
+        example: "emplAdmin#1232"
+      emp_hangouts:
+        type: "string"
+        example: "admin@gmail.com"
+      emp_viber:
+        type: "string"
+        example: "9568734554"
+      emp_vk:
+        type: "string"
+        example: "empadmin"
+      emp_date_enrollment:
+        type: "string"
+        format: "date"
+        example: "1997-11-22"
+    description: "Данные сотрудника"
+    example:
+      emp_vk: "empadmin"
+      emp_skype: "emplAdmin"
+      emp_viber: "9568734554"
+      emp_hangouts: "admin@gmail.com"
+      emp_date_enrollment: "1997-11-22"
+      emp_discord: "emplAdmin#1232"
+  Parent:
+    type: "object"
+    required:
+    - "prnt_city"
+    - "prnt_home"
+    - "prnt_street"
+    properties:
+      prnt_city:
+        type: "string"
+        example: "Липецк"
+      prnt_street:
+        type: "string"
+        example: "Ангарская"
+      prnt_home:
+        type: "string"
+        example: "17Б"
+      prnt_flat:
+        type: "string"
+        example: "45"
+    description: "Данные родителя"
+    example:
+      prnt_flat: "45"
+      prnt_home: "17Б"
+      prnt_city: "Липецк"
+      prnt_street: "Ангарская"
+  Student:
+    type: "object"
+    required:
+    - "std_class"
+    - "std_date_issue"
+    - "std_stayed_two_year"
+    properties:
+      std_class:
+        type: "string"
+        example: "7Б"
+      std_stayed_two_year:
+        type: "integer"
+        format: "int32"
+        example: 0
+      std_date_issue:
+        type: "string"
+        format: "date"
+        example: "2023-06-01"
+    description: "Данные ученика"
+    example:
+      std_stayed_two_year: 0
+      std_class: "7Б"
+      std_date_issue: "2023-06-01"
+  Role:
+    type: "array"
+    items:
+      type: "string"
+      example: ""
+      description: "Value:\n * Admin\n * Student\n * Parent\n * Teacher\n * Psychologist\n"
+  Post:
+    type: "object"
+    required:
+    - "pst_id"
+    - "pst_name"
+    properties:
+      pst_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+      pst_name:
+        type: "string"
+        example: "Педагог-психолог"
+      pst_description:
+        type: "string"
+    example:
+      pst_id: 1
+      pst_name: "Педагог-психолог"
+      pst_description: "pst_description"
+  WorkDay:
+    type: "object"
+    required:
+    - "wd_duration"
+    - "wd_time_begin"
+    - "wd_time_end"
+    properties:
+      wd_time_begin:
+        type: "string"
+        example: "8:00:00"
+      wd_time_end:
+        type: "string"
+        example: "18:30:00"
+      wd_break_begin:
+        type: "string"
+        example: "13:00:00"
+      wd_break_end:
+        type: "string"
+        example: "14:00:00"
+      wd_duration:
+        type: "integer"
+        format: "int32"
+        example: 30
+    example:
+      wd_time_begin: "8:00:00"
+      wd_break_begin: "13:00:00"
+      wd_break_end: "14:00:00"
+      wd_time_end: "18:30:00"
+      wd_duration: 30
+  Record:
+    type: "object"
+    required:
+    - "rec_not_come"
+    - "rec_online"
+    - "rec_time"
+    properties:
+      pepl_id:
+        type: "integer"
+        format: "int32"
+        example: 3
+      rec_time:
+        type: "string"
+        example: "11:00:00"
+      rec_online:
+        type: "boolean"
+        example: true
+      rec_not_come:
+        type: "boolean"
+        example: false
+    example:
+      rec_time: "11:00:00"
+      rec_online: true
+      pepl_id: 3
+      rec_not_come: false
+  body:
+    required:
+    - "file_id"
+    properties:
+      file_id:
+        type: "integer"
+        format: "int32"
+        example: 3
+  inline_response_200_payload:
+    required:
+    - "file"
+    - "file_dt"
+    - "file_id"
+    - "file_name"
+    properties:
+      file_id:
+        type: "integer"
+        format: "int32"
+        example: 3
+      file_name:
+        type: "string"
+        example: "Тест по профорейнтации"
+      file_path:
+        type: "string"
+        example: "/folder1"
+      file:
+        type: "string"
+        format: "base64"
+      file_dt:
+        type: "string"
+        format: "date-time"
+        example: "2019-03-04T09:35:00.000Z"
+  inline_response_200:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+      payload:
+        type: "array"
+        items:
+          $ref: "#/definitions/inline_response_200_payload"
+  body_1:
+    type: "object"
+    properties:
+      std_id:
+        type: "integer"
+        format: "int32"
+        example: 3
+      tr_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+      tst_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+  inline_response_200_1_payload:
+    required:
+    - "file_dt"
+    - "file_id"
+    - "file_name"
+    properties:
+      file_id:
+        type: "integer"
+        format: "int32"
+        example: 3
+      file_name:
+        type: "string"
+        example: "Тест по профорейнтации"
+      file_path:
+        type: "string"
+        example: "/folder1"
+      file_dt:
+        type: "string"
+        format: "date-time"
+        example: "2019-03-04T09:35:00.000Z"
+    example:
+      file_path: "/folder1"
+      file_name: "Тест по профорейнтации"
+      file_id: 3
+      file_dt: "2019-03-04T09:35:00.000Z"
+  inline_response_200_1:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+      payload:
+        type: "array"
+        items:
+          $ref: "#/definitions/inline_response_200_1_payload"
+    example:
+      payload:
+      - file_path: "/folder1"
+        file_name: "Тест по профорейнтации"
+        file_id: 3
+        file_dt: "2019-03-04T09:35:00.000Z"
+      - file_path: "/folder1"
+        file_name: "Тест по профорейнтации"
+        file_id: 3
+        file_dt: "2019-03-04T09:35:00.000Z"
+      status: "OK"
+  addFiles_file_arr:
+    required:
+    - "file"
+    - "file_name"
+    properties:
+      file_name:
+        type: "string"
+        example: "Тест по профорейнтации"
+      file_path:
+        type: "string"
+        example: "/folder1"
+      file:
+        type: "string"
+        format: "base64"
+  body_2:
+    type: "object"
+    required:
+    - "file_arr"
+    properties:
+      std_id:
+        type: "integer"
+        format: "int32"
+        example: 3
+      tr_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+      tst_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+      file_arr:
+        type: "array"
+        items:
+          $ref: "#/definitions/addFiles_file_arr"
+  inline_response_200_2_payload:
+    required:
+    - "file_id"
+    - "file_name"
+    properties:
+      file_id:
+        type: "integer"
+        format: "int32"
+        example: 3
+      file_name:
+        type: "string"
+        example: "Тест по профорейнтации"
+    example:
+      file_name: "Тест по профорейнтации"
+      file_id: 3
+  inline_response_200_2:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+      payload:
+        type: "array"
+        items:
+          $ref: "#/definitions/inline_response_200_2_payload"
+    example:
+      payload:
+      - file_name: "Тест по профорейнтации"
+        file_id: 3
+      - file_name: "Тест по профорейнтации"
+        file_id: 3
+      status: "OK"
+  body_3:
+    type: "object"
+    required:
+    - "file_id"
+    properties:
+      file_id:
+        type: "integer"
+        format: "int32"
+        example: 3
+      file_name:
+        type: "string"
+        example: "Тест по профорейнтации"
+      file_path:
+        type: "string"
+        example: "/folder1"
+  inline_response_200_3:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+      payload:
+        $ref: "#/definitions/inline_response_200_1_payload"
+    example:
+      payload:
+        file_path: "/folder1"
+        file_name: "Тест по профорейнтации"
+        file_id: 3
+        file_dt: "2019-03-04T09:35:00.000Z"
+      status: "OK"
+  inline_response_200_4_payload:
+    required:
+    - "file_del_status"
+    - "file_id"
+    properties:
+      file_id:
+        type: "integer"
+        format: "int32"
+        example: 3
+      file_del_status:
+        type: "boolean"
+        example: true
+    example:
+      file_del_status: true
+      file_id: 3
+  inline_response_200_4:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+      payload:
+        type: "array"
+        items:
+          $ref: "#/definitions/inline_response_200_4_payload"
+    example:
+      payload:
+      - file_del_status: true
+        file_id: 3
+      - file_del_status: true
+        file_id: 3
+      status: "OK"
+  addTest_file_arr:
+    required:
+    - "file"
+    - "file_name"
+    properties:
+      file_name:
+        type: "string"
+        example: "Тест по профорейнтации"
+      file:
+        type: "string"
+        format: "base64"
+  body_4:
+    type: "object"
+    required:
+    - "file_arr"
+    - "tst_name"
+    properties:
+      tst_name:
+        type: "string"
+        example: "Тест по профорейнтации"
+      file_arr:
+        type: "array"
+        items:
+          $ref: "#/definitions/addTest_file_arr"
+  inline_response_200_5_payload:
+    required:
+    - "tst_id"
+    properties:
+      tst_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+    example:
+      tst_id: 1
+  inline_response_200_5:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+      payload:
+        $ref: "#/definitions/inline_response_200_5_payload"
+    example:
+      payload:
+        tst_id: 1
+      status: "OK"
+  body_5:
+    type: "object"
+    required:
+    - "tst_id"
+    properties:
+      tst_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+  inline_response_200_6:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+    example:
+      status: "OK"
+  inline_response_200_7_payload:
+    required:
+    - "tst_id"
+    - "tst_name"
+    - "tst_online"
+    properties:
+      tst_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+      tst_name:
+        type: "string"
+        example: "Тест по профорейнтации"
+      tst_online:
+        type: "boolean"
+        example: false
+    example:
+      tst_name: "Тест по профорейнтации"
+      tst_online: false
+      tst_id: 1
+  inline_response_200_7:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+      payload:
+        type: "array"
+        items:
+          $ref: "#/definitions/inline_response_200_7_payload"
+    example:
+      payload:
+      - tst_name: "Тест по профорейнтации"
+        tst_online: false
+        tst_id: 1
+      - tst_name: "Тест по профорейнтации"
+        tst_online: false
+        tst_id: 1
+      status: "OK"
+  body_6:
+    type: "object"
+    required:
+    - "tst_id"
+    - "tst_name"
+    properties:
+      tst_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+      tst_name:
+        type: "string"
+        example: "Новый Тест по профорейнтации"
+  body_7:
+    type: "object"
+    required:
+    - "std_id"
+    - "tst_id"
+    - "tst_open_access"
+    properties:
+      tst_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+      std_id:
+        type: "integer"
+        format: "int32"
+        example: 3
+      tst_open_access:
+        type: "boolean"
+        example: true
+  addTestResult_file_arr:
+    required:
+    - "file"
+    - "file_name"
+    - "file_path"
+    properties:
+      file_name:
+        type: "string"
+        example: "Тест по профорейнтации"
+      file_path:
+        type: "string"
+        example: "/folder1"
+      file:
+        type: "string"
+        format: "base64"
+  body_8:
+    type: "object"
+    required:
+    - "file_arr"
+    - "std_id"
+    - "tst_id"
+    properties:
+      tst_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+      std_id:
+        type: "integer"
+        format: "int32"
+        example: 3
+      file_arr:
+        type: "array"
+        items:
+          $ref: "#/definitions/addTestResult_file_arr"
+  inline_response_200_8_payload:
+    required:
+    - "tr_id"
+    properties:
+      tr_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+    example:
+      tr_id: 1
+  inline_response_200_8:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+      payload:
+        $ref: "#/definitions/inline_response_200_8_payload"
+    example:
+      payload:
+        tr_id: 1
+      status: "OK"
+  body_9:
+    type: "object"
+    properties:
+      tst_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+      std_id:
+        type: "integer"
+        format: "int32"
+        example: 3
+  inline_response_200_9:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+      payload:
+        type: "array"
+        items:
+          $ref: "#/definitions/inline_response_200_8_payload"
+    example:
+      payload:
+      - tr_id: 1
+      - tr_id: 1
+      status: "OK"
+  body_10:
+    type: "object"
+    required:
+    - "tr_id"
+    properties:
+      tr_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+  body_11:
+    type: "object"
+    required:
+    - "emp_id"
+    properties:
+      emp_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+  inline_response_200_10_rec_array:
+    required:
+    - "rec_data"
+    - "rec_id"
+    properties:
+      rec_id:
+        type: "integer"
+        format: "int32"
+        example: 7
+      rec_data:
+        $ref: "#/definitions/Record"
+    example:
+      rec_id: 7
+      rec_data:
+        rec_time: "11:00:00"
+        rec_online: true
+        pepl_id: 3
+        rec_not_come: false
+  inline_response_200_10_payload:
+    required:
+    - "wd_data"
+    - "wd_date"
+    - "wd_id"
+    properties:
+      wd_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+      wd_date:
+        type: "string"
+        format: "date"
+        example: "2019-03-03"
+      rec_array:
+        type: "array"
+        items:
+          $ref: "#/definitions/inline_response_200_10_rec_array"
+      wd_data:
+        $ref: "#/definitions/WorkDay"
+    example:
+      wd_date: "2019-03-03"
+      wd_id: 1
+      rec_array:
+      - rec_id: 7
+        rec_data:
+          rec_time: "11:00:00"
+          rec_online: true
+          pepl_id: 3
+          rec_not_come: false
+      - rec_id: 7
+        rec_data:
+          rec_time: "11:00:00"
+          rec_online: true
+          pepl_id: 3
+          rec_not_come: false
+      wd_data:
+        wd_time_begin: "8:00:00"
+        wd_break_begin: "13:00:00"
+        wd_break_end: "14:00:00"
+        wd_time_end: "18:30:00"
+        wd_duration: 30
+  inline_response_200_10:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+      payload:
+        type: "array"
+        items:
+          $ref: "#/definitions/inline_response_200_10_payload"
+    example:
+      payload:
+      - wd_date: "2019-03-03"
+        wd_id: 1
+        rec_array:
+        - rec_id: 7
+          rec_data:
+            rec_time: "11:00:00"
+            rec_online: true
+            pepl_id: 3
+            rec_not_come: false
+        - rec_id: 7
+          rec_data:
+            rec_time: "11:00:00"
+            rec_online: true
+            pepl_id: 3
+            rec_not_come: false
+        wd_data:
+          wd_time_begin: "8:00:00"
+          wd_break_begin: "13:00:00"
+          wd_break_end: "14:00:00"
+          wd_time_end: "18:30:00"
+          wd_duration: 30
+      - wd_date: "2019-03-03"
+        wd_id: 1
+        rec_array:
+        - rec_id: 7
+          rec_data:
+            rec_time: "11:00:00"
+            rec_online: true
+            pepl_id: 3
+            rec_not_come: false
+        - rec_id: 7
+          rec_data:
+            rec_time: "11:00:00"
+            rec_online: true
+            pepl_id: 3
+            rec_not_come: false
+        wd_data:
+          wd_time_begin: "8:00:00"
+          wd_break_begin: "13:00:00"
+          wd_break_end: "14:00:00"
+          wd_time_end: "18:30:00"
+          wd_duration: 30
+      status: "OK"
+  setUserGraphic_wd_arr_del:
+    required:
+    - "wd_id"
+    properties:
+      wd_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+  setUserGraphic_wd_arr_add:
+    required:
+    - "wd_data"
+    - "wd_date"
+    properties:
+      wd_date:
+        type: "string"
+        format: "date"
+        example: "2019-03-03"
+      wd_data:
+        $ref: "#/definitions/WorkDay"
+  setUserGraphic_wd_arr_upd:
+    required:
+    - "wd_id"
+    properties:
+      wd_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+      wd_time_begin:
+        type: "string"
+        example: "8:00:00"
+      wd_time_end:
+        type: "string"
+        example: "18:30:00"
+      wd_break_begin:
+        type: "string"
+        example: "13:00:00"
+      wd_break_end:
+        type: "string"
+        example: "14:00:00"
+      wd_duration:
+        type: "integer"
+        format: "int32"
+        example: 30
+  body_12:
+    type: "object"
+    required:
+    - "emp_id"
+    properties:
+      emp_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+      wd_arr_del:
+        type: "array"
+        items:
+          $ref: "#/definitions/setUserGraphic_wd_arr_del"
+      wd_arr_add:
+        type: "array"
+        items:
+          $ref: "#/definitions/setUserGraphic_wd_arr_add"
+      wd_arr_upd:
+        type: "array"
+        items:
+          $ref: "#/definitions/setUserGraphic_wd_arr_upd"
+  inline_response_200_11_payload_wd_arr_del:
+    required:
+    - "wd_id"
+    - "wd_status"
+    properties:
+      wd_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+      wd_status:
+        type: "string"
+        example: "OK"
+    example:
+      wd_id: 1
+      wd_status: "OK"
+  inline_response_200_11_payload_wd_arr_add:
+    required:
+    - "wd_date"
+    - "wd_status"
+    properties:
+      wd_date:
+        type: "string"
+        format: "date"
+        example: "2019-03-03"
+      wd_status:
+        type: "string"
+        example: "OK"
+    example:
+      wd_date: "2019-03-03"
+      wd_status: "OK"
+  inline_response_200_11_payload:
+    properties:
+      wd_arr_del:
+        type: "array"
+        items:
+          $ref: "#/definitions/inline_response_200_11_payload_wd_arr_del"
+      wd_arr_add:
+        type: "array"
+        items:
+          $ref: "#/definitions/inline_response_200_11_payload_wd_arr_add"
+      wd_arr_upd:
+        type: "array"
+        items:
+          $ref: "#/definitions/inline_response_200_11_payload_wd_arr_del"
+    example:
+      wd_arr_add:
+      - wd_date: "2019-03-03"
+        wd_status: "OK"
+      - wd_date: "2019-03-03"
+        wd_status: "OK"
+      wd_arr_del:
+      - wd_id: 1
+        wd_status: "OK"
+      - wd_id: 1
+        wd_status: "OK"
+      wd_arr_upd:
+      - wd_id: 1
+        wd_status: "OK"
+      - wd_id: 1
+        wd_status: "OK"
+  inline_response_200_11:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+      payload:
+        $ref: "#/definitions/inline_response_200_11_payload"
+    example:
+      payload:
+        wd_arr_add:
+        - wd_date: "2019-03-03"
+          wd_status: "OK"
+        - wd_date: "2019-03-03"
+          wd_status: "OK"
+        wd_arr_del:
+        - wd_id: 1
+          wd_status: "OK"
+        - wd_id: 1
+          wd_status: "OK"
+        wd_arr_upd:
+        - wd_id: 1
+          wd_status: "OK"
+        - wd_id: 1
+          wd_status: "OK"
+      status: "OK"
+  body_13:
+    type: "object"
+    required:
+    - "pepl_id"
+    - "rec_id"
+    - "rec_online"
+    properties:
+      pepl_id:
+        type: "integer"
+        format: "int32"
+        example: 3
+      rec_id:
+        type: "integer"
+        format: "int32"
+        example: 9
+      rec_online:
+        type: "boolean"
+        example: true
+      cont_name:
+        type: "string"
+        example: "skype"
+        description: "Не обязательно,только при личном визите Value:\n  - skype\n\
+          \  - discord\n  - hangouts\n  - viber\n  - vk\n  - phone\n"
+      cont_value:
+        type: "string"
+        example: "student132"
+  inline_response_200_12_payload:
+    required:
+    - "emp_id"
+    - "pepl_id"
+    - "rec_online"
+    - "rec_time"
+    - "wd_date"
+    - "wd_duration"
+    properties:
+      pepl_id:
+        type: "integer"
+        format: "int32"
+        example: 3
+      emp_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+      wd_date:
+        type: "string"
+        format: "date"
+        example: "2019-03-03"
+      rec_time:
+        type: "string"
+        example: "12:00:00"
+      wd_duration:
+        type: "integer"
+        format: "int32"
+        example: 30
+      rec_online:
+        type: "boolean"
+        example: true
+      cont_name:
+        type: "string"
+        example: "skype"
+        description: "Не обязательно,только при личном визите Value:\n  - skype\n\
+          \  - discord\n  - hangouts\n  - viber\n  - vk\n  - phone\n"
+      cont_value:
+        type: "string"
+        example: "student132"
+    example:
+      rec_time: "12:00:00"
+      rec_online: true
+      wd_date: "2019-03-03"
+      pepl_id: 3
+      cont_value: "student132"
+      wd_duration: 30
+      emp_id: 1
+      cont_name: "skype"
+  inline_response_200_12:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+      payload:
+        $ref: "#/definitions/inline_response_200_12_payload"
+    example:
+      payload:
+        rec_time: "12:00:00"
+        rec_online: true
+        wd_date: "2019-03-03"
+        pepl_id: 3
+        cont_value: "student132"
+        wd_duration: 30
+        emp_id: 1
+        cont_name: "skype"
+      status: "OK"
+  body_14:
+    type: "object"
+    required:
+    - "rec_id"
+    properties:
+      rec_id:
+        type: "integer"
+        format: "int32"
+        example: 9
+  body_15:
+    type: "object"
+    required:
+    - "rec_id"
+    properties:
+      rec_id:
+        type: "integer"
+        format: "int32"
+        example: 9
+  body_16:
+    type: "object"
+    required:
+    - "new_rec_id"
+    - "rec_id"
+    properties:
+      rec_id:
+        type: "integer"
+        format: "int32"
+        example: 9
+      new_rec_id:
+        type: "integer"
+        format: "int32"
+        example: 10
+  body_17:
+    type: "object"
+    required:
+    - "rec_id"
+    properties:
+      rec_id:
+        type: "integer"
+        format: "int32"
+        example: 9
+      rec_online:
+        type: "boolean"
+        example: false
+      cont_name:
+        type: "string"
+        example: "phone"
+        description: "Value:\n  - skype\n  - discord\n  - hangouts\n  - viber\n  -\
+          \ vk\n  - phone\n"
+      cont_value:
+        type: "string"
+        example: "9652354488"
+  body_18:
+    type: "object"
+    required:
+    - "rec_id"
+    properties:
+      rec_id:
+        type: "integer"
+        format: "int32"
+        example: 9
+  body_19:
+    type: "object"
+    required:
+    - "wd_id"
+    properties:
+      wd_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+  inline_response_200_13_payload:
+    required:
+    - "emp_id"
+    - "pepl_id"
+    - "rec_id"
+    - "rec_online"
+    - "rec_time"
+    - "wd_date"
+    - "wd_duration"
+    properties:
+      rec_id:
+        type: "integer"
+        format: "int32"
+        example: 9
+      pepl_id:
+        type: "integer"
+        format: "int32"
+        example: 3
+      emp_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+      wd_date:
+        type: "string"
+        format: "date"
+        example: "2019-03-03"
+      rec_time:
+        type: "string"
+        example: "12:00:00"
+      wd_duration:
+        type: "integer"
+        format: "int32"
+        example: 30
+      rec_online:
+        type: "boolean"
+        example: true
+      cont_name:
+        type: "string"
+        example: "skype"
+        description: "Не обязательно,только при личном визите Value:\n  - skype\n\
+          \  - discord\n  - hangouts\n  - viber\n  - vk\n  - phone\n"
+      cont_value:
+        type: "string"
+        example: "student132"
+    example:
+      rec_time: "12:00:00"
+      rec_online: true
+      wd_date: "2019-03-03"
+      pepl_id: 3
+      cont_value: "student132"
+      rec_id: 9
+      wd_duration: 30
+      emp_id: 1
+      cont_name: "skype"
+  inline_response_200_13:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+      payload:
+        type: "array"
+        items:
+          $ref: "#/definitions/inline_response_200_13_payload"
+    example:
+      payload:
+      - rec_time: "12:00:00"
+        rec_online: true
+        wd_date: "2019-03-03"
+        pepl_id: 3
+        cont_value: "student132"
+        rec_id: 9
+        wd_duration: 30
+        emp_id: 1
+        cont_name: "skype"
+      - rec_time: "12:00:00"
+        rec_online: true
+        wd_date: "2019-03-03"
+        pepl_id: 3
+        cont_value: "student132"
+        rec_id: 9
+        wd_duration: 30
+        emp_id: 1
+        cont_name: "skype"
+      status: "OK"
+  setJournal_vst_arr_del:
+    required:
+    - "vst_id"
+    properties:
+      vst_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+  setJournal_rec_data:
+    required:
+    - "rec_id"
+    properties:
+      rec_id:
+        type: "integer"
+        format: "int32"
+        example: 7
+    description: "либо rec_data, либо vst_data"
+  setJournal_vst_data:
+    required:
+    - "vst_age"
+    - "vst_consultant"
+    - "vst_dt"
+    - "vst_gender"
+    - "vst_name"
+    properties:
+      vst_dt:
+        type: "string"
+        format: "date-time"
+        example: "2019-03-03T11:00:00.000Z"
+      vst_age:
+        type: "integer"
+        format: "int32"
+        example: 13
+      vst_gender:
+        type: "boolean"
+        example: true
+      vst_name:
+        type: "string"
+        example: "Тарасов Семен Львович"
+      vst_consultant:
+        type: "string"
+        example: "Иванов Иван иванович"
+    description: "либо rec_data, либо vst_data"
+  setJournal_vst_arr_add:
+    required:
+    - "vst_problem"
+    - "vst_reason"
+    - "vst_result"
+    properties:
+      vst_reason:
+        type: "string"
+        example: "Стресс"
+      vst_problem:
+        type: "string"
+        example: "Угнетение учениками"
+      vst_result:
+        type: "string"
+        example: "Стресс"
+      rec_data:
+        $ref: "#/definitions/setJournal_rec_data"
+      vst_data:
+        $ref: "#/definitions/setJournal_vst_data"
+  setJournal_rec_data_1:
+    properties:
+      rec_id:
+        type: "integer"
+        format: "int32"
+        example: 7
+    description: "либо rec_data, либо vst_data"
+  setJournal_vst_data_1:
+    properties:
+      vst_dt:
+        type: "string"
+        format: "date-time"
+        example: "2019-03-03T11:00:00.000Z"
+      vst_age:
+        type: "integer"
+        format: "int32"
+        example: 13
+      vst_gender:
+        type: "boolean"
+        example: true
+      vst_name:
+        type: "string"
+        example: "Тарасов Семен Львович"
+      vst_consultant:
+        type: "string"
+        example: "Иванов Иван иванович"
+    description: "либо rec_data, либо vst_data"
+  setJournal_vst_arr_upd:
+    required:
+    - "vst_id"
+    properties:
+      vst_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+      vst_reason:
+        type: "string"
+        example: "Стресс"
+      vst_problem:
+        type: "string"
+        example: "Угнетение учениками"
+      vst_result:
+        type: "string"
+        example: "Стресс"
+      rec_data:
+        $ref: "#/definitions/setJournal_rec_data_1"
+      vst_data:
+        $ref: "#/definitions/setJournal_vst_data_1"
+  body_20:
+    type: "object"
+    properties:
+      vst_arr_del:
+        type: "array"
+        items:
+          $ref: "#/definitions/setJournal_vst_arr_del"
+      vst_arr_add:
+        type: "array"
+        items:
+          $ref: "#/definitions/setJournal_vst_arr_add"
+      vst_arr_upd:
+        type: "array"
+        items:
+          $ref: "#/definitions/setJournal_vst_arr_upd"
+  inline_response_200_14_payload_vst_arr_del:
+    required:
+    - "vst_id"
+    - "vst_status"
+    properties:
+      vst_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+      vst_status:
+        type: "string"
+        example: "OK"
+    example:
+      vst_status: "OK"
+      vst_id: 1
+  inline_response_200_14_payload_rec_data:
+    required:
+    - "rec_id"
+    properties:
+      rec_id:
+        type: "integer"
+        format: "int32"
+        example: 7
+    description: "вернется либо rec_data, либо vst_data"
+    example:
+      rec_id: 7
+  inline_response_200_14_payload_vst_data:
+    required:
+    - "vst_dt"
+    properties:
+      vst_dt:
+        type: "string"
+        format: "date-time"
+        example: "2019-03-03T11:00:00.000Z"
+    description: "вернется либо rec_data, либо vst_data"
+    example:
+      vst_dt: "2019-03-03T11:00:00.000Z"
+  inline_response_200_14_payload_vst_arr_add:
+    required:
+    - "vst_status"
+    properties:
+      vst_status:
+        type: "string"
+        example: "OK"
+      rec_data:
+        $ref: "#/definitions/inline_response_200_14_payload_rec_data"
+      vst_data:
+        $ref: "#/definitions/inline_response_200_14_payload_vst_data"
+    example:
+      vst_data:
+        vst_dt: "2019-03-03T11:00:00.000Z"
+      vst_status: "OK"
+      rec_data:
+        rec_id: 7
+  inline_response_200_14_payload:
+    properties:
+      vst_arr_del:
+        type: "array"
+        items:
+          $ref: "#/definitions/inline_response_200_14_payload_vst_arr_del"
+      vst_arr_add:
+        type: "array"
+        items:
+          $ref: "#/definitions/inline_response_200_14_payload_vst_arr_add"
+      vst_arr_upd:
+        type: "array"
+        items:
+          $ref: "#/definitions/inline_response_200_14_payload_vst_arr_del"
+    example:
+      vst_arr_upd:
+      - vst_status: "OK"
+        vst_id: 1
+      - vst_status: "OK"
+        vst_id: 1
+      vst_arr_del:
+      - vst_status: "OK"
+        vst_id: 1
+      - vst_status: "OK"
+        vst_id: 1
+      vst_arr_add:
+      - vst_data:
+          vst_dt: "2019-03-03T11:00:00.000Z"
+        vst_status: "OK"
+        rec_data:
+          rec_id: 7
+      - vst_data:
+          vst_dt: "2019-03-03T11:00:00.000Z"
+        vst_status: "OK"
+        rec_data:
+          rec_id: 7
+  inline_response_200_14:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+      payload:
+        $ref: "#/definitions/inline_response_200_14_payload"
+    example:
+      payload:
+        vst_arr_upd:
+        - vst_status: "OK"
+          vst_id: 1
+        - vst_status: "OK"
+          vst_id: 1
+        vst_arr_del:
+        - vst_status: "OK"
+          vst_id: 1
+        - vst_status: "OK"
+          vst_id: 1
+        vst_arr_add:
+        - vst_data:
+            vst_dt: "2019-03-03T11:00:00.000Z"
+          vst_status: "OK"
+          rec_data:
+            rec_id: 7
+        - vst_data:
+            vst_dt: "2019-03-03T11:00:00.000Z"
+          vst_status: "OK"
+          rec_data:
+            rec_id: 7
+      status: "OK"
+  getJournal_byDate:
+    required:
+    - "vst_date_begin"
+    properties:
+      vst_date_begin:
+        type: "string"
+        format: "date"
+        example: "2019-02-01"
+      vst_date_end:
+        type: "string"
+        format: "date"
+        example: "2019-02-28"
+  getJournal_inCount:
+    required:
+    - "vst_N"
+    properties:
+      vst_N:
+        type: "integer"
+        format: "int32"
+        example: 50
+      vst_F:
+        type: "integer"
+        format: "int32"
+        example: 0
+    description: "Получить N записей с шагом F"
+  body_21:
+    type: "object"
+    properties:
+      byDate:
+        $ref: "#/definitions/getJournal_byDate"
+      inCount:
+        $ref: "#/definitions/getJournal_inCount"
+  inline_response_200_15_payload:
+    required:
+    - "vst_age"
+    - "vst_consultant"
+    - "vst_dt"
+    - "vst_gender"
+    - "vst_id"
+    - "vst_name"
+    - "vst_problem"
+    - "vst_reason"
+    - "vst_result"
+    properties:
+      vst_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+      rec_id:
+        type: "integer"
+        format: "int32"
+        example: 7
+      vst_dt:
+        type: "string"
+        format: "date-time"
+        example: "2019-03-03T11:00:00.000Z"
+      vst_age:
+        type: "integer"
+        format: "int32"
+        example: 13
+      vst_gender:
+        type: "boolean"
+        example: true
+      vst_name:
+        type: "string"
+        example: "Тарасов Семен Львович"
+      vst_reason:
+        type: "string"
+        example: "Стресс"
+      vst_problem:
+        type: "string"
+        example: "Угнетение учениками"
+      vst_result:
+        type: "string"
+        example: "Стресс"
+      vst_consultant:
+        type: "string"
+        example: "Иванов Иван иванович"
+    example:
+      vst_problem: "Угнетение учениками"
+      vst_name: "Тарасов Семен Львович"
+      vst_id: 1
+      vst_consultant: "Иванов Иван иванович"
+      vst_reason: "Стресс"
+      vst_result: "Стресс"
+      rec_id: 7
+      vst_age: 13
+      vst_dt: "2019-03-03T11:00:00.000Z"
+      vst_gender: true
+  inline_response_200_15:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+      payload:
+        type: "array"
+        items:
+          $ref: "#/definitions/inline_response_200_15_payload"
+    example:
+      payload:
+      - vst_problem: "Угнетение учениками"
+        vst_name: "Тарасов Семен Львович"
+        vst_id: 1
+        vst_consultant: "Иванов Иван иванович"
+        vst_reason: "Стресс"
+        vst_result: "Стресс"
+        rec_id: 7
+        vst_age: 13
+        vst_dt: "2019-03-03T11:00:00.000Z"
+        vst_gender: true
+      - vst_problem: "Угнетение учениками"
+        vst_name: "Тарасов Семен Львович"
+        vst_id: 1
+        vst_consultant: "Иванов Иван иванович"
+        vst_reason: "Стресс"
+        vst_result: "Стресс"
+        rec_id: 7
+        vst_age: 13
+        vst_dt: "2019-03-03T11:00:00.000Z"
+        vst_gender: true
+      status: "OK"
+  signup_emp_data_pst_arr:
+    required:
+    - "pst_id"
+    properties:
+      pst_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+  signup_emp_data:
+    properties:
+      pst_arr:
+        type: "array"
+        items:
+          $ref: "#/definitions/signup_emp_data_pst_arr"
+      emp_skype:
+        type: "string"
+        example: "emplAdmin"
+      emp_discord:
+        type: "string"
+        example: "emplAdmin#1232"
+      emp_hangouts:
+        type: "string"
+        example: "admin@gmail.com"
+      emp_viber:
+        type: "string"
+        example: "9568734554"
+      emp_vk:
+        type: "string"
+        example: "empadmin"
+      emp_date_enrollment:
+        type: "string"
+        format: "date"
+        example: "1997-11-22"
+  signup_std_data:
+    required:
+    - "std_class"
+    properties:
+      emp_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+      std_class:
+        type: "string"
+        example: "7Б"
+  signup_prnt_data_cr_array:
+    required:
+    - "cr_class"
+    - "cr_first_child"
+    - "cr_last_child"
+    - "cr_second_child"
+    properties:
+      cr_second_child:
+        type: "string"
+        example: "Тарасов"
+      cr_first_child:
+        type: "string"
+        example: "Семен"
+      cr_last_child:
+        type: "string"
+        example: "Львович"
+      cr_second_teacher:
+        type: "string"
+        example: "Иванов"
+      cr_first_teacher:
+        type: "string"
+        example: "Иван"
+      cr_last_teacher:
+        type: "string"
+        example: "Иванович"
+      cr_class:
+        type: "string"
+        example: "7Б"
+  signup_prnt_data_prnt_data:
+    required:
+    - "prnt_city"
+    - "prnt_home"
+    - "prnt_street"
+    properties:
+      prnt_city:
+        type: "string"
+        example: "Липецк"
+      prnt_street:
+        type: "string"
+        example: "Ангарская"
+      prnt_home:
+        type: "string"
+        example: "17Б"
+      prnt_flat:
+        type: "string"
+        example: "45"
+    description: "Данные родителя"
+  signup_prnt_data:
+    required:
+    - "cr_array"
+    - "prnt_data"
+    properties:
+      cr_array:
+        type: "array"
+        description: "ФИО ребенка, классного рук. и класс"
+        items:
+          $ref: "#/definitions/signup_prnt_data_cr_array"
+      prnt_data:
+        $ref: "#/definitions/signup_prnt_data_prnt_data"
+    description: "Данные родителя"
+  body_22:
+    type: "object"
+    required:
+    - "pepl_data"
+    properties:
+      pepl_login:
+        type: "string"
+        example: "Admin"
+      pepl_pass:
+        type: "string"
+        format: "password"
+        example: "P@ssword"
+      role_array:
+        $ref: "#/definitions/Role"
+      pepl_data:
+        $ref: "#/definitions/People"
+      emp_data:
+        $ref: "#/definitions/signup_emp_data"
+      std_data:
+        $ref: "#/definitions/signup_std_data"
+      prnt_data:
+        $ref: "#/definitions/signup_prnt_data"
+  inline_response_200_16_payload:
+    required:
+    - "pepl_first_name"
+    - "pepl_id"
+    - "pepl_last_name"
+    - "pepl_second_name"
+    - "role_array"
+    properties:
+      pepl_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+      pepl_login:
+        type: "string"
+        example: "Admin"
+      pepl_pass:
+        type: "string"
+        example: "123kT@"
+      role_array:
+        $ref: "#/definitions/Role"
+      pepl_second_name:
+        type: "string"
+        example: "Иванов"
+      pepl_first_name:
+        type: "string"
+        example: "Иван"
+      pepl_last_name:
+        type: "string"
+        example: "Иванович"
+    description: "Содержимое ответа"
+    example:
+      pepl_first_name: "Иван"
+      pepl_login: "Admin"
+      pepl_pass: "123kT@"
+      pepl_second_name: "Иванов"
+      pepl_id: 1
+      pepl_last_name: "Иванович"
+      role_array: ""
+  inline_response_200_16:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+      payload:
+        $ref: "#/definitions/inline_response_200_16_payload"
+    example:
+      payload:
+        pepl_first_name: "Иван"
+        pepl_login: "Admin"
+        pepl_pass: "123kT@"
+        pepl_second_name: "Иванов"
+        pepl_id: 1
+        pepl_last_name: "Иванович"
+        role_array: ""
+      status: "OK"
+  inline_response_200_17:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+      payload:
+        $ref: "#/definitions/Token"
+    example:
+      payload:
+        pepl_first_name: "Иван"
+        pepl_login: "Admin"
+        pepl_second_name: "Иванов"
+        pepl_last_name: "Иванович"
+        role_array: ""
+        token: "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwZXBsX2lkIjoyLCJpYXQiOjE1NTI1ODAxMjgsImV4cCI6MTU1Mjc1MjkyOH0.crhNQROEcLRxLywh7-ROIAv48MgfRWywm-ohNSrxcy0"
+      status: "OK"
+  inline_response_200_18_payload:
+    required:
+    - "file"
+    properties:
+      file:
+        type: "string"
+        format: "base64"
+  inline_response_200_18:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+      payload:
+        $ref: "#/definitions/inline_response_200_18_payload"
+  body_23:
+    type: "object"
+    required:
+    - "prnt_confirm"
+    - "prnt_id"
+    properties:
+      prnt_id:
+        type: "integer"
+        format: "int32"
+        example: 2
+      prnt_confirm:
+        type: "integer"
+        format: "int32"
+        example: 1
+        description: "Value:\n * 0 - на рассмотрении\n * 1 - подтверждено\n * 2 -\
+          \ отклонено\n"
+  inline_response_200_19_cr_array:
+    required:
+    - "cr_class"
+    - "cr_first_child"
+    - "cr_id"
+    - "cr_last_child"
+    - "cr_second_child"
+    properties:
+      cr_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+      cr_second_child:
+        type: "string"
+        example: "Тарасов"
+      cr_first_child:
+        type: "string"
+        example: "Семен"
+      cr_last_child:
+        type: "string"
+        example: "Львович"
+      cr_second_teacher:
+        type: "string"
+        example: "Иванов"
+      cr_first_teacher:
+        type: "string"
+        example: "Иван"
+      cr_last_teacher:
+        type: "string"
+        example: "Иванович"
+      cr_class:
+        type: "string"
+        example: "7Б"
+    example:
+      cr_first_child: "Семен"
+      cr_last_teacher: "Иванович"
+      cr_id: 1
+      cr_class: "7Б"
+      cr_first_teacher: "Иван"
+      cr_second_child: "Тарасов"
+      cr_last_child: "Львович"
+      cr_second_teacher: "Иванов"
+  inline_response_200_19_payload:
+    required:
+    - "cr_array"
+    - "pepl_data"
+    - "prnt_data"
+    - "prnt_id"
+    properties:
+      prnt_id:
+        type: "integer"
+        format: "int32"
+        example: 2
+      cr_array:
+        type: "array"
+        items:
+          $ref: "#/definitions/inline_response_200_19_cr_array"
+      pepl_data:
+        $ref: "#/definitions/People"
+      prnt_data:
+        $ref: "#/definitions/Parent"
+    example:
+      prnt_id: 2
+      cr_array:
+      - cr_first_child: "Семен"
+        cr_last_teacher: "Иванович"
+        cr_id: 1
+        cr_class: "7Б"
+        cr_first_teacher: "Иван"
+        cr_second_child: "Тарасов"
+        cr_last_child: "Львович"
+        cr_second_teacher: "Иванов"
+      - cr_first_child: "Семен"
+        cr_last_teacher: "Иванович"
+        cr_id: 1
+        cr_class: "7Б"
+        cr_first_teacher: "Иван"
+        cr_second_child: "Тарасов"
+        cr_last_child: "Львович"
+        cr_second_teacher: "Иванов"
+      pepl_data:
+        pepl_first_name: "Иван"
+        pepl_gender: true
+        pepl_second_name: "Иванов"
+        pepl_last_name: "Иванович"
+        pepl_email: "admin@mail.ru"
+        pepl_phone: "9568734554"
+        pepl_birthday: "1977-01-19"
+      prnt_data:
+        prnt_flat: "45"
+        prnt_home: "17Б"
+        prnt_city: "Липецк"
+        prnt_street: "Ангарская"
+  inline_response_200_19:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+      payload:
+        type: "array"
+        items:
+          $ref: "#/definitions/inline_response_200_19_payload"
+    example:
+      payload:
+      - prnt_id: 2
+        cr_array:
+        - cr_first_child: "Семен"
+          cr_last_teacher: "Иванович"
+          cr_id: 1
+          cr_class: "7Б"
+          cr_first_teacher: "Иван"
+          cr_second_child: "Тарасов"
+          cr_last_child: "Львович"
+          cr_second_teacher: "Иванов"
+        - cr_first_child: "Семен"
+          cr_last_teacher: "Иванович"
+          cr_id: 1
+          cr_class: "7Б"
+          cr_first_teacher: "Иван"
+          cr_second_child: "Тарасов"
+          cr_last_child: "Львович"
+          cr_second_teacher: "Иванов"
+        pepl_data:
+          pepl_first_name: "Иван"
+          pepl_gender: true
+          pepl_second_name: "Иванов"
+          pepl_last_name: "Иванович"
+          pepl_email: "admin@mail.ru"
+          pepl_phone: "9568734554"
+          pepl_birthday: "1977-01-19"
+        prnt_data:
+          prnt_flat: "45"
+          prnt_home: "17Б"
+          prnt_city: "Липецк"
+          prnt_street: "Ангарская"
+      - prnt_id: 2
+        cr_array:
+        - cr_first_child: "Семен"
+          cr_last_teacher: "Иванович"
+          cr_id: 1
+          cr_class: "7Б"
+          cr_first_teacher: "Иван"
+          cr_second_child: "Тарасов"
+          cr_last_child: "Львович"
+          cr_second_teacher: "Иванов"
+        - cr_first_child: "Семен"
+          cr_last_teacher: "Иванович"
+          cr_id: 1
+          cr_class: "7Б"
+          cr_first_teacher: "Иван"
+          cr_second_child: "Тарасов"
+          cr_last_child: "Львович"
+          cr_second_teacher: "Иванов"
+        pepl_data:
+          pepl_first_name: "Иван"
+          pepl_gender: true
+          pepl_second_name: "Иванов"
+          pepl_last_name: "Иванович"
+          pepl_email: "admin@mail.ru"
+          pepl_phone: "9568734554"
+          pepl_birthday: "1977-01-19"
+        prnt_data:
+          prnt_flat: "45"
+          prnt_home: "17Б"
+          prnt_city: "Липецк"
+          prnt_street: "Ангарская"
+      status: "OK"
+  body_24:
+    required:
+    - "prnt_id"
+    properties:
+      prnt_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+  inline_response_200_20_payload:
+    required:
+    - "cr_child_fullname"
+    - "cr_class"
+    - "cr_id"
+    - "cr_teacher_fullname"
+    properties:
+      cr_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+      cr_child_fullname:
+        type: "string"
+        example: "OK"
+      cr_teacher_fullname:
+        type: "string"
+        example: "OK"
+      cr_class:
+        type: "string"
+        example: "OK"
+    example:
+      cr_id: 1
+      cr_teacher_fullname: "OK"
+      cr_class: "OK"
+      cr_child_fullname: "OK"
+  inline_response_200_20:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+      payload:
+        type: "array"
+        items:
+          $ref: "#/definitions/inline_response_200_20_payload"
+    example:
+      payload:
+      - cr_id: 1
+        cr_teacher_fullname: "OK"
+        cr_class: "OK"
+        cr_child_fullname: "OK"
+      - cr_id: 1
+        cr_teacher_fullname: "OK"
+        cr_class: "OK"
+        cr_child_fullname: "OK"
+      status: "OK"
+  inline_response_200_21_payload:
+    required:
+    - "emp_data"
+    - "pepl_data"
+    - "pepl_id"
+    - "pepl_login"
+    - "role_array"
+    properties:
+      pepl_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+      pepl_login:
+        type: "string"
+        example: "Admin"
+      role_array:
+        $ref: "#/definitions/Role"
+      pepl_data:
+        $ref: "#/definitions/People"
+      emp_data:
+        $ref: "#/definitions/Employee"
+      pst_arr:
+        type: "array"
+        items:
+          type: "string"
+          example: ""
+      class_arr:
+        type: "array"
+        items:
+          type: "string"
+          example: ""
+    example:
+      pepl_login: "Admin"
+      pst_arr:
+      - ""
+      - ""
+      emp_data:
+        emp_vk: "empadmin"
+        emp_skype: "emplAdmin"
+        emp_viber: "9568734554"
+        emp_hangouts: "admin@gmail.com"
+        emp_date_enrollment: "1997-11-22"
+        emp_discord: "emplAdmin#1232"
+      pepl_id: 1
+      class_arr:
+      - ""
+      - ""
+      role_array: ""
+      pepl_data:
+        pepl_first_name: "Иван"
+        pepl_gender: true
+        pepl_second_name: "Иванов"
+        pepl_last_name: "Иванович"
+        pepl_email: "admin@mail.ru"
+        pepl_phone: "9568734554"
+        pepl_birthday: "1977-01-19"
+  inline_response_200_21:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+      payload:
+        type: "array"
+        items:
+          $ref: "#/definitions/inline_response_200_21_payload"
+    example:
+      payload:
+      - pepl_login: "Admin"
+        pst_arr:
+        - ""
+        - ""
+        emp_data:
+          emp_vk: "empadmin"
+          emp_skype: "emplAdmin"
+          emp_viber: "9568734554"
+          emp_hangouts: "admin@gmail.com"
+          emp_date_enrollment: "1997-11-22"
+          emp_discord: "emplAdmin#1232"
+        pepl_id: 1
+        class_arr:
+        - ""
+        - ""
+        role_array: ""
+        pepl_data:
+          pepl_first_name: "Иван"
+          pepl_gender: true
+          pepl_second_name: "Иванов"
+          pepl_last_name: "Иванович"
+          pepl_email: "admin@mail.ru"
+          pepl_phone: "9568734554"
+          pepl_birthday: "1977-01-19"
+      - pepl_login: "Admin"
+        pst_arr:
+        - ""
+        - ""
+        emp_data:
+          emp_vk: "empadmin"
+          emp_skype: "emplAdmin"
+          emp_viber: "9568734554"
+          emp_hangouts: "admin@gmail.com"
+          emp_date_enrollment: "1997-11-22"
+          emp_discord: "emplAdmin#1232"
+        pepl_id: 1
+        class_arr:
+        - ""
+        - ""
+        role_array: ""
+        pepl_data:
+          pepl_first_name: "Иван"
+          pepl_gender: true
+          pepl_second_name: "Иванов"
+          pepl_last_name: "Иванович"
+          pepl_email: "admin@mail.ru"
+          pepl_phone: "9568734554"
+          pepl_birthday: "1977-01-19"
+      status: "OK"
+  inline_response_200_22_payload_emp_data:
+    required:
+    - "main_data"
+    properties:
+      main_data:
+        $ref: "#/definitions/Employee"
+      pst_arr:
+        type: "array"
+        items:
+          type: "string"
+          example: ""
+    example:
+      main_data:
+        emp_vk: "empadmin"
+        emp_skype: "emplAdmin"
+        emp_viber: "9568734554"
+        emp_hangouts: "admin@gmail.com"
+        emp_date_enrollment: "1997-11-22"
+        emp_discord: "emplAdmin#1232"
+      pst_arr:
+      - ""
+      - ""
+  inline_response_200_22_payload_prnt_data_prnt_childrens:
+    required:
+    - "pepl_data"
+    - "pepl_id"
+    - "pepl_login"
+    - "std_data"
+    properties:
+      pepl_id:
+        type: "integer"
+        format: "int32"
+        example: 3
+      pepl_login:
+        type: "string"
+        example: "Student"
+      pepl_data:
+        $ref: "#/definitions/People"
+      std_data:
+        $ref: "#/definitions/Student"
+    example:
+      pepl_login: "Student"
+      pepl_id: 3
+      pepl_data:
+        pepl_first_name: "Иван"
+        pepl_gender: true
+        pepl_second_name: "Иванов"
+        pepl_last_name: "Иванович"
+        pepl_email: "admin@mail.ru"
+        pepl_phone: "9568734554"
+        pepl_birthday: "1977-01-19"
+      std_data:
+        std_stayed_two_year: 0
+        std_class: "7Б"
+        std_date_issue: "2023-06-01"
+  inline_response_200_22_payload_prnt_data:
+    required:
+    - "main_data"
+    - "prnt_childrens"
+    properties:
+      main_data:
+        $ref: "#/definitions/Parent"
+      prnt_childrens:
+        type: "array"
+        items:
+          $ref: "#/definitions/inline_response_200_22_payload_prnt_data_prnt_childrens"
+    example:
+      main_data:
+        prnt_flat: "45"
+        prnt_home: "17Б"
+        prnt_city: "Липецк"
+        prnt_street: "Ангарская"
+      prnt_childrens:
+      - pepl_login: "Student"
+        pepl_id: 3
+        pepl_data:
+          pepl_first_name: "Иван"
+          pepl_gender: true
+          pepl_second_name: "Иванов"
+          pepl_last_name: "Иванович"
+          pepl_email: "admin@mail.ru"
+          pepl_phone: "9568734554"
+          pepl_birthday: "1977-01-19"
+        std_data:
+          std_stayed_two_year: 0
+          std_class: "7Б"
+          std_date_issue: "2023-06-01"
+      - pepl_login: "Student"
+        pepl_id: 3
+        pepl_data:
+          pepl_first_name: "Иван"
+          pepl_gender: true
+          pepl_second_name: "Иванов"
+          pepl_last_name: "Иванович"
+          pepl_email: "admin@mail.ru"
+          pepl_phone: "9568734554"
+          pepl_birthday: "1977-01-19"
+        std_data:
+          std_stayed_two_year: 0
+          std_class: "7Б"
+          std_date_issue: "2023-06-01"
+  inline_response_200_22_payload:
+    required:
+    - "pepl_data"
+    - "pepl_login"
+    - "role_array"
+    properties:
+      pepl_login:
+        type: "string"
+        example: "Admin"
+      role_array:
+        $ref: "#/definitions/Role"
+      pepl_data:
+        $ref: "#/definitions/People"
+      emp_data:
+        $ref: "#/definitions/inline_response_200_22_payload_emp_data"
+      prnt_data:
+        $ref: "#/definitions/inline_response_200_22_payload_prnt_data"
+      std_data:
+        $ref: "#/definitions/Student"
+    description: "Данные пользователя"
+    example:
+      pepl_login: "Admin"
+      emp_data:
+        main_data:
+          emp_vk: "empadmin"
+          emp_skype: "emplAdmin"
+          emp_viber: "9568734554"
+          emp_hangouts: "admin@gmail.com"
+          emp_date_enrollment: "1997-11-22"
+          emp_discord: "emplAdmin#1232"
+        pst_arr:
+        - ""
+        - ""
+      role_array: ""
+      pepl_data:
+        pepl_first_name: "Иван"
+        pepl_gender: true
+        pepl_second_name: "Иванов"
+        pepl_last_name: "Иванович"
+        pepl_email: "admin@mail.ru"
+        pepl_phone: "9568734554"
+        pepl_birthday: "1977-01-19"
+      prnt_data:
+        main_data:
+          prnt_flat: "45"
+          prnt_home: "17Б"
+          prnt_city: "Липецк"
+          prnt_street: "Ангарская"
+        prnt_childrens:
+        - pepl_login: "Student"
+          pepl_id: 3
+          pepl_data:
+            pepl_first_name: "Иван"
+            pepl_gender: true
+            pepl_second_name: "Иванов"
+            pepl_last_name: "Иванович"
+            pepl_email: "admin@mail.ru"
+            pepl_phone: "9568734554"
+            pepl_birthday: "1977-01-19"
+          std_data:
+            std_stayed_two_year: 0
+            std_class: "7Б"
+            std_date_issue: "2023-06-01"
+        - pepl_login: "Student"
+          pepl_id: 3
+          pepl_data:
+            pepl_first_name: "Иван"
+            pepl_gender: true
+            pepl_second_name: "Иванов"
+            pepl_last_name: "Иванович"
+            pepl_email: "admin@mail.ru"
+            pepl_phone: "9568734554"
+            pepl_birthday: "1977-01-19"
+          std_data:
+            std_stayed_two_year: 0
+            std_class: "7Б"
+            std_date_issue: "2023-06-01"
+      std_data:
+        std_stayed_two_year: 0
+        std_class: "7Б"
+        std_date_issue: "2023-06-01"
+  inline_response_200_22:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+      payload:
+        $ref: "#/definitions/inline_response_200_22_payload"
+    example:
+      payload:
+        pepl_login: "Admin"
+        emp_data:
+          main_data:
+            emp_vk: "empadmin"
+            emp_skype: "emplAdmin"
+            emp_viber: "9568734554"
+            emp_hangouts: "admin@gmail.com"
+            emp_date_enrollment: "1997-11-22"
+            emp_discord: "emplAdmin#1232"
+          pst_arr:
+          - ""
+          - ""
+        role_array: ""
+        pepl_data:
+          pepl_first_name: "Иван"
+          pepl_gender: true
+          pepl_second_name: "Иванов"
+          pepl_last_name: "Иванович"
+          pepl_email: "admin@mail.ru"
+          pepl_phone: "9568734554"
+          pepl_birthday: "1977-01-19"
+        prnt_data:
+          main_data:
+            prnt_flat: "45"
+            prnt_home: "17Б"
+            prnt_city: "Липецк"
+            prnt_street: "Ангарская"
+          prnt_childrens:
+          - pepl_login: "Student"
+            pepl_id: 3
+            pepl_data:
+              pepl_first_name: "Иван"
+              pepl_gender: true
+              pepl_second_name: "Иванов"
+              pepl_last_name: "Иванович"
+              pepl_email: "admin@mail.ru"
+              pepl_phone: "9568734554"
+              pepl_birthday: "1977-01-19"
+            std_data:
+              std_stayed_two_year: 0
+              std_class: "7Б"
+              std_date_issue: "2023-06-01"
+          - pepl_login: "Student"
+            pepl_id: 3
+            pepl_data:
+              pepl_first_name: "Иван"
+              pepl_gender: true
+              pepl_second_name: "Иванов"
+              pepl_last_name: "Иванович"
+              pepl_email: "admin@mail.ru"
+              pepl_phone: "9568734554"
+              pepl_birthday: "1977-01-19"
+            std_data:
+              std_stayed_two_year: 0
+              std_class: "7Б"
+              std_date_issue: "2023-06-01"
+        std_data:
+          std_stayed_two_year: 0
+          std_class: "7Б"
+          std_date_issue: "2023-06-01"
+      status: "OK"
+  inline_response_200_23_payload:
+    required:
+    - "pepl_first_name"
+    - "pepl_id"
+    - "pepl_last_name"
+    - "pepl_login"
+    - "pepl_second_name"
+    properties:
+      pepl_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+      pepl_login:
+        type: "string"
+        example: "Admin"
+      pepl_second_name:
+        type: "string"
+        example: "Иванов"
+      pepl_first_name:
+        type: "string"
+        example: "Иван"
+      pepl_last_name:
+        type: "string"
+        example: "Иванович"
+      pst_arr:
+        type: "array"
+        items:
+          type: "string"
+          example: ""
+    description: "Данные пользователя"
+    example:
+      pepl_first_name: "Иван"
+      pepl_login: "Admin"
+      pepl_second_name: "Иванов"
+      pst_arr:
+      - ""
+      - ""
+      pepl_id: 1
+      pepl_last_name: "Иванович"
+  inline_response_200_23:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+      payload:
+        type: "array"
+        items:
+          $ref: "#/definitions/inline_response_200_23_payload"
+    example:
+      payload:
+      - pepl_first_name: "Иван"
+        pepl_login: "Admin"
+        pepl_second_name: "Иванов"
+        pst_arr:
+        - ""
+        - ""
+        pepl_id: 1
+        pepl_last_name: "Иванович"
+      - pepl_first_name: "Иван"
+        pepl_login: "Admin"
+        pepl_second_name: "Иванов"
+        pst_arr:
+        - ""
+        - ""
+        pepl_id: 1
+        pepl_last_name: "Иванович"
+      status: "OK"
+  body_25:
+    type: "object"
+    required:
+    - "pepl_id"
+    properties:
+      pepl_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+  inline_response_200_24_payload:
+    required:
+    - "pepl_data"
+    - "role_array"
+    properties:
+      role_array:
+        $ref: "#/definitions/Role"
+      pepl_data:
+        $ref: "#/definitions/People"
+      emp_data:
+        $ref: "#/definitions/Employee"
+      prnt_data:
+        $ref: "#/definitions/Parent"
+      std_data:
+        $ref: "#/definitions/Student"
+    description: "Данные пользователя"
+    example:
+      emp_data:
+        emp_vk: "empadmin"
+        emp_skype: "emplAdmin"
+        emp_viber: "9568734554"
+        emp_hangouts: "admin@gmail.com"
+        emp_date_enrollment: "1997-11-22"
+        emp_discord: "emplAdmin#1232"
+      role_array: ""
+      pepl_data:
+        pepl_first_name: "Иван"
+        pepl_gender: true
+        pepl_second_name: "Иванов"
+        pepl_last_name: "Иванович"
+        pepl_email: "admin@mail.ru"
+        pepl_phone: "9568734554"
+        pepl_birthday: "1977-01-19"
+      prnt_data:
+        prnt_flat: "45"
+        prnt_home: "17Б"
+        prnt_city: "Липецк"
+        prnt_street: "Ангарская"
+      std_data:
+        std_stayed_two_year: 0
+        std_class: "7Б"
+        std_date_issue: "2023-06-01"
+  inline_response_200_24:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+      payload:
+        $ref: "#/definitions/inline_response_200_24_payload"
+    example:
+      payload:
+        emp_data:
+          emp_vk: "empadmin"
+          emp_skype: "emplAdmin"
+          emp_viber: "9568734554"
+          emp_hangouts: "admin@gmail.com"
+          emp_date_enrollment: "1997-11-22"
+          emp_discord: "emplAdmin#1232"
+        role_array: ""
+        pepl_data:
+          pepl_first_name: "Иван"
+          pepl_gender: true
+          pepl_second_name: "Иванов"
+          pepl_last_name: "Иванович"
+          pepl_email: "admin@mail.ru"
+          pepl_phone: "9568734554"
+          pepl_birthday: "1977-01-19"
+        prnt_data:
+          prnt_flat: "45"
+          prnt_home: "17Б"
+          prnt_city: "Липецк"
+          prnt_street: "Ангарская"
+        std_data:
+          std_stayed_two_year: 0
+          std_class: "7Б"
+          std_date_issue: "2023-06-01"
+      status: "OK"
+  body_26:
+    type: "object"
+    properties:
+      emp_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+      std_parallel:
+        type: "integer"
+        format: "int32"
+        example: 7
+      std_letter:
+        type: "string"
+        example: "Б"
+      prnt_id:
+        type: "integer"
+        format: "int32"
+        example: 2
+      pepl_login:
+        type: "string"
+        example: "Student"
+      pepl_second_name:
+        type: "string"
+        example: "Тарасов"
+      pepl_first_name:
+        type: "string"
+        example: "Семен"
+      pepl_last_name:
+        type: "string"
+        example: "Львович"
+      pepl_gender:
+        type: "boolean"
+        example: true
+      pepl_birthday:
+        type: "string"
+        format: "date"
+        example: "2005-05-12"
+      pepl_phone:
+        type: "string"
+        example: "6756776565"
+      pepl_email:
+        type: "string"
+        example: "stud@mail.ru"
+  inline_response_200_25:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+      payload:
+        type: "array"
+        items:
+          $ref: "#/definitions/inline_response_200_22_payload_prnt_data_prnt_childrens"
+    example:
+      payload:
+      - pepl_login: "Student"
+        pepl_id: 3
+        pepl_data:
+          pepl_first_name: "Иван"
+          pepl_gender: true
+          pepl_second_name: "Иванов"
+          pepl_last_name: "Иванович"
+          pepl_email: "admin@mail.ru"
+          pepl_phone: "9568734554"
+          pepl_birthday: "1977-01-19"
+        std_data:
+          std_stayed_two_year: 0
+          std_class: "7Б"
+          std_date_issue: "2023-06-01"
+      - pepl_login: "Student"
+        pepl_id: 3
+        pepl_data:
+          pepl_first_name: "Иван"
+          pepl_gender: true
+          pepl_second_name: "Иванов"
+          pepl_last_name: "Иванович"
+          pepl_email: "admin@mail.ru"
+          pepl_phone: "9568734554"
+          pepl_birthday: "1977-01-19"
+        std_data:
+          std_stayed_two_year: 0
+          std_class: "7Б"
+          std_date_issue: "2023-06-01"
+      status: "OK"
+  getEmployee_post_array:
+    properties:
+      pst_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+  body_27:
+    type: "object"
+    properties:
+      role_array:
+        $ref: "#/definitions/Role"
+      post_array:
+        type: "array"
+        items:
+          $ref: "#/definitions/getEmployee_post_array"
+      pepl_login:
+        type: "string"
+        example: "Admin"
+      pepl_second_name:
+        type: "string"
+        example: "Иванов"
+      pepl_first_name:
+        type: "string"
+        example: "Иван"
+      pepl_last_name:
+        type: "string"
+        example: "Иванович"
+      pepl_gender:
+        type: "boolean"
+        example: true
+      pepl_birthday:
+        type: "string"
+        format: "date"
+        example: "1977-01-19"
+      pepl_phone:
+        type: "string"
+        example: "9568734554"
+      pepl_email:
+        type: "string"
+        example: "admin@mail.ru"
+  inline_response_200_26_payload:
+    required:
+    - "emp_data"
+    - "pepl_data"
+    - "pepl_id"
+    - "pepl_login"
+    properties:
+      pepl_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+      pepl_login:
+        type: "string"
+        example: "Admin"
+      pepl_data:
+        $ref: "#/definitions/People"
+      emp_data:
+        $ref: "#/definitions/Employee"
+    example:
+      pepl_login: "Admin"
+      emp_data:
+        emp_vk: "empadmin"
+        emp_skype: "emplAdmin"
+        emp_viber: "9568734554"
+        emp_hangouts: "admin@gmail.com"
+        emp_date_enrollment: "1997-11-22"
+        emp_discord: "emplAdmin#1232"
+      pepl_id: 1
+      pepl_data:
+        pepl_first_name: "Иван"
+        pepl_gender: true
+        pepl_second_name: "Иванов"
+        pepl_last_name: "Иванович"
+        pepl_email: "admin@mail.ru"
+        pepl_phone: "9568734554"
+        pepl_birthday: "1977-01-19"
+  inline_response_200_26:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+      payload:
+        type: "array"
+        items:
+          $ref: "#/definitions/inline_response_200_26_payload"
+    example:
+      payload:
+      - pepl_login: "Admin"
+        emp_data:
+          emp_vk: "empadmin"
+          emp_skype: "emplAdmin"
+          emp_viber: "9568734554"
+          emp_hangouts: "admin@gmail.com"
+          emp_date_enrollment: "1997-11-22"
+          emp_discord: "emplAdmin#1232"
+        pepl_id: 1
+        pepl_data:
+          pepl_first_name: "Иван"
+          pepl_gender: true
+          pepl_second_name: "Иванов"
+          pepl_last_name: "Иванович"
+          pepl_email: "admin@mail.ru"
+          pepl_phone: "9568734554"
+          pepl_birthday: "1977-01-19"
+      - pepl_login: "Admin"
+        emp_data:
+          emp_vk: "empadmin"
+          emp_skype: "emplAdmin"
+          emp_viber: "9568734554"
+          emp_hangouts: "admin@gmail.com"
+          emp_date_enrollment: "1997-11-22"
+          emp_discord: "emplAdmin#1232"
+        pepl_id: 1
+        pepl_data:
+          pepl_first_name: "Иван"
+          pepl_gender: true
+          pepl_second_name: "Иванов"
+          pepl_last_name: "Иванович"
+          pepl_email: "admin@mail.ru"
+          pepl_phone: "9568734554"
+          pepl_birthday: "1977-01-19"
+      status: "OK"
+  body_28:
+    type: "object"
+    properties:
+      std_id:
+        type: "integer"
+        format: "int32"
+        example: 3
+      prnt_confirm:
+        type: "integer"
+        format: "int32"
+        example: 0
+        description: "Value:\n * 0 - на рассмотрении\n * 1 - подтверждено\n * 2 -\
+          \ отклонено\n"
+      pepl_login:
+        type: "string"
+        example: "Parent"
+      pepl_second_name:
+        type: "string"
+        example: "Смирнова"
+      pepl_first_name:
+        type: "string"
+        example: "Ольга"
+      pepl_last_name:
+        type: "string"
+        example: "Викторовна"
+      pepl_gender:
+        type: "boolean"
+        example: false
+      pepl_birthday:
+        type: "string"
+        format: "date"
+        example: "1990-02-20"
+      pepl_phone:
+        type: "string"
+        example: "5345345543"
+      pepl_email:
+        type: "string"
+        example: "parent@mail.ru"
+  inline_response_200_27_payload:
+    required:
+    - "pepl_data"
+    - "pepl_id"
+    - "pepl_login"
+    - "prnt_data"
+    properties:
+      pepl_id:
+        type: "integer"
+        format: "int32"
+        example: 2
+      pepl_login:
+        type: "string"
+        example: "Parent"
+      pepl_data:
+        $ref: "#/definitions/People"
+      prnt_data:
+        $ref: "#/definitions/Parent"
+    example:
+      pepl_login: "Parent"
+      pepl_id: 2
+      pepl_data:
+        pepl_first_name: "Иван"
+        pepl_gender: true
+        pepl_second_name: "Иванов"
+        pepl_last_name: "Иванович"
+        pepl_email: "admin@mail.ru"
+        pepl_phone: "9568734554"
+        pepl_birthday: "1977-01-19"
+      prnt_data:
+        prnt_flat: "45"
+        prnt_home: "17Б"
+        prnt_city: "Липецк"
+        prnt_street: "Ангарская"
+  inline_response_200_27:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+      payload:
+        type: "array"
+        items:
+          $ref: "#/definitions/inline_response_200_27_payload"
+    example:
+      payload:
+      - pepl_login: "Parent"
+        pepl_id: 2
+        pepl_data:
+          pepl_first_name: "Иван"
+          pepl_gender: true
+          pepl_second_name: "Иванов"
+          pepl_last_name: "Иванович"
+          pepl_email: "admin@mail.ru"
+          pepl_phone: "9568734554"
+          pepl_birthday: "1977-01-19"
+        prnt_data:
+          prnt_flat: "45"
+          prnt_home: "17Б"
+          prnt_city: "Липецк"
+          prnt_street: "Ангарская"
+      - pepl_login: "Parent"
+        pepl_id: 2
+        pepl_data:
+          pepl_first_name: "Иван"
+          pepl_gender: true
+          pepl_second_name: "Иванов"
+          pepl_last_name: "Иванович"
+          pepl_email: "admin@mail.ru"
+          pepl_phone: "9568734554"
+          pepl_birthday: "1977-01-19"
+        prnt_data:
+          prnt_flat: "45"
+          prnt_home: "17Б"
+          prnt_city: "Липецк"
+          prnt_street: "Ангарская"
+      status: "OK"
+  body_29:
+    type: "object"
+    required:
+    - "prnt_id"
+    - "std_id"
+    properties:
+      std_id:
+        type: "integer"
+        format: "int32"
+        example: 3
+      prnt_id:
+        type: "integer"
+        format: "int32"
+        example: 2
+  inline_response_200_28:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+      role_array:
+        $ref: "#/definitions/Role"
+    example:
+      role_array: ""
+      status: "OK"
+  body_30:
+    type: "object"
+    required:
+    - "pepl_id"
+    properties:
+      pepl_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+  inline_response_200_29:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+      payload:
+        $ref: "#/definitions/Role"
+    example:
+      payload: ""
+      status: "OK"
+  body_31:
+    type: "object"
+    required:
+    - "pepl_id"
+    - "role_array"
+    properties:
+      pepl_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+      role_array:
+        $ref: "#/definitions/Role"
+  body_32:
+    type: "object"
+    required:
+    - "pepl_id"
+    - "role_array"
+    properties:
+      pepl_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+      role_array:
+        $ref: "#/definitions/Role"
+  body_33:
+    type: "object"
+    required:
+    - "emp_id"
+    properties:
+      emp_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+  inline_response_200_30:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+      payload:
+        type: "array"
+        items:
+          $ref: "#/definitions/Post"
+    example:
+      payload:
+      - pst_id: 1
+        pst_name: "Педагог-психолог"
+        pst_description: "pst_description"
+      - pst_id: 1
+        pst_name: "Педагог-психолог"
+        pst_description: "pst_description"
+      status: "OK"
+  body_34:
+    type: "object"
+    required:
+    - "emp_id"
+    - "pst_array"
+    properties:
+      emp_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+      pst_array:
+        type: "array"
+        items:
+          $ref: "#/definitions/signup_emp_data_pst_arr"
+  body_35:
+    type: "object"
+    required:
+    - "emp_id"
+    - "pst_array"
+    properties:
+      emp_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+      pst_array:
+        type: "array"
+        items:
+          $ref: "#/definitions/signup_emp_data_pst_arr"
+  body_36:
+    required:
+    - "pst_name"
+    properties:
+      pst_name:
+        type: "string"
+        example: "Педагог-психолог"
+      pst_description:
+        type: "string"
