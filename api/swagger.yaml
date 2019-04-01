@@ -4,7 +4,7 @@ info:
   description: "Это API (swagger 2.0) системы автоматизации психолого-педагогическ\
     ого сопровождения субъектов образовательной деятельности для школы №18."
   version: "1.0.7"
-  title: "PsychoSys18"
+  title: "PsychoSys18 "
   contact:
     email: "antony.nor@yandex.ru"
 host: "api-ps18.herokuapp.com"
