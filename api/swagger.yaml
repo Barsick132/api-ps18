@@ -3,7 +3,7 @@ swagger: "2.0"
 info:
   description: "Это API (swagger 2.0) системы автоматизации психолого-педагогическ\
     ого сопровождения субъектов образовательной деятельности для школы №18."
-  version: "1.0.8"
+  version: "1.0.9"
   title: "PsychoSys18"
   contact:
     email: "antony.nor@yandex.ru"
@@ -1787,7 +1787,7 @@ paths:
     post:
       tags:
       - "posts"
-      summary: "Получить список должностей"
+      summary: "Получить список должностей (Admin)"
       operationId: "getAllPosts"
       produces:
       - "application/json"
@@ -1815,12 +1815,12 @@ paths:
       - JWT: []
       x-swagger-router-controller: "Posts"
     x-swagger-router-controller: "posts"
-  /addPost:
+  /addPosts:
     post:
       tags:
       - "posts"
-      summary: "Добавить должности"
-      operationId: "addPost"
+      summary: "Добавить должности (Admin)"
+      operationId: "addPosts"
       consumes:
       - "application/json"
       produces:
@@ -1853,12 +1853,12 @@ paths:
       - JWT: []
       x-swagger-router-controller: "Posts"
     x-swagger-router-controller: "posts"
-  /delPost:
+  /delPosts:
     post:
       tags:
       - "posts"
-      summary: "Удалить должности"
-      operationId: "delPost"
+      summary: "Удалить должности (Admin)"
+      operationId: "delPosts"
       consumes:
       - "application/json"
       produces:

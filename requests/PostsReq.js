@@ -20,3 +20,15 @@ exports.getSeveralEmpPosts = function (knex, pepl_id_arr) {
         .whereIn('ep.' + T.EMP_PST.EMP_ID, pepl_id_arr)
         .andWhereRaw('?? = ??', ['ep.' + T.EMP_PST.PST_ID, 'pt.' + T.POSTS.PST_ID]);
 };
+
+exports.getAllPosts = function (knex) {
+    return knex.select().from(T.POSTS.NAME);
+};
+
+exports.insertPosts = function (knex, pst_arr) {
+    return knex(T.POSTS.NAME).insert(pst_arr).returning(T.POSTS.PST_ID);
+};
+
+exports.delPosts = function (knex, pst_id_arr) {
+    return knex(T.POSTS.NAME).whereIn(T.POSTS.PST_ID, pst_id_arr).del();
+};
