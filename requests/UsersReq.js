@@ -1,4 +1,4 @@
-const FILE = './requests/UserReq.js';
+const FILE = './requests/UsersReq.js';
 const ROLE = require('../constants').ROLE;
 const T = require('../constants').TABLES;
 
@@ -126,7 +126,6 @@ exports.getChildrensPepl = (knex, pepl_id) => {
                 reject(err);
             })
     })
-
 };
 
 exports.getStudentByID = (knex, pepl_id) => {

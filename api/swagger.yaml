@@ -3,7 +3,7 @@ swagger: "2.0"
 info:
   description: "Это API (swagger 2.0) системы автоматизации психолого-педагогическ\
     ого сопровождения субъектов образовательной деятельности для школы №18."
-  version: "1.0.9"
+  version: "1.0.10"
   title: "PsychoSys18"
   contact:
     email: "antony.nor@yandex.ru"
@@ -524,12 +524,12 @@ paths:
       - JWT: []
       x-swagger-router-controller: "Tests"
     x-swagger-router-controller: "tests"
-  /getUserGraphic:
+  /getEmpGraphic:
     post:
       tags:
       - "records"
-      summary: "Получение график работы пользователя с записями"
-      operationId: "getUserGraphic"
+      summary: "Получение графика работы сотрудника с записями (ALL)"
+      operationId: "getEmpGraphic"
       consumes:
       - "application/json"
       produces:
@@ -537,13 +537,16 @@ paths:
       parameters:
       - in: "body"
         name: "body"
-        description: "ID сотрудника"
+        description: "1. ID сотрудника (**не указ.**, если запрашивается **личный\
+          \ график**);\n2. Указатель истории (**не указ.**, если запрашивает **кли\
+          ент**);\n3. *Фиксированный* период (*неделя*/*месяц*);\n4. *Заданный* пе\
+          риод (**не указ.**, если запрашивает **клиент**)."
         required: true
         schema:
           $ref: "#/definitions/body_11"
       responses:
         200:
-          description: "Полный график работы, включая записи"
+          description: "График работы за период, включая записи"
           schema:
             type: "object"
             required:
@@ -564,12 +567,12 @@ paths:
       - JWT: []
       x-swagger-router-controller: "Records"
     x-swagger-router-controller: "records"
-  /setUserGraphic:
+  /setPersonalGraphic:
     post:
       tags:
       - "records"
-      summary: "Установка график работы пользователя"
-      operationId: "setUserGraphic"
+      summary: "Установка личного графика работы (Employee)"
+      operationId: "setPersonalGraphic"
       consumes:
       - "application/json"
       produces:
@@ -577,8 +580,9 @@ paths:
       parameters:
       - in: "body"
         name: "body"
-        description: "ID сотрудника, массивы удаляемых и/или добавляемых и/или обн\
-          овляемых рабочих дней"
+        description: "**Обязательно** указать *хотя бы один* массив.\n1. Массив **у\
+          даляемых** рабочих дней;\n2. Массив **добавляемых** рабочих дней;\n3. Ма\
+          ссив **обновляемых** рабочих дней."
         required: true
         schema:
           $ref: "#/definitions/body_12"
@@ -2124,11 +2128,21 @@ definitions:
       rec_not_come:
         type: "boolean"
         example: false
+      cont_name:
+        type: "string"
+        example: "skype"
+        description: "Value:\n  - phone\n  - skype\n  - viber\n  - discord\n  - hangouts\n\
+          \  - vk\n"
+      cont_value:
+        type: "string"
+        example: "student132"
     example:
       rec_time: "11:00:00"
       rec_online: true
       pepl_id: 3
+      cont_value: "student132"
       rec_not_come: false
+      cont_name: "skype"
   body:
     required:
     - "file_id"
@@ -2597,13 +2611,26 @@ definitions:
         example: 1
   body_11:
     type: "object"
-    required:
-    - "emp_id"
     properties:
       emp_id:
         type: "integer"
         format: "int32"
         example: 1
+      wd_history:
+        type: "boolean"
+        example: true
+      wd_period_fix:
+        type: "string"
+        example: "week"
+        description: "Value:\n  - week\n  - month\n"
+      wd_period_begin:
+        type: "string"
+        format: "date"
+        example: "2019-04-01"
+      wd_period_end:
+        type: "string"
+        format: "date"
+        example: "2019-04-07"
   inline_response_200_10_rec_array:
     required:
     - "rec_data"
@@ -2621,7 +2648,9 @@ definitions:
         rec_time: "11:00:00"
         rec_online: true
         pepl_id: 3
+        cont_value: "student132"
         rec_not_come: false
+        cont_name: "skype"
   inline_response_200_10_payload:
     required:
     - "wd_data"
@@ -2651,13 +2680,17 @@ definitions:
           rec_time: "11:00:00"
           rec_online: true
           pepl_id: 3
+          cont_value: "student132"
           rec_not_come: false
+          cont_name: "skype"
       - rec_id: 7
         rec_data:
           rec_time: "11:00:00"
           rec_online: true
           pepl_id: 3
+          cont_value: "student132"
           rec_not_come: false
+          cont_name: "skype"
       wd_data:
         wd_time_begin: "8:00:00"
         wd_break_begin: "13:00:00"
@@ -2685,13 +2718,17 @@ definitions:
             rec_time: "11:00:00"
             rec_online: true
             pepl_id: 3
+            cont_value: "student132"
             rec_not_come: false
+            cont_name: "skype"
         - rec_id: 7
           rec_data:
             rec_time: "11:00:00"
             rec_online: true
             pepl_id: 3
+            cont_value: "student132"
             rec_not_come: false
+            cont_name: "skype"
         wd_data:
           wd_time_begin: "8:00:00"
           wd_break_begin: "13:00:00"
@@ -2706,13 +2743,17 @@ definitions:
             rec_time: "11:00:00"
             rec_online: true
             pepl_id: 3
+            cont_value: "student132"
             rec_not_come: false
+            cont_name: "skype"
         - rec_id: 7
           rec_data:
             rec_time: "11:00:00"
             rec_online: true
             pepl_id: 3
+            cont_value: "student132"
             rec_not_come: false
+            cont_name: "skype"
         wd_data:
           wd_time_begin: "8:00:00"
           wd_break_begin: "13:00:00"
@@ -2720,7 +2761,7 @@ definitions:
           wd_time_end: "18:30:00"
           wd_duration: 30
       status: "OK"
-  setUserGraphic_wd_arr_del:
+  setPersonalGraphic_wd_arr_del:
     required:
     - "wd_id"
     properties:
@@ -2728,7 +2769,7 @@ definitions:
         type: "integer"
         format: "int32"
         example: 1
-  setUserGraphic_wd_arr_add:
+  setPersonalGraphic_wd_arr_add:
     required:
     - "wd_data"
     - "wd_date"
@@ -2739,7 +2780,7 @@ definitions:
         example: "2019-03-03"
       wd_data:
         $ref: "#/definitions/WorkDay"
-  setUserGraphic_wd_arr_upd:
+  setPersonalGraphic_wd_arr_upd:
     required:
     - "wd_id"
     properties:
@@ -2754,10 +2795,10 @@ definitions:
         type: "string"
         example: "18:30:00"
       wd_break_begin:
-        type: "string"
+        type: ["string","null"]
         example: "13:00:00"
       wd_break_end:
-        type: "string"
+        type: ["string","null"]
         example: "14:00:00"
       wd_duration:
         type: "integer"
@@ -2765,85 +2806,97 @@ definitions:
         example: 30
   body_12:
     type: "object"
-    required:
-    - "emp_id"
     properties:
-      emp_id:
-        type: "integer"
-        format: "int32"
-        example: 1
       wd_arr_del:
         type: "array"
         items:
-          $ref: "#/definitions/setUserGraphic_wd_arr_del"
+          $ref: "#/definitions/setPersonalGraphic_wd_arr_del"
       wd_arr_add:
         type: "array"
         items:
-          $ref: "#/definitions/setUserGraphic_wd_arr_add"
+          $ref: "#/definitions/setPersonalGraphic_wd_arr_add"
       wd_arr_upd:
         type: "array"
         items:
-          $ref: "#/definitions/setUserGraphic_wd_arr_upd"
-  inline_response_200_11_payload_wd_arr_del:
+          $ref: "#/definitions/setPersonalGraphic_wd_arr_upd"
+  inline_response_200_11_payload_wd_del_res:
     required:
-    - "wd_id"
-    - "wd_status"
+    - "status"
     properties:
-      wd_id:
-        type: "integer"
-        format: "int32"
-        example: 1
-      wd_status:
+      status:
         type: "string"
         example: "OK"
+      wd_id_del:
+        type: "array"
+        items:
+          type: "integer"
+          format: "int32"
+          example: ""
     example:
-      wd_id: 1
-      wd_status: "OK"
-  inline_response_200_11_payload_wd_arr_add:
+      wd_id_del:
+      - ""
+      - ""
+      status: "OK"
+  inline_response_200_11_payload_wd_upd_res:
     required:
-    - "wd_date"
-    - "wd_status"
+    - "status"
     properties:
-      wd_date:
-        type: "string"
-        format: "date"
-        example: "2019-03-03"
-      wd_status:
+      status:
         type: "string"
         example: "OK"
+      wd_id_upd:
+        type: "array"
+        items:
+          type: "integer"
+          format: "int32"
+          example: ""
     example:
-      wd_date: "2019-03-03"
-      wd_status: "OK"
+      wd_id_upd:
+      - ""
+      - ""
+      status: "OK"
+  inline_response_200_11_payload_wd_add_res:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+      wd_date_add:
+        type: "array"
+        items:
+          type: "string"
+          format: "date"
+          example: ""
+    example:
+      wd_date_add:
+      - ""
+      - ""
+      status: "OK"
   inline_response_200_11_payload:
     properties:
-      wd_arr_del:
-        type: "array"
-        items:
-          $ref: "#/definitions/inline_response_200_11_payload_wd_arr_del"
-      wd_arr_add:
-        type: "array"
-        items:
-          $ref: "#/definitions/inline_response_200_11_payload_wd_arr_add"
-      wd_arr_upd:
-        type: "array"
-        items:
-          $ref: "#/definitions/inline_response_200_11_payload_wd_arr_del"
+      wd_del_res:
+        $ref: "#/definitions/inline_response_200_11_payload_wd_del_res"
+      wd_upd_res:
+        $ref: "#/definitions/inline_response_200_11_payload_wd_upd_res"
+      wd_add_res:
+        $ref: "#/definitions/inline_response_200_11_payload_wd_add_res"
     example:
-      wd_arr_add:
-      - wd_date: "2019-03-03"
-        wd_status: "OK"
-      - wd_date: "2019-03-03"
-        wd_status: "OK"
-      wd_arr_del:
-      - wd_id: 1
-        wd_status: "OK"
-      - wd_id: 1
-        wd_status: "OK"
-      wd_arr_upd:
-      - wd_id: 1
-        wd_status: "OK"
-      - wd_id: 1
-        wd_status: "OK"
+      wd_del_res:
+        wd_id_del:
+        - ""
+        - ""
+        status: "OK"
+      wd_upd_res:
+        wd_id_upd:
+        - ""
+        - ""
+        status: "OK"
+      wd_add_res:
+        wd_date_add:
+        - ""
+        - ""
+        status: "OK"
   inline_response_200_11:
     required:
     - "status"
@@ -2855,21 +2908,21 @@ definitions:
         $ref: "#/definitions/inline_response_200_11_payload"
     example:
       payload:
-        wd_arr_add:
-        - wd_date: "2019-03-03"
-          wd_status: "OK"
-        - wd_date: "2019-03-03"
-          wd_status: "OK"
-        wd_arr_del:
-        - wd_id: 1
-          wd_status: "OK"
-        - wd_id: 1
-          wd_status: "OK"
-        wd_arr_upd:
-        - wd_id: 1
-          wd_status: "OK"
-        - wd_id: 1
-          wd_status: "OK"
+        wd_del_res:
+          wd_id_del:
+          - ""
+          - ""
+          status: "OK"
+        wd_upd_res:
+          wd_id_upd:
+          - ""
+          - ""
+          status: "OK"
+        wd_add_res:
+          wd_date_add:
+          - ""
+          - ""
+          status: "OK"
       status: "OK"
   body_13:
     type: "object"
