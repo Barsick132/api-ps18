@@ -2622,7 +2622,7 @@ definitions:
       wd_period_fix:
         type: "string"
         example: "week"
-        description: "Value:\n  - week\n  - month\n"
+        description: "Value:\n  - week\n  - month\n  - 3month\n  - all\n"
       wd_period_begin:
         type: "string"
         format: "date"

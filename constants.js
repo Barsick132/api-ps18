@@ -7,6 +7,13 @@ module.exports.ROLE = {
     PSYCHOLOGIST: 'Psychologist'
 };
 
+module.exports.PERIOD_FIX = {
+    WEEK: 'week',
+    MONTH: 'month',
+    THREE_MONTH: '3month',
+    ALL: 'all'
+};
+
 module.exports.TABLES = {
     PEOPLE: {
         NAME: 'people',
