@@ -182,10 +182,10 @@ exports.login = function (req) {
                 pepl_last_name: req.user.pepl_last_name,
             };
 
-            if(match[2]){
+            if (match[2]) {
                 data.token = 'JWT ' + jwt.sign({pepl_id: req.user.pepl_id}, config.jwt.secret, {expiresIn: config.jwt.expiresIn});
             }
-            if(match[3]) {
+            if (match[3]) {
                 data.token = req.headers.authorization;
             }
 
@@ -258,6 +258,7 @@ exports.signup = function (req, body) {
             let result = {};
 
             const STATUS = {
+                NOT_ADDED_POSTS: 'NOT_ADDED_POSTS',
                 NOT_PEPL_DATA: 'NOT_PEPL_DATA',
                 NOT_DETERMINE_ROLE: 'NOT_DETERMINE_ROLE',
                 NOT_ACCESS: 'NOT_ACCESS',
@@ -540,7 +541,7 @@ exports.signup = function (req, body) {
                                             case ROLE.EMPLOYEE: {
                                                 // Добавляем должности, если они были указаны
                                                 if (body.emp_data.pst_arr.length !== 0) {
-                                                    return PostsReq.insertEmpPosts(knex, trx, payload.pepl_id, body.emp_data.pst_arr);
+                                                    return PostsReq.insertEmpPostsTrx(knex, trx, payload.pepl_id, body.emp_data.pst_arr);
                                                 } else {
                                                     console.log('Not Found Posts');
                                                     return undefined;
@@ -559,8 +560,11 @@ exports.signup = function (req, body) {
                                 .then((res) => {
                                     switch (globalData.ROLE) {
                                         case ROLE.EMPLOYEE: {
-                                            if (res === undefined || res.length === 0)
+                                            if (res === undefined || res.length === 0) {
                                                 console.log('Not Added Posts');
+                                                throw new Error(STATUS.NOT_ADDED_POSTS);
+                                            }
+
                                             console.log('Successful Registered Employee');
                                             result = {
                                                 status: STATUS.OK,
@@ -593,7 +597,8 @@ exports.signup = function (req, body) {
                                         err.message === STATUS.NOT_ADDED_ROLES_USER ||
                                         err.message === STATUS.NOT_ADDED_ADDITIONAL_DATA ||
                                         err.message === STATUS.NOT_REG_PEOPLE ||
-                                        err.message === STATUS.CLASS_NOT_PARSED)
+                                        err.message === STATUS.CLASS_NOT_PARSED ||
+                                        err.message === STATUS.NOT_ADDED_POSTS)
                                         result = {status: err.message};
                                     else
                                         result = {status: STATUS.UNKNOWN_ERROR};

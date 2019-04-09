@@ -1,11 +1,17 @@
 'use strict';
 
-var utils = require('../utils/writer.js');
-var Posts = require('../service/PostsService');
+const utils = require('../utils/writer.js');
+const Posts = require('../service/PostsService');
 
 module.exports.addEmpPosts = function addEmpPosts(req, res, next) {
-    var body = req.swagger.params['body'].value;
-    Posts.addEmpPosts(body)
+    if (req.error === 'ERROR_AUTH' ||
+        req.error === 'JWT_EXPIRED') {
+        utils.writeJson(res, {status: req.error});
+        return;
+    }
+
+    const body = req.swagger.params['body'].value;
+    Posts.addEmpPosts(req, body)
         .then(function (response) {
             utils.writeJson(res, response);
         })
@@ -32,8 +38,14 @@ module.exports.addPosts = function addPost(req, res, next) {
 };
 
 module.exports.delEmpPosts = function delEmpPosts(req, res, next) {
-    var body = req.swagger.params['body'].value;
-    Posts.delEmpPosts(body)
+    if (req.error === 'ERROR_AUTH' ||
+        req.error === 'JWT_EXPIRED') {
+        utils.writeJson(res, {status: req.error});
+        return;
+    }
+
+    const body = req.swagger.params['body'].value;
+    Posts.delEmpPosts(req, body)
         .then(function (response) {
             utils.writeJson(res, response);
         })
@@ -76,8 +88,14 @@ module.exports.getAllPosts = function getAllPosts(req, res, next) {
 };
 
 module.exports.getEmpPosts = function getEmpPosts(req, res, next) {
-    var body = req.swagger.params['body'].value;
-    Posts.getEmpPosts(body)
+    if (req.error === 'ERROR_AUTH' ||
+        req.error === 'JWT_EXPIRED') {
+        utils.writeJson(res, {status: req.error});
+        return;
+    }
+
+    const body = req.swagger.params['body'].value;
+    Posts.getEmpPosts(req, body)
         .then(function (response) {
             utils.writeJson(res, response);
         })

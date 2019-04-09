@@ -3,7 +3,7 @@ swagger: "2.0"
 info:
   description: "Это API (swagger 2.0) системы автоматизации психолого-педагогическ\
     ого сопровождения субъектов образовательной деятельности для школы №18."
-  version: "1.0.10"
+  version: "1.0.11"
   title: "PsychoSys18"
   contact:
     email: "antony.nor@yandex.ru"
@@ -1679,7 +1679,7 @@ paths:
     post:
       tags:
       - "posts"
-      summary: "Получить список должностей сотрудника"
+      summary: "Получить список должностей сотрудника (Admin)"
       operationId: "getEmpPosts"
       consumes:
       - "application/json"
@@ -1694,7 +1694,7 @@ paths:
           $ref: "#/definitions/body_34"
       responses:
         200:
-          description: "Список должностей сотрудника"
+          description: "Статус и список должностей сотрудника"
           schema:
             type: "object"
             required:
@@ -1719,7 +1719,7 @@ paths:
     post:
       tags:
       - "posts"
-      summary: "Добавить должности сотруднику"
+      summary: "Добавить должности сотруднику (Admin)"
       operationId: "addEmpPosts"
       consumes:
       - "application/json"
@@ -1734,7 +1734,7 @@ paths:
           $ref: "#/definitions/body_35"
       responses:
         200:
-          description: "Статус выполнения запроса"
+          description: "Статус выполнения запроса и id добавленных должностей."
           schema:
             type: "object"
             required:
@@ -1743,6 +1743,12 @@ paths:
               status:
                 type: "string"
                 example: "OK"
+              payload:
+                type: "array"
+                items:
+                  type: "integer"
+                  format: "int32"
+                  example: [1,2]
         400:
           description: "Invalid data"
         default:
@@ -1755,7 +1761,7 @@ paths:
     post:
       tags:
       - "posts"
-      summary: "Удалить должности сотрудника"
+      summary: "Удалить должности сотрудника (Admin)"
       operationId: "delEmpPosts"
       consumes:
       - "application/json"
@@ -1770,7 +1776,7 @@ paths:
           $ref: "#/definitions/body_36"
       responses:
         200:
-          description: "Статус выполнения операции."
+          description: "Статус выполнения операции и id удаленных должностей."
           schema:
             type: "object"
             required:
@@ -1779,6 +1785,12 @@ paths:
               status:
                 type: "string"
                 example: "OK"
+              payload:
+                type: "array"
+                items:
+                  type: "integer"
+                  format: "int32"
+                  example: [1,2]
         400:
           description: "Invalid data"
         default:
@@ -3554,6 +3566,8 @@ definitions:
         format: "int32"
         example: 1
   signup_emp_data:
+    required:
+    - "pst_arr"
     properties:
       pst_arr:
         type: "array"
@@ -5104,6 +5118,24 @@ definitions:
         type: "array"
         items:
           $ref: "#/definitions/signup_emp_data_pst_arr"
+  inline_response_200_32:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+      payload:
+        type: "array"
+        items:
+          type: "integer"
+          format: "int32"
+          example: ""
+    example:
+      payload:
+      - ""
+      - ""
+      status: "OK"
   body_36:
     type: "object"
     required:

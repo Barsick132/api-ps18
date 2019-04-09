@@ -21,6 +21,7 @@ exports.getClassTeacher = function (req, body) {
 
     return new Promise(function (resolve, reject) {
         const STATUS = {
+            NOT_ACCESS_TO_CHILD: 'NOT_ACCESS_TO_CHILD',
             NOT_FOUND_TEACHER_POSTS: 'NOT_FOUND_TEACHER_POSTS',
             NOT_FOUND_TEACHER_ROLES: 'NOT_FOUND_TEACHER_ROLES',
             NOT_FOUND_CLASS_TEACHER: 'NOT_FOUND_CLASS_TEACHER',
@@ -60,7 +61,19 @@ exports.getClassTeacher = function (req, body) {
             return;
         }
 
-        UsersReq.getClassTeacher(knex, body.std_id)
+        const getChildrenParent = function () {
+            if (currentRole === ROLE.PARENT) {
+                return UsersReq.checkChildrensId(knex, req.user.pepl_id, body.std_id);
+            }
+            return new Promise(resolve => resolve(undefined));
+        };
+
+        getChildrenParent()
+            .then((res) => {
+                if (res !== undefined && res.length !== 1)
+                    throw new Error(STATUS.NOT_ACCESS_TO_CHILD);
+                return UsersReq.getClassTeacher(knex, body.std_id)
+            })
             .then((res) => {
                 if (res.length !== 1) {
                     throw new Error(STATUS.NOT_FOUND_CLASS_TEACHER);
@@ -167,7 +180,8 @@ exports.getClassTeacher = function (req, body) {
                 console.error(err);
                 if (err.message === STATUS.NOT_FOUND_CLASS_TEACHER ||
                     err.message === STATUS.NOT_FOUND_TEACHER_ROLES ||
-                    err.message === STATUS.NOT_FOUND_TEACHER_POSTS) {
+                    err.message === STATUS.NOT_FOUND_TEACHER_POSTS ||
+                    err.message === STATUS.NOT_ACCESS_TO_CHILD) {
                     result = {status: err.message}
                 } else {
                     result = {status: STATUS.UNKNOWN_ERROR}
@@ -498,6 +512,7 @@ exports.getPersonsToBeRec = function (req) {
 
     return new Promise(function (resolve, reject) {
         const STATUS = {
+            POSTS_EMP_NOT_FOUND: 'POSTS_EMP_NOT_FOUND',
             UNKNOWN_ERROR: 'UNKNOWN_ERROR',
             NOT_FOUND_USER_TO_BE_REC: 'NOT_FOUND_USER_TO_BE_REC',
             NOT_AUTH: 'NOT_AUTH',
@@ -528,26 +543,24 @@ exports.getPersonsToBeRec = function (req) {
             })
             .then((res) => {
                 if (res.length === 0) {
-                    console.log('Posts Emp Not Found');
-                } else {
-                    console.log('Posts Emp Found');
-
-                    payload = payload.map(item => {
-                        res.forEach(i => {
-                            if (i.emp_id === item.pepl_id) {
-                                if (item.pst_arr === undefined) item.pst_arr = [];
-                                item.pst_arr.push(i.pst_name);
-                            }
-                        });
-                        return item;
-                    });
+                    throw new Error('POSTS_EMP_NOT_FOUND');
                 }
+                console.log('Posts Emp Found');
+
+                payload = payload.map(item => {
+                    res.forEach(i => {
+                        if (i.emp_id === item.pepl_id) {
+                            if (item.pst_arr === undefined) item.pst_arr = [];
+                            item.pst_arr.push(i.pst_name);
+                        }
+                    });
+                    return item;
+                });
 
                 result = {
                     status: STATUS.OK,
                     payload: payload
                 };
-
 
                 resolve(result);
             })

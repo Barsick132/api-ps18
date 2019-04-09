@@ -128,6 +128,13 @@ exports.getChildrensPepl = (knex, pepl_id) => {
     })
 };
 
+exports.checkChildrensId = (knex, prnt_id, std_id) => {
+    return knex(T.STD_PRNT.NAME)
+        .select()
+        .where(T.STD_PRNT.STD_ID, std_id)
+        .andWhere(T.STD_PRNT.PRNT_ID, prnt_id);
+};
+
 exports.getStudentByID = (knex, pepl_id) => {
     return knex.select().from(T.STUDENTS.NAME).where(T.STUDENTS.STD_ID, pepl_id);
 };
