@@ -136,6 +136,97 @@ exports.addPosts = function (req, body) {
 
 
 /**
+ *
+ * Обновить должности
+ *
+ **/
+exports.updPosts = function (req, body) {
+    const METHOD = 'updPosts()';
+    console.log(FILE, METHOD);
+
+    return new Promise(function (resolve, reject) {
+        const STATUS = {
+            NOT_FOUND_UPDATED_POSTS: 'NOT_FOUND_UPDATED_POSTS',
+            NO_UPDATED_POSTS_FOUND: 'NO_UPDATED_POSTS_FOUND',
+            NOT_ACCESS: 'NOT_ACCESS',
+            NOT_AUTH: 'NOT_AUTH',
+            UNKNOWN_ERROR: 'UNKNOWN_ERROR',
+            OK: 'OK'
+        };
+
+        let result = {};
+
+        if (!req.isAuthenticated()) {
+            console.error('Not Authenticated');
+            reject({status: STATUS.NOT_AUTH});
+            return;
+        }
+
+        if (!UsersReq.checkRole(req.user.roles, ROLE.ADMIN)) {
+            console.error('Not Admin');
+            reject({status: STATUS.NOT_ACCESS});
+            return;
+        }
+
+        for (let i = 0; i < body.length; i++) {
+            if (body[i].pst_name === undefined && body[i].pst_description === undefined) {
+                body.splice(i, 1);
+                i--;
+            }
+        }
+        if (body.length === 0) {
+            console.error('No Updated Posts Found');
+            reject({status: STATUS.NO_UPDATED_POSTS_FOUND});
+            return;
+        }
+
+        PostsReq.getExistingPosts(knex, body.map(i => i.pst_id))
+            .then((res) => {
+                if (res.length === 0) {
+                    throw new Error(STATUS.NO_UPDATED_POSTS_FOUND);
+                }
+
+                for (let i = 0; i < body.length; i++) {
+                    if (!res.some(item => item.pst_id === body[i].pst_id)) {
+                        body.splice(i, 1);
+                        i--;
+                    }
+                }
+                if (body.length === 0) {
+                    throw new Error(STATUS.NO_UPDATED_POSTS_FOUND);
+                }
+
+                console.log('Found Updated Posts');
+                return PostsReq.updPosts(knex, body);
+            })
+            .then((res) => {
+                if (res.length === 0) {
+                    throw new Error(STATUS.NOT_FOUND_UPDATED_POSTS);
+                }
+
+                console.log('Updated ' + res.length + ' Posts');
+                result = {
+                    status: STATUS.OK,
+                    payload: res.map(i => i[0])
+                };
+
+                resolve(result);
+            })
+            .catch((err) => {
+                console.error(err);
+                if (err.message === STATUS.NO_UPDATED_POSTS_FOUND ||
+                    err.message === STATUS.NOT_FOUND_UPDATED_POSTS) {
+                    result = {status: err.message}
+                } else {
+                    result = {status: STATUS.UNKNOWN_ERROR}
+                }
+                reject(result);
+            });
+    });
+};
+
+
+/**
  * Удалить должности сотрудника
  *
  * body Body_35 ID сотрудника и список ID должностей

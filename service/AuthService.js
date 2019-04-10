@@ -170,39 +170,61 @@ exports.login = function (req) {
     const METHOD = 'login()';
 
     return new Promise(function (resolve, reject) {
+        const STATUS = {
+            ACCOUNT_UNDER_REVIEW: 'ACCOUNT_UNDER_REVIEW',
+            ACCOUNT_REJECT: 'ACCOUNT_REJECT',
+            NOT_FOUND_PARENT_INFO: 'NOT_FOUND_PARENT_INFO',
+            NOT_AUTH: 'NOT_AUTH',
+            OK: 'OK'
+        };
+
         let result = {};
-        if (req.isAuthenticated()) {
-            const regex = new RegExp('^((Basic)[ ]|(JWT)[ ]).+$');
-            let match = req.headers.authorization.match(regex);
 
-            let data = {
-                pepl_login: req.user.pepl_login,
-                pepl_second_name: req.user.pepl_second_name,
-                pepl_first_name: req.user.pepl_first_name,
-                pepl_last_name: req.user.pepl_last_name,
-            };
-
-            if (match[2]) {
-                data.token = 'JWT ' + jwt.sign({pepl_id: req.user.pepl_id}, config.jwt.secret, {expiresIn: config.jwt.expiresIn});
-            }
-            if (match[3]) {
-                data.token = req.headers.authorization;
-            }
-
-            data.role_array = req.user.roles;
-            result = {
-                status: "OK",
-                payload: data
-            };
-
-            resolve(result);
-        } else {
-            console.log(FILE, '\n', METHOD, 'User is not authenticated');
-            result = {
-                status: "NOT_AUTH"
-            };
-            reject(result);
+        if (!req.isAuthenticated()) {
+            console.error('Not Authenticated');
+            reject({status: STATUS.NOT_AUTH});
+            return;
         }
+
+        if (UsersReq.checkRole(req.user.roles, ROLE.PARENT)) {
+            switch (req.user.prnt_data.prnt_confirm) {
+                case 0: {
+                    console.error('Account Under Review');
+                    reject({status: STATUS.ACCOUNT_UNDER_REVIEW});
+                    return;
+                }
+                case 2: {
+                    console.error('Account Reject');
+                    reject({status: STATUS.ACCOUNT_REJECT});
+                    return
+                }
+            }
+        }
+
+        const regex = new RegExp('^((Basic)[ ]|(JWT)[ ]).+$');
+        let match = req.headers.authorization.match(regex);
+
+        let data = {
+            pepl_login: req.user.pepl_login,
+            pepl_second_name: req.user.pepl_second_name,
+            pepl_first_name: req.user.pepl_first_name,
+            pepl_last_name: req.user.pepl_last_name,
+        };
+
+        if (match[2]) {
+            data.token = 'JWT ' + jwt.sign({pepl_id: req.user.pepl_id}, config.jwt.secret, {expiresIn: config.jwt.expiresIn});
+        }
+        if (match[3]) {
+            data.token = req.headers.authorization;
+        }
+
+        data.role_array = req.user.roles;
+        result = {
+            status: "OK",
+            payload: data
+        };
+
+        resolve(result);
     });
 };
 
@@ -508,13 +530,13 @@ exports.signup = function (req, body) {
                                         console.log('Determined Role');
                                         if (role_name) {
                                             payload.role_array = [role_name];
-                                            return RolesReq.addUserRoles(knex, trx, payload.pepl_id, [{role_name: role_name}]);
+                                            return RolesReq.addUserRolesTrx(knex, trx, payload.pepl_id, [{role_name: role_name}]);
                                         } else {
                                             payload.role_array = body.role_array;
                                             const req_role_arr = body.role_array.map(item => {
                                                 return {role_name: item};
                                             });
-                                            return RolesReq.addUserRoles(knex, trx, payload.pepl_id, req_role_arr);
+                                            return RolesReq.addUserRolesTrx(knex, trx, payload.pepl_id, req_role_arr);
                                         }
 
 

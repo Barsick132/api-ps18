@@ -179,6 +179,8 @@ exports.getEmpGraphic = function (req, body) {
 
     return new Promise(function (resolve, reject) {
         const STATUS = {
+            ACCOUNT_UNDER_REVIEW: 'ACCOUNT_UNDER_REVIEW',
+            ACCOUNT_REJECT: 'ACCOUNT_REJECT',
             NOT_AUTH: 'NOT_AUTH',
             PERIOD_IS_NOT_VALID: 'PERIOD_IS_NOT_VALID',
             UNKNOWN_ERROR: 'UNKNOWN_ERROR',
@@ -193,6 +195,21 @@ exports.getEmpGraphic = function (req, body) {
             console.error('Not Authenticated');
             reject({status: STATUS.NOT_AUTH});
             return;
+        }
+
+        if (UsersReq.checkRole(req.user.roles, ROLE.PARENT)) {
+            switch (req.user.prnt_data.prnt_confirm) {
+                case 0: {
+                    console.error('Account Under Review');
+                    reject({status: STATUS.ACCOUNT_UNDER_REVIEW});
+                    return;
+                }
+                case 2: {
+                    console.error('Account Reject');
+                    reject({status: STATUS.ACCOUNT_REJECT});
+                    return
+                }
+            }
         }
 
         // Смотрим кто делает запрос, клиент или

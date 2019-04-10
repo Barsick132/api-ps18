@@ -21,6 +21,8 @@ exports.getClassTeacher = function (req, body) {
 
     return new Promise(function (resolve, reject) {
         const STATUS = {
+            ACCOUNT_UNDER_REVIEW: 'ACCOUNT_UNDER_REVIEW',
+            ACCOUNT_REJECT: 'ACCOUNT_REJECT',
             NOT_ACCESS_TO_CHILD: 'NOT_ACCESS_TO_CHILD',
             NOT_FOUND_TEACHER_POSTS: 'NOT_FOUND_TEACHER_POSTS',
             NOT_FOUND_TEACHER_ROLES: 'NOT_FOUND_TEACHER_ROLES',
@@ -52,8 +54,22 @@ exports.getClassTeacher = function (req, body) {
             currentRole = ROLE.PSYCHOLOGIST;
         }
         if (UsersReq.checkRole(req.user.roles, ROLE.PARENT)) {
-            console.log('User Have ' + ROLE.PARENT + ' Role');
-            currentRole = ROLE.PARENT;
+            switch (req.user.prnt_data.prnt_confirm) {
+                case 0: {
+                    console.error('Account Under Review');
+                    reject({status: STATUS.ACCOUNT_UNDER_REVIEW});
+                    return;
+                }
+                case 2: {
+                    console.error('Account Reject');
+                    reject({status: STATUS.ACCOUNT_REJECT});
+                    return
+                }
+                case 1: {
+                    console.log('User Have ' + ROLE.PARENT + ' Role');
+                    currentRole = ROLE.PARENT;
+                }
+            }
         }
         if (!currentRole) {
             console.error('Not Access');
@@ -354,6 +370,8 @@ exports.getPersonalData = function (req) {
 
     return new Promise(function (resolve, reject) {
         const STATUS = {
+            ACCOUNT_UNDER_REVIEW: 'ACCOUNT_UNDER_REVIEW',
+            ACCOUNT_REJECT: 'ACCOUNT_REJECT',
             NOT_GETTED_POSTS: 'NOT_GETTED_POSTS',
             NOT_GETTED_ADDITIONAL_DATA_OR_NOT_CONFIRMED: 'NOT_GETTED_ADDITIONAL_DATA_OR_NOT_CONFIRMED',
             NOT_GETTED_ADDITIONAL_DATA: 'NOT_GETTED_ADDITIONAL_DATA',
@@ -389,6 +407,21 @@ exports.getPersonalData = function (req) {
             console.error('Not Authenticated');
             reject({status: STATUS.NOT_AUTH});
             return;
+        }
+
+        if (UsersReq.checkRole(req.user.roles, ROLE.PARENT)) {
+            switch (req.user.prnt_data.prnt_confirm) {
+                case 0: {
+                    console.error('Account Under Review');
+                    reject({status: STATUS.ACCOUNT_UNDER_REVIEW});
+                    return;
+                }
+                case 2: {
+                    console.error('Account Reject');
+                    reject({status: STATUS.ACCOUNT_REJECT});
+                    return
+                }
+            }
         }
 
         payload = {
@@ -512,6 +545,8 @@ exports.getPersonsToBeRec = function (req) {
 
     return new Promise(function (resolve, reject) {
         const STATUS = {
+            ACCOUNT_UNDER_REVIEW: 'ACCOUNT_UNDER_REVIEW',
+            ACCOUNT_REJECT: 'ACCOUNT_REJECT',
             POSTS_EMP_NOT_FOUND: 'POSTS_EMP_NOT_FOUND',
             UNKNOWN_ERROR: 'UNKNOWN_ERROR',
             NOT_FOUND_USER_TO_BE_REC: 'NOT_FOUND_USER_TO_BE_REC',
@@ -528,7 +563,22 @@ exports.getPersonsToBeRec = function (req) {
             return;
         }
 
-        UsersReq.getUserToBeRec(knex)
+        if (UsersReq.checkRole(req.user.roles, ROLE.PARENT)) {
+            switch (req.user.prnt_data.prnt_confirm) {
+                case 0: {
+                    console.error('Account Under Review');
+                    reject({status: STATUS.ACCOUNT_UNDER_REVIEW});
+                    return;
+                }
+                case 2: {
+                    console.error('Account Reject');
+                    reject({status: STATUS.ACCOUNT_REJECT});
+                    return
+                }
+            }
+        }
+
+        UsersReq.getEmpToBeRec(knex)
             .then((res) => {
                 if (res.length === 0) {
                     throw new Error(STATUS.NOT_FOUND_USER_TO_BE_REC);
@@ -543,7 +593,7 @@ exports.getPersonsToBeRec = function (req) {
             })
             .then((res) => {
                 if (res.length === 0) {
-                    throw new Error('POSTS_EMP_NOT_FOUND');
+                    throw new Error(STATUS.POSTS_EMP_NOT_FOUND);
                 }
                 console.log('Posts Emp Found');
 
@@ -566,7 +616,8 @@ exports.getPersonsToBeRec = function (req) {
             })
             .catch((err) => {
                 console.error(err);
-                if (err.message === STATUS.NOT_FOUND_USER_TO_BE_REC) {
+                if (err.message === STATUS.NOT_FOUND_USER_TO_BE_REC ||
+                    err.message === STATUS.POSTS_EMP_NOT_FOUND) {
                     result = {status: err.message};
                 } else {
                     result = {status: STATUS.UNKNOWN_ERROR}

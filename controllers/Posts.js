@@ -4,8 +4,7 @@ const utils = require('../utils/writer.js');
 const Posts = require('../service/PostsService');
 
 module.exports.addEmpPosts = function addEmpPosts(req, res, next) {
-    if (req.error === 'ERROR_AUTH' ||
-        req.error === 'JWT_EXPIRED') {
+    if (req.error) {
         utils.writeJson(res, {status: req.error});
         return;
     }
@@ -21,8 +20,7 @@ module.exports.addEmpPosts = function addEmpPosts(req, res, next) {
 };
 
 module.exports.addPosts = function addPost(req, res, next) {
-    if (req.error === 'ERROR_AUTH' ||
-        req.error === 'JWT_EXPIRED') {
+    if (req.error) {
         utils.writeJson(res, {status: req.error});
         return;
     }
@@ -37,9 +35,24 @@ module.exports.addPosts = function addPost(req, res, next) {
         });
 };
 
+module.exports.updPosts = function addPost(req, res, next) {
+    if (req.error) {
+        utils.writeJson(res, {status: req.error});
+        return;
+    }
+
+    const body = req.swagger.params['body'].value;
+    Posts.updPosts(req, body)
+        .then(function (response) {
+            utils.writeJson(res, response);
+        })
+        .catch(function (response) {
+            utils.writeJson(res, response);
+        });
+};
+
 module.exports.delEmpPosts = function delEmpPosts(req, res, next) {
-    if (req.error === 'ERROR_AUTH' ||
-        req.error === 'JWT_EXPIRED') {
+    if (req.error) {
         utils.writeJson(res, {status: req.error});
         return;
     }
@@ -55,8 +68,7 @@ module.exports.delEmpPosts = function delEmpPosts(req, res, next) {
 };
 
 module.exports.delPosts = function delPost(req, res, next) {
-    if (req.error === 'ERROR_AUTH' ||
-        req.error === 'JWT_EXPIRED') {
+    if (req.error) {
         utils.writeJson(res, {status: req.error});
         return;
     }
@@ -72,8 +84,7 @@ module.exports.delPosts = function delPost(req, res, next) {
 };
 
 module.exports.getAllPosts = function getAllPosts(req, res, next) {
-    if (req.error === 'ERROR_AUTH' ||
-        req.error === 'JWT_EXPIRED') {
+    if (req.error) {
         utils.writeJson(res, {status: req.error});
         return;
     }
@@ -88,8 +99,7 @@ module.exports.getAllPosts = function getAllPosts(req, res, next) {
 };
 
 module.exports.getEmpPosts = function getEmpPosts(req, res, next) {
-    if (req.error === 'ERROR_AUTH' ||
-        req.error === 'JWT_EXPIRED') {
+    if (req.error) {
         utils.writeJson(res, {status: req.error});
         return;
     }

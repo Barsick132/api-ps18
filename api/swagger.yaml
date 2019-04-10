@@ -3,7 +3,7 @@ swagger: "2.0"
 info:
   description: "Это API (swagger 2.0) системы автоматизации психолого-педагогическ\
     ого сопровождения субъектов образовательной деятельности для школы №18."
-  version: "1.0.11"
+  version: "1.0.12"
   title: "PsychoSys18"
   contact:
     email: "antony.nor@yandex.ru"
@@ -21,9 +21,9 @@ tags:
 - name: "users"
   description: "Запросы связанные с пользователями"
 - name: "roles"
-  description: "Запросы связанные с ролями пользователей"
+  description: "Запросы связанные с ролями пользователей (Admin)"
 - name: "posts"
-  description: "Запросы связанные с должностями"
+  description: "Запросы связанные с должностями (Admin)"
 schemes:
 - "https"
 paths:
@@ -1539,7 +1539,7 @@ paths:
     post:
       tags:
       - "roles"
-      summary: "Получение списка ролей"
+      summary: "Получение списка ролей (Admin)"
       operationId: "getRoles"
       produces:
       - "application/json"
@@ -1569,7 +1569,7 @@ paths:
     post:
       tags:
       - "roles"
-      summary: "Получить список ролей пользователя"
+      summary: "Получить список ролей пользователя (Admin)"
       operationId: "getUserRoles"
       consumes:
       - "application/json"
@@ -1607,7 +1607,7 @@ paths:
     post:
       tags:
       - "roles"
-      summary: "Добавить роли пользователю"
+      summary: "Добавить роли пользователю (Admin)"
       operationId: "addUserRoles"
       consumes:
       - "application/json"
@@ -1643,7 +1643,7 @@ paths:
     post:
       tags:
       - "roles"
-      summary: "Удалить роли у пользователя"
+      summary: "Удалить роли у пользователя (Admin)"
       operationId: "delUserRoles"
       consumes:
       - "application/json"
@@ -1748,7 +1748,7 @@ paths:
                 items:
                   type: "integer"
                   format: "int32"
-                  example: [1,2]
+                  example: ""
         400:
           description: "Invalid data"
         default:
@@ -1790,7 +1790,7 @@ paths:
                 items:
                   type: "integer"
                   format: "int32"
-                  example: [1,2]
+                  example: ""
         400:
           description: "Invalid data"
         default:
@@ -1861,6 +1861,53 @@ paths:
               status:
                 type: "string"
                 example: "OK"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Posts"
+    x-swagger-router-controller: "posts"
+  /updPosts:
+    post:
+      tags:
+      - "posts"
+      summary: "Обновить должности (Admin)"
+      operationId: "updPosts"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Список должностей"
+        required: true
+        schema:
+          type: "array"
+          items:
+            $ref: "#/definitions/body_38"
+      responses:
+        200:
+          description: "Статус выполнения запроса и массив ID обновленных должност\
+            ей"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                type: "array"
+                example:
+                - 1
+                - 2
+                items:
+                  type: "integer"
+                  format: "int32"
         400:
           description: "Invalid data"
         default:
@@ -2070,8 +2117,10 @@ definitions:
     type: "array"
     items:
       type: "string"
-      example: ""
       description: "Value:\n * Admin\n * Student\n * Parent\n * Teacher\n * Psychologist\n"
+    example:
+    - "Admin"
+    - "Teacher"
   Post:
     type: "object"
     required:
@@ -5159,3 +5208,36 @@ definitions:
         example: "Педагог-психолог"
       pst_description:
         type: "string"
+  body_38:
+    required:
+    - "pst_id"
+    properties:
+      pst_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+      pst_name:
+        type: "string"
+        example: "Педагог-психолог"
+      pst_description:
+        type: ["string","null"]
+  inline_response_200_33:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+      payload:
+        type: "array"
+        example:
+        - 1
+        - 2
+        items:
+          type: "integer"
+          format: "int32"
+    example:
+      payload:
+      - 1
+      - 2
+      status: "OK"

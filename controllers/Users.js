@@ -4,8 +4,7 @@ const utils = require('../utils/writer.js');
 const Users = require('../service/UsersService');
 
 module.exports.getClassTeacher = function getTeachers(req, res, next) {
-    if (req.error === 'ERROR_AUTH' ||
-        req.error === 'JWT_EXPIRED') {
+    if (req.error) {
         utils.writeJson(res, {status: req.error});
         return;
     }
@@ -21,8 +20,7 @@ module.exports.getClassTeacher = function getTeachers(req, res, next) {
 };
 
 module.exports.getTeachers = function getTeachers(req, res, next) {
-    if (req.error === 'ERROR_AUTH' ||
-        req.error === 'JWT_EXPIRED') {
+    if (req.error) {
         utils.writeJson(res, {status: req.error});
         return;
     }
@@ -37,8 +35,7 @@ module.exports.getTeachers = function getTeachers(req, res, next) {
 };
 
 module.exports.getPersonalData = function getPersonalData(req, res, next) {
-    if (req.error === 'ERROR_AUTH' ||
-        req.error === 'JWT_EXPIRED') {
+    if (req.error) {
         utils.writeJson(res, {status: req.error});
         return;
     }
@@ -53,8 +50,7 @@ module.exports.getPersonalData = function getPersonalData(req, res, next) {
 };
 
 module.exports.getPersonsToBeRec = function getPersonsToBeRec(req, res, next) {
-    if (req.error === 'ERROR_AUTH' ||
-        req.error === 'JWT_EXPIRED') {
+    if (req.error) {
         utils.writeJson(res, {status: req.error});
         return;
     }

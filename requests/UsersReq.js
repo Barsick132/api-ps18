@@ -46,19 +46,24 @@ exports.checkRoles = function (role_arr, input_role_arr) {
     });
 };
 
+
 /**
  *
  * Запросы к БД
  *
  */
+
+// Получить информацию человека по ID
 exports.getPeplById = (knex, pepl_id) => {
     return knex.select().from(T.PEOPLE.NAME).where(T.PEOPLE.PEPL_ID, pepl_id);
 };
 
+// Получить информацию человека по логину
 exports.getPeplByLogin = (knex, pepl_login) => {
     return knex.select().from(T.PEOPLE.NAME).where(T.PEOPLE.PEPL_LOGIN, pepl_login);
 };
 
+// Получить информацию родителя, если его регистрация была продтверждена
 exports.getConfParentAddressByID = (knex, pepl_id) => {
     return knex.select(T.PARENTS.PRNT_CITY, T.PARENTS.PRNT_STREET,
         T.PARENTS.PRNT_HOME, T.PARENTS.PRNT_FLAT)
@@ -67,6 +72,14 @@ exports.getConfParentAddressByID = (knex, pepl_id) => {
         .andWhere(T.PARENTS.PRNT_CONFIRM, 1);
 };
 
+exports.getConfParentById = (knex, prnt_id) => {
+    return knex(T.PARENTS.NAME)
+        .columns(T.PARENTS.PRNT_CONFIRM)
+        .select()
+        .where(T.PARENTS.PRNT_ID, prnt_id);
+};
+
+// Вернуть полную информацию о детях родителя
 exports.getChildrensPepl = (knex, pepl_id) => {
     const METHOD = 'getChildrensPepl';
     console.log(FILE, METHOD);
@@ -128,6 +141,7 @@ exports.getChildrensPepl = (knex, pepl_id) => {
     })
 };
 
+// Проверить принадлежность ученика родитенлю
 exports.checkChildrensId = (knex, prnt_id, std_id) => {
     return knex(T.STD_PRNT.NAME)
         .select()
@@ -135,17 +149,20 @@ exports.checkChildrensId = (knex, prnt_id, std_id) => {
         .andWhere(T.STD_PRNT.PRNT_ID, prnt_id);
 };
 
+// Получить информацию ученика по ID
 exports.getStudentByID = (knex, pepl_id) => {
     return knex.select().from(T.STUDENTS.NAME).where(T.STUDENTS.STD_ID, pepl_id);
 };
 
+// Получить информацию сотрудника по ID
 exports.getEmployeeByID = (knex, pepl_id) => {
     return knex.column(T.EMPLOYEES.EMP_SKYPE, T.EMPLOYEES.EMP_DISCORD, T.EMPLOYEES.EMP_HANGOUTS, T.EMPLOYEES.EMP_VIBER,
         T.EMPLOYEES.EMP_VK, T.EMPLOYEES.EMP_DATE_ENROLLMENT)
         .select().from(T.EMPLOYEES.NAME).where(T.EMPLOYEES.EMP_ID, pepl_id);
 };
 
-exports.getUserToBeRec = (knex) => {
+// Получить список сотрудников, доступных для записи
+exports.getEmpToBeRec = (knex) => {
     const dt = new Date();
 
     const getUTCDate = (dt) => {

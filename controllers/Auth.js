@@ -73,8 +73,7 @@ module.exports.registerStudents = function registerStudents(req, res, next) {
 };
 
 module.exports.signup = function signup(req, res, next) {
-    if(req.error==='ERROR_AUTH' ||
-        req.error === 'JWT_EXPIRED') {
+    if(req.error) {
         utils.writeJson(res, {status: req.error});
         return;
     }
