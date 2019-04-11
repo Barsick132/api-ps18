@@ -591,25 +591,46 @@ exports.updPersonalData = function (req, body) {
         }
         if (UsersReq.checkRole(req.user.roles, ROLE.EMPLOYEE)) {
             currentRole = ROLE.EMPLOYEE;
-            addit_req = body.emp_data;
+            if (body.emp_data) {
+                if (body.emp_data.emp_skype !== undefined)
+                    addit_req.emp_skype = body.emp_data.emp_skype;
+                if (body.emp_data.emp_discord !== undefined)
+                    addit_req.emp_discord = body.emp_data.emp_discord;
+                if (body.emp_data.emp_hangouts !== undefined)
+                    addit_req.emp_hangouts = body.emp_data.emp_hangouts;
+                if (body.emp_data.emp_viber !== undefined)
+                    addit_req.emp_viber = body.emp_data.emp_viber;
+                if (body.emp_data.emp_vk !== undefined)
+                    addit_req.emp_vk = body.emp_data.emp_vk;
+            }
         }
         if (UsersReq.checkRole(req.user.roles, ROLE.PARENT)) {
             currentRole = ROLE.PARENT;
-            addit_req = body.prnt_data;
+            if (body.prnt_data) {
+                if (body.prnt_data.prnt_city)
+                    addit_req.prnt_city = body.prnt_data.prnt_city;
+                if (body.prnt_data.prnt_street)
+                    addit_req.prnt_street = body.prnt_data.prnt_street;
+                if (body.prnt_data.prnt_home)
+                    addit_req.prnt_home = body.prnt_data.prnt_home;
+                if (body.prnt_data.prnt_flat !== undefined)
+                    addit_req.prnt_flat = body.prnt_data.prnt_flat;
+            }
         }
 
-        if (currentRole === ROLE.STUDENT) {
-            if (body.pepl_phone)
-                pepl_req.pepl_phone = body.pepl_phone;
-            if (body.pepl_email)
-                pepl_req.pepl_email = body.pepl_email;
-        } else {
-            Object.keys(body).forEach(i => {
-                if (i !== "pepl_old_pass" && i !== "pepl_new_pass" &&
-                    i !== "emp_data" && i !== "prnt_data") {
-                    pepl_req[i] = body[i];
-                }
-            });
+        if (body.pepl_phone !== undefined)
+            pepl_req.pepl_phone = body.pepl_phone;
+        if (body.pepl_email !== undefined)
+            pepl_req.pepl_email = body.pepl_email;
+        if (currentRole !== ROLE.STUDENT) {
+            if (body.pepl_second_name)
+                pepl_req.pepl_second_name = body.pepl_second_name;
+            if (body.pepl_first_name)
+                pepl_req.pepl_first_name = body.pepl_first_name;
+            if (body.pepl_last_name)
+                pepl_req.pepl_last_name = body.pepl_last_name;
+            if (body.pepl_gender)
+                pepl_req.pepl_gender = body.pepl_gender;
         }
 
         if (Object.keys(pepl_req).length === 0) {
