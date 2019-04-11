@@ -58,7 +58,7 @@ module.exports.getRecordsFromWD = function getRecordsFromWD(req, res, next) {
         });
 };
 
-module.exports.getEmpGraphic = function getUserGraphic(req, res, next) {
+module.exports.getEmpGraphic = function getEmpGraphic(req, res, next) {
     if (req.error) {
         utils.writeJson(res, {status: req.error});
         return;
@@ -112,7 +112,7 @@ module.exports.setToRecord = function setToRecord(req, res, next) {
         });
 };
 
-module.exports.setPersonalGraphic = function setUserGraphic(req, res, next) {
+module.exports.setPersonalGraphic = function setPersonalGraphic(req, res, next) {
     if (req.error) {
         utils.writeJson(res, {status: req.error});
         return;

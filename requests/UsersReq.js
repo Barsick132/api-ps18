@@ -161,6 +161,108 @@ exports.getEmployeeByID = (knex, pepl_id) => {
         .select().from(T.EMPLOYEES.NAME).where(T.EMPLOYEES.EMP_ID, pepl_id);
 };
 
+// Обновление данных People и/или Employee или Parent
+exports.updPersonalData = (knex, pepl_id, role, pepl_data, addit_data) => {
+    return new Promise((resolve, reject) => {
+        const STATUS = {
+            INFO_NOT_UPDATEABLE: 'INFO_NOT_UPDATEABLE',
+            NOT_FOUND_UPDATED_DATA: 'NOT_FOUND_UPDATED_DATA',
+            UNKNOWN_ERROR: 'UNKNOWN_ERROR'
+        };
+
+        let result = {};
+
+        knex.transaction((trx) => {
+            const updPeople = () => {
+                return new Promise(((resolve) => {
+                    if (Object.keys(pepl_data).length !== 0) {
+                        return knex(T.PEOPLE.NAME)
+                            .transacting(trx)
+                            .where(T.PEOPLE.PEPL_ID, pepl_id)
+                            .update(pepl_data)
+                            .returning('*')
+                            .then((res) => resolve(res));
+                    }
+
+                    resolve(undefined);
+                }))
+            };
+
+            return updPeople()
+                .then((res) => {
+                    const updAdditData = () => {
+                        switch (role) {
+                            case ROLE.EMPLOYEE: {
+                                return knex(T.EMPLOYEES.NAME)
+                                    .transacting(trx)
+                                    .where(T.EMPLOYEES.EMP_ID, pepl_id)
+                                    .update(addit_data)
+                                    .returning('*');
+                            }
+                            case ROLE.PARENT: {
+                                return knex(T.PARENTS.NAME)
+                                    .transacting(trx)
+                                    .where(T.PARENTS.PRNT_ID, pepl_id)
+                                    .update(addit_data)
+                                    .returning('*');
+                            }
+                        }
+                    };
+
+                    if (res === undefined) {
+                        if (!addit_data || Object.keys(addit_data).length === 0) {
+                            throw new Error(STATUS.INFO_NOT_UPDATEABLE)
+                        }
+                        return updAdditData();
+                    }
+
+                    if (res.length === 0) {
+                        throw new Error(STATUS.NOT_FOUND_UPDATED_DATA);
+                    }
+                    console.log('Updated Data People');
+                    result.pepl_data = res[0];
+
+                    if (role === ROLE.STUDENT ||
+                        (!addit_data || Object.keys(addit_data).length === 0)) {
+                        resolve(result);
+                        return;
+                    }
+
+                    return updAdditData();
+                })
+                .then((res) => {
+                    if (res === undefined) return;
+                    if (res.length === 0) {
+                        throw new Error(STATUS.NOT_FOUND_UPDATED_DATA);
+                    }
+                    console.log('Updated Additional Data');
+
+                    if (role === ROLE.EMPLOYEE) {
+                        result.emp_data = res[0];
+                    }
+                    if (role === ROLE.PARENT) {
+                        result.prnt_data = res[0];
+                    }
+
+                    resolve(result);
+                })
+                .then(() => {
+                    trx.commit();
+                })
+                .catch((err) => {
+                    if (err.message === STATUS.NOT_FOUND_UPDATED_DATA ||
+                        err.message === STATUS.INFO_NOT_UPDATEABLE)
+                        result = {status: err.message};
+                    else
+                        result = {status: STATUS.UNKNOWN_ERROR};
+                    resolve(result);
+
+                    trx.rollback(err);
+                });
+        });
+    });
+};
+
 // Получить список сотрудников, доступных для записи
 exports.getEmpToBeRec = (knex) => {
     const dt = new Date();

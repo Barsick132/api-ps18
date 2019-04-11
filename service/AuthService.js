@@ -517,8 +517,13 @@ exports.signup = function (req, body) {
                                                     });
                                                 }
 
-                                                if (body.role_array === undefined || body.role_array.length === 0)
+                                                if (body.role_array === undefined || body.role_array.length === 0) {
                                                     role_name = ROLE.EMPLOYEE;
+                                                } else {
+                                                    if (!UsersReq.checkRole(body.role_array, ROLE.EMPLOYEE)) {
+                                                        body.role_array.push(ROLE.EMPLOYEE);
+                                                    }
+                                                }
                                                 break;
                                             }
                                             case ROLE.PARENT: {

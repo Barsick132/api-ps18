@@ -3,7 +3,7 @@
 const utils = require('../utils/writer.js');
 const Users = require('../service/UsersService');
 
-module.exports.getClassTeacher = function getTeachers(req, res, next) {
+module.exports.getClassTeacher = function getClassTeacher(req, res, next) {
     if (req.error) {
         utils.writeJson(res, {status: req.error});
         return;
@@ -41,6 +41,22 @@ module.exports.getPersonalData = function getPersonalData(req, res, next) {
     }
 
     Users.getPersonalData(req)
+        .then(function (response) {
+            utils.writeJson(res, response);
+        })
+        .catch(function (response) {
+            utils.writeJson(res, response);
+        });
+};
+
+module.exports.updPersonalData = function updPersonalData(req, res, next) {
+    if (req.error) {
+        utils.writeJson(res, {status: req.error});
+        return;
+    }
+
+    const body = req.swagger.params['body'].value;
+    Users.updPersonalData(req, body)
         .then(function (response) {
             utils.writeJson(res, response);
         })

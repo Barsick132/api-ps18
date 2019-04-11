@@ -2,18 +2,14 @@ const passport = require('passport');
 const BasicStrategy = require('passport-http').BasicStrategy;
 const JwtStrategy = require('passport-jwt').Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
-const crypto = require('crypto');
 const RolesReq = require('../../requests/RolesReq');
 const UsersReq = require('../../requests/UsersReq');
+const AuthReq = require('../../requests/AuthReq');
 const ROLE = require('../../constants').ROLE;
 
 const config = require('../config');
 
 const FILE = './api/auth/passport.js';
-
-const encryptPassword = (password, salt) => {
-    return crypto.createHmac('sha1', salt).update(password).digest('hex');
-};
 
 
 // Basic стратегия
@@ -34,7 +30,7 @@ passport.use(
             UsersReq.getPeplByLogin(knex, username)
                 .then((res) => {
                     console.log('Getting User');
-                    if (res.length !== 0 && encryptPassword(password, res[0].pepl_salt) === res[0].pepl_hash_pass) {
+                    if (res.length !== 0 && AuthReq.encryptPassword(password, res[0].pepl_salt) === res[0].pepl_hash_pass) {
                         data.user = res[0];
                         return RolesReq.getUserRoles(knex, data.user.pepl_id);
                     } else {

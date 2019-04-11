@@ -4,6 +4,7 @@ const knex = require('../index').knex;
 const UsersReq = require('../requests/UsersReq');
 const PostsReq = require('../requests/PostsReq');
 const RolesReq = require('../requests/RolesReq');
+const AuthReq = require('../requests/AuthReq');
 const ROLE = require('../constants').ROLE;
 
 const FILE = './service/UsersService.js';
@@ -533,6 +534,166 @@ exports.getPersonalData = function (req) {
     });
 };
 
+
+/**
+ *
+ * Обновление персональных данных (ALL)
+ *
+ */
+exports.updPersonalData = function (req, body) {
+    const METHOD = 'getPersonsToBeRec()';
+    console.log(FILE, METHOD);
+
+    return new Promise(function (resolve, reject) {
+        const STATUS = {
+            INFO_NOT_UPDATEABLE: 'INFO_NOT_UPDATEABLE',
+            ACCOUNT_UNDER_REVIEW: 'ACCOUNT_UNDER_REVIEW',
+            ACCOUNT_REJECT: 'ACCOUNT_REJECT',
+            UNKNOWN_ERROR: 'UNKNOWN_ERROR',
+            NOT_AUTH: 'NOT_AUTH',
+            OK: 'OK'
+        };
+
+        let result = {};
+        let payload = [];
+
+        if (!req.isAuthenticated()) {
+            console.error('Not Authenticated');
+            reject({status: STATUS.NOT_AUTH});
+            return;
+        }
+
+        if (UsersReq.checkRole(req.user.roles, ROLE.PARENT)) {
+            switch (req.user.prnt_data.prnt_confirm) {
+                case 0: {
+                    console.error('Account Under Review');
+                    reject({status: STATUS.ACCOUNT_UNDER_REVIEW});
+                    return;
+                }
+                case 2: {
+                    console.error('Account Reject');
+                    reject({status: STATUS.ACCOUNT_REJECT});
+                    return
+                }
+            }
+        }
+
+        let pepl_req = {};
+        let addit_req = {};
+        let currentRole;
+        if (body.pepl_old_pass && body.pepl_new_pass &&
+            AuthReq.encryptPassword(body.pepl_old_pass, req.user.pepl_salt) === req.user.pepl_hash_pass) {
+            pepl_req = AuthReq.getSaltAndHashPass(body.pepl_new_pass);
+        }
+
+        if (UsersReq.checkRole(req.user.roles, ROLE.STUDENT)) {
+            currentRole = ROLE.STUDENT;
+        }
+        if (UsersReq.checkRole(req.user.roles, ROLE.EMPLOYEE)) {
+            currentRole = ROLE.EMPLOYEE;
+            addit_req = body.emp_data;
+        }
+        if (UsersReq.checkRole(req.user.roles, ROLE.PARENT)) {
+            currentRole = ROLE.PARENT;
+            addit_req = body.prnt_data;
+        }
+
+        if (currentRole === ROLE.STUDENT) {
+            if (body.pepl_phone)
+                pepl_req.pepl_phone = body.pepl_phone;
+            if (body.pepl_email)
+                pepl_req.pepl_email = body.pepl_email;
+        } else {
+            Object.keys(body).forEach(i => {
+                if (i !== "pepl_old_pass" && i !== "pepl_new_pass" &&
+                    i !== "emp_data" && i !== "prnt_data") {
+                    pepl_req[i] = body[i];
+                }
+            });
+        }
+
+        if (Object.keys(pepl_req).length === 0) {
+            // Не данных People, которые столи бы обновить
+            switch (currentRole) {
+                case ROLE.STUDENT: {
+                    console.error('Information Not Updateable');
+                    reject({status: STATUS.INFO_NOT_UPDATEABLE});
+                    return;
+                }
+                case ROLE.EMPLOYEE: {
+                    if (!body.emp_data || Object.keys(body.emp_data).length === 0) {
+                        console.error('Information Not Updateable');
+                        reject({status: STATUS.INFO_NOT_UPDATEABLE});
+                        return;
+                    }
+                    break;
+                }
+                case ROLE.PARENT: {
+                    if (!body.prnt_data || Object.keys(body.prnt_data).length === 0) {
+                        console.error('Information Not Updateable');
+                        reject({status: STATUS.INFO_NOT_UPDATEABLE});
+                        return;
+                    }
+                    break;
+                }
+            }
+        }
+
+        UsersReq.updPersonalData(knex, req.user.pepl_id, currentRole, pepl_req, addit_req)
+            .then((res) => {
+                if (res.status !== undefined) {
+                    reject(res);
+                    return;
+                }
+
+                if (pepl_req.pepl_salt && pepl_req.pepl_hash_pass &&
+                    body.pepl_old_pass && body.pepl_new_pass &&
+                    AuthReq.encryptPassword(body.pepl_new_pass, res.pepl_data.pepl_salt) === res.pepl_data.pepl_hash_pass) {
+                    res.pepl_data.pepl_pass = body.pepl_new_pass;
+                }
+                if (res.pepl_data) {
+                    res.pepl_data.pepl_salt = undefined;
+                    res.pepl_data.pepl_hash_pass = undefined;
+                    res.pepl_data.pepl_id = undefined;
+                    res.pepl_data.pepl_login = undefined;
+                    res.pepl_data.pepl_birthday = undefined;
+                }
+
+                switch (currentRole) {
+                    case ROLE.STUDENT: {
+                        Object.keys(res.pepl_data).forEach(item => {
+                            if (item !== "pepl_pass" && item !== "pepl_phone" && item !== "pepl_email") {
+                                res.pepl_data[item] = undefined;
+                            }
+                        });
+                        break;
+                    }
+                    case ROLE.EMPLOYEE: {
+                        if (res.emp_data) {
+                            res.emp_data.emp_id = undefined;
+                            res.emp_data.emp_date_enrollment = undefined;
+                        }
+                        break;
+                    }
+                    case ROLE.PARENT: {
+                        if (res.prnt_data) {
+                            res.prnt_data.prnt_id = undefined;
+                            res.prnt_data.prnt_confirm = undefined;
+                        }
+                        break;
+                    }
+                }
+
+                result = res;
+                resolve(result);
+            })
+            .catch((err) => {
+                console.error(err);
+                result = {status: STATUS.UNKNOWN_ERROR};
+                reject(result);
+            })
+    });
+};
 
 /**
  * Получение списка сотрудников доступных для записи

@@ -1,4 +1,31 @@
 const T = require('../constants').TABLES;
+const crypto = require('crypto');
+
+/**
+ *
+ *  Полезные функции
+ *
+ */
+
+exports.encryptPassword = function encryptPassword(password, salt) {
+    return crypto.createHmac('sha1', salt).update(password).digest('hex');
+};
+
+exports.getSaltAndHashPass = function getSaltAndHashPass (pass) {
+    const salt = crypto.randomBytes(32).toString('base64');
+    const hash_pass = crypto.createHmac('sha1', salt).update(pass).digest('hex');
+    return {
+        pepl_salt: salt,
+        pepl_hash_pass: hash_pass
+    }
+};
+
+
+/**
+ *
+ *  Методы для работы с БД
+ *
+ */
 
 exports.insertPepl = function (knex, trx, pepl_data) {
     return knex(T.PEOPLE.NAME).transacting(trx).insert(pepl_data).returning([T.PEOPLE.PEPL_ID, T.PEOPLE.PEPL_LOGIN]);

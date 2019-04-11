@@ -35,7 +35,7 @@ module.exports.addPosts = function addPost(req, res, next) {
         });
 };
 
-module.exports.updPosts = function addPost(req, res, next) {
+module.exports.updPosts = function updPosts(req, res, next) {
     if (req.error) {
         utils.writeJson(res, {status: req.error});
         return;
