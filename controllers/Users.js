@@ -113,9 +113,14 @@ module.exports.getParent = function getParent(req, res, next) {
         });
 };
 
-module.exports.getStudent = function getStudent(req, res, next) {
-    var body = req.swagger.params['body'].value;
-    Users.getStudent(body)
+module.exports.getStudents = function getStudent(req, res, next) {
+    if (req.error) {
+        utils.writeJson(res, {status: req.error});
+        return;
+    }
+
+    const body = req.swagger.params['body'].value;
+    Users.getStudents(req, body)
         .then(function (response) {
             utils.writeJson(res, response);
         })

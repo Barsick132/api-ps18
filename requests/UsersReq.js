@@ -40,9 +40,7 @@ exports.checkRole = function (role_arr, role_name) {
 // функция проверки вхождения элементов в массив
 exports.checkRoles = function (role_arr, input_role_arr) {
     return role_arr.some(item => {
-        input_role_arr.forEach(i => {
-            return item === i;
-        });
+        return input_role_arr.some(i => item === i);
     });
 };
 
@@ -152,6 +150,35 @@ exports.checkChildrensId = (knex, prnt_id, std_id) => {
 // Получить информацию ученика по ID
 exports.getStudentByID = (knex, pepl_id) => {
     return knex.select().from(T.STUDENTS.NAME).where(T.STUDENTS.STD_ID, pepl_id);
+};
+
+// Поиск учеников  фильтрацией
+exports.getStudents = (knex, data, std_parallel, std_graduated) => {
+    if (std_parallel && std_graduated !== undefined)
+        return knex({p: T.PEOPLE.NAME, s: T.STUDENTS.NAME})
+            .select()
+            .where(knex.raw('?? = case when ? then ' +
+                'case when ?? < current_date then ' +
+                'case when extract(month from ??) < 9 then ' +
+                'extract(year from ??) - extract(year from ??) - ?? else ' +
+                'extract (year from ??) - extract(year from ??) - ?? + 1 end end ' +
+                'else case when extract(month from current_date) < 9 then ' +
+                'extract(year from current_date) - extract(year from ??) - ?? else ' +
+                'extract (year from current_date) - extract(year from ??) - ?? + 1 end end',
+                [std_parallel, std_graduated, 's.' + T.STUDENTS.STD_DATE_ISSUE, 's.' + T.STUDENTS.STD_DATE_ISSUE,
+                    's.' + T.STUDENTS.STD_DATE_ISSUE, 's.' + T.STUDENTS.STD_DATE_RECEIPT,
+                    's.' + T.STUDENTS.STD_STAYED_TWO_YEAR, 's.' + T.STUDENTS.STD_DATE_ISSUE,
+                    's.' + T.STUDENTS.STD_DATE_RECEIPT, 's.' + T.STUDENTS.STD_STAYED_TWO_YEAR,
+                    's.' + T.STUDENTS.STD_DATE_RECEIPT, 's.' + T.STUDENTS.STD_STAYED_TWO_YEAR,
+                    's.' + T.STUDENTS.STD_DATE_RECEIPT, 's.' + T.STUDENTS.STD_STAYED_TWO_YEAR,]))
+            .whereRaw('?? = ??', ['p.' + T.PEOPLE.PEPL_ID, 's.' + T.STUDENTS.STD_ID])
+            .where(data);
+    else
+        return knex({p: T.PEOPLE.NAME, s: T.STUDENTS.NAME})
+            .select()
+            .whereRaw('?? ' + (std_graduated ? '<' : '>=') + ' current_date', [T.STUDENTS.STD_DATE_ISSUE])
+            .andWhereRaw('?? = ??', ['p.' + T.PEOPLE.PEPL_ID, 's.' + T.STUDENTS.STD_ID])
+            .where(data);
 };
 
 // Получить информацию сотрудника по ID

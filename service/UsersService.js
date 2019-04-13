@@ -4,8 +4,10 @@ const knex = require('../index').knex;
 const UsersReq = require('../requests/UsersReq');
 const PostsReq = require('../requests/PostsReq');
 const RolesReq = require('../requests/RolesReq');
+const RecordsReq = require('../requests/RecordsReq');
 const AuthReq = require('../requests/AuthReq');
 const ROLE = require('../constants').ROLE;
+const T = require('../constants').TABLES;
 
 const FILE = './service/UsersService.js';
 
@@ -959,58 +961,106 @@ exports.getParent = function (body) {
  * body Body_26 параметры поиска ученика
  * returns inline_response_200_22
  **/
-exports.getStudent = function (body) {
+exports.getStudents = function (req, body) {
+    const METHOD = 'getStudents()';
+    console.log(FILE, METHOD);
+
     return new Promise(function (resolve, reject) {
-        var examples = {};
-        examples['application/json'] = {
-            "payload": [{
-                "pepl_login": "Student",
-                "pepl_id": 3,
-                "pepl_data": {
-                    "pepl_first_name": "Иван",
-                    "pepl_gender": true,
-                    "pepl_second_name": "Иванов",
-                    "pepl_last_name": "Иванович",
-                    "pepl_email": "admin@mail.ru",
-                    "pepl_phone": "9568734554",
-                    "pepl_birthday": "1977-01-19"
-                },
-                "std_data": {
-                    "std_finished": false,
-                    "std_stayed_two_year": 0,
-                    "std_class_letter": "Б",
-                    "std_year_first": 2012,
-                    "emp_id": 1
-                }
-            }, {
-                "pepl_login": "Student",
-                "pepl_id": 3,
-                "pepl_data": {
-                    "pepl_first_name": "Иван",
-                    "pepl_gender": true,
-                    "pepl_second_name": "Иванов",
-                    "pepl_last_name": "Иванович",
-                    "pepl_email": "admin@mail.ru",
-                    "pepl_phone": "9568734554",
-                    "pepl_birthday": "1977-01-19"
-                },
-                "std_data": {
-                    "std_finished": false,
-                    "std_stayed_two_year": 0,
-                    "std_class_letter": "Б",
-                    "std_year_first": 2012,
-                    "emp_id": 1
-                }
-            }],
-            "status": "OK"
+        const STATUS = {
+            NOT_FOUND_STUDENTS: 'NOT_FOUND_STUDENTS',
+            UNKNOWN_ERROR: 'UNKNOWN_ERROR',
+            NOT_ACCESS: 'NOT_ACCESS',
+            NOT_AUTH: 'NOT_AUTH',
+            OK: 'OK'
         };
-        if (Object.keys(examples).length > 0) {
-            resolve(examples[Object.keys(examples)[0]]);
-        } else {
-            resolve();
+
+        let result = {};
+        let payload = [];
+
+        if (!req.isAuthenticated()) {
+            console.error('Not Authenticated');
+            reject({status: STATUS.NOT_AUTH});
+            return;
         }
+
+        if (!UsersReq.checkRoles(req.user.roles, [ROLE.ADMIN, ROLE.PSYCHOLOGIST])) {
+            console.error('Not Admin or Psychologist');
+            reject({status: STATUS.NOT_ACCESS});
+            return;
+        }
+
+        const access_props = [T.STUDENTS.EMP_ID, "std_parallel", "std_graduated", T.STUDENTS.STD_CLASS_LETTER,
+            T.PEOPLE.PEPL_LOGIN, T.PEOPLE.PEPL_SECOND_NAME, T.PEOPLE.PEPL_FIRST_NAME,
+            T.PEOPLE.PEPL_LAST_NAME, T.PEOPLE.PEPL_GENDER, T.PEOPLE.PEPL_BIRTHDAY,
+            T.PEOPLE.PEPL_PHONE, T.PEOPLE.PEPL_EMAIL];
+        Object.keys(body).forEach(props => {
+            if (!access_props.some(i => i === props)) {
+                delete body[props];
+            }
+        });
+
+        let std_parallel;
+        if (body.std_parallel) {
+            if (body.std_parallel < 12 && body.std_parallel > 0)
+                std_parallel = body.std_parallel;
+            delete body.std_parallel;
+        }
+
+        let std_graduated = false;
+        if (UsersReq.checkRole(req.user.roles, ROLE.ADMIN)) {
+            if (body.std_graduated !== undefined) {
+                std_graduated = body.std_graduated;
+            }
+        }
+        delete body.std_graduated;
+
+        UsersReq.getStudents(knex, body, std_parallel, std_graduated)
+            .then((res) => {
+                if (res.length === 0) {
+                    throw new Error(STATUS.NOT_FOUND_STUDENTS);
+                }
+
+                console.log('Found ' + res.length + ' Students');
+                payload = res.map(item => {
+                    return {
+                        pepl_id: item.pepl_id,
+                        pepl_login: item.pepl_login,
+                        pepl_data: {
+                            pepl_second_name: item.pepl_second_name,
+                            pepl_first_name: item.pepl_first_name,
+                            pepl_last_name: item.pepl_last_name,
+                            pepl_gender: item.pepl_gender,
+                            pepl_birthday: RecordsReq.getDateString(item.pepl_birthday),
+                            pepl_phone: item.pepl_phone,
+                            pepl_email: item.pepl_email,
+                        },
+                        std_data: {
+                            std_class: UsersReq.getParallel(item.std_date_receipt,
+                                item.std_stayed_two_year,
+                                item.std_date_issue) + item.std_class_letter,
+                            std_stayed_two_year: item.std_stayed_two_year,
+                            std_date_issue: RecordsReq.getDateString(item.std_date_issue)
+                        }
+                    }
+                });
+
+                result = {
+                    status: STATUS.OK,
+                    payload: payload
+                };
+                resolve(result);
+            })
+            .catch((err) => {
+                console.error(err);
+                if (err.message === STATUS.NOT_FOUND_STUDENTS) {
+                    result = {status: err.message};
+                } else {
+                    result = {status: STATUS.UNKNOWN_ERROR}
+                }
+                reject(result);
+            })
     });
-}
+};
 
 
 /**
