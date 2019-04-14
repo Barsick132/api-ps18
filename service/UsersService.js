@@ -839,60 +839,105 @@ exports.bindParentAndStud = function (body) {
  * body Body_27 Параметры поиска сотрудника
  * returns inline_response_200_23
  **/
-exports.getEmployee = function (body) {
+exports.getEmployees = function (req, body) {
+    const METHOD = 'getEmployees()';
+    console.log(FILE, METHOD);
+
     return new Promise(function (resolve, reject) {
-        var examples = {};
-        examples['application/json'] = {
-            "payload": [{
-                "pepl_login": "Admin",
-                "emp_data": {
-                    "emp_vk": "empadmin",
-                    "emp_skype": "emplAdmin",
-                    "emp_viber": "9568734554",
-                    "emp_hangouts": "admin@gmail.com",
-                    "emp_date_enrollment": "1997-11-22",
-                    "emp_discord": "emplAdmin#1232"
-                },
-                "pepl_id": 1,
-                "pepl_data": {
-                    "pepl_first_name": "Иван",
-                    "pepl_gender": true,
-                    "pepl_second_name": "Иванов",
-                    "pepl_last_name": "Иванович",
-                    "pepl_email": "admin@mail.ru",
-                    "pepl_phone": "9568734554",
-                    "pepl_birthday": "1977-01-19"
-                }
-            }, {
-                "pepl_login": "Admin",
-                "emp_data": {
-                    "emp_vk": "empadmin",
-                    "emp_skype": "emplAdmin",
-                    "emp_viber": "9568734554",
-                    "emp_hangouts": "admin@gmail.com",
-                    "emp_date_enrollment": "1997-11-22",
-                    "emp_discord": "emplAdmin#1232"
-                },
-                "pepl_id": 1,
-                "pepl_data": {
-                    "pepl_first_name": "Иван",
-                    "pepl_gender": true,
-                    "pepl_second_name": "Иванов",
-                    "pepl_last_name": "Иванович",
-                    "pepl_email": "admin@mail.ru",
-                    "pepl_phone": "9568734554",
-                    "pepl_birthday": "1977-01-19"
-                }
-            }],
-            "status": "OK"
+        const STATUS = {
+            NOT_FOUND_EMPLOYEES: 'NOT_FOUND_EMPLOYEES',
+            NOT_ACCESS: 'NOT_ACCESS',
+            NOT_AUTH: 'NOT_AUTH',
+            UNKNOWN_ERROR: 'UNKNOWN_ERROR',
+            OK: 'OK'
         };
-        if (Object.keys(examples).length > 0) {
-            resolve(examples[Object.keys(examples)[0]]);
-        } else {
-            resolve();
+
+        let result = {};
+        let payload = {};
+
+        if (!req.isAuthenticated()) {
+            console.error('Not Authenticated');
+            reject({status: STATUS.NOT_AUTH});
+            return;
         }
+
+        if (!UsersReq.checkRole(req.user.roles, ROLE.ADMIN)) {
+            console.error('Not Admin');
+            reject({status: STATUS.NOT_ACCESS});
+            return;
+        }
+
+        let pst_arr;
+        if (body.pst_arr) {
+            if (body.pst_arr.length !== 0)
+                pst_arr = body.pst_arr;
+            delete body.pst_arr;
+        }
+
+        let role_arr;
+        if (body.role_array) {
+            if (body.role_array.length !== 0)
+                role_arr = body.role_array;
+            delete body.role_array;
+        }
+
+        const access_params = [T.PEOPLE.PEPL_LOGIN, T.PEOPLE.PEPL_SECOND_NAME, T.PEOPLE.PEPL_FIRST_NAME,
+            T.PEOPLE.PEPL_LAST_NAME, T.PEOPLE.PEPL_GENDER, T.PEOPLE.PEPL_BIRTHDAY,
+            T.PEOPLE.PEPL_PHONE, T.PEOPLE.PEPL_EMAIL];
+        Object.keys(body).forEach(param => {
+            if (!access_params.some(p => p === param)) {
+                delete body[param];
+            }
+        });
+
+        UsersReq.getEmployees(knex, body, role_arr, pst_arr)
+            .then((res) => {
+                if (res.length === 0) {
+                    throw new Error(STATUS.NOT_FOUND_EMPLOYEES);
+                }
+
+                payload = res.map(emp => {
+                    return {
+                        pepl_id: emp.pepl_id,
+                        pepl_login: emp.pepl_login,
+                        pepl_data: {
+                            pepl_second_name: emp.pepl_second_name,
+                            pepl_first_name: emp.pepl_first_name,
+                            pepl_last_name: emp.pepl_last_name,
+                            pepl_gender: emp.pepl_gender,
+                            pepl_birthday: RecordsReq.getDateString(emp.pepl_birthday),
+                            pepl_phone: emp.pepl_phone,
+                            pepl_email: emp.pepl_email
+                        },
+                        emp_data: {
+                            emp_skype: emp.emp_skype,
+                            emp_discord: emp.emp_discord,
+                            emp_hangouts: emp.emp_hangouts,
+                            emp_viber: emp.emp_viber,
+                            emp_vk: emp.emp_vk,
+                            emp_date_enrollment: emp.emp_date_enrollment === null ? null : RecordsReq.getDateString(emp.emp_date_enrollment)
+                        }
+                    }
+                });
+
+                result = {
+                    status: STATUS.OK,
+                    payload: payload
+                };
+
+                resolve(result);
+            })
+            .catch((err) => {
+                console.error(err);
+                if (err.message === STATUS.NOT_FOUND_EMPLOYEES) {
+                    result = {status: err.message};
+                } else {
+                    result = {status: STATUS.UNKNOWN_ERROR}
+                }
+                reject(result);
+            })
     });
-}
+};
 
 
 /**

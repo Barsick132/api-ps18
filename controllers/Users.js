@@ -91,9 +91,14 @@ module.exports.bindParentAndStud = function bindParentAndStud(req, res, next) {
         });
 };
 
-module.exports.getEmployee = function getEmployee(req, res, next) {
-    var body = req.swagger.params['body'].value;
-    Users.getEmployee(body)
+module.exports.getEmployees = function getEmployee(req, res, next) {
+    if (req.error) {
+        utils.writeJson(res, {status: req.error});
+        return;
+    }
+
+    const body = req.swagger.params['body'].value;
+    Users.getEmployees(req, body)
         .then(function (response) {
             utils.writeJson(res, response);
         })

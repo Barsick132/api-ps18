@@ -152,7 +152,7 @@ exports.getStudentByID = (knex, pepl_id) => {
     return knex.select().from(T.STUDENTS.NAME).where(T.STUDENTS.STD_ID, pepl_id);
 };
 
-// Поиск учеников  фильтрацией
+// Поиск учеников с фильтрацией
 exports.getStudents = (knex, data, std_parallel, std_graduated) => {
     if (std_parallel && std_graduated !== undefined)
         return knex({p: T.PEOPLE.NAME, s: T.STUDENTS.NAME})
@@ -179,6 +179,47 @@ exports.getStudents = (knex, data, std_parallel, std_graduated) => {
             .whereRaw('?? ' + (std_graduated ? '<' : '>=') + ' current_date', [T.STUDENTS.STD_DATE_ISSUE])
             .andWhereRaw('?? = ??', ['p.' + T.PEOPLE.PEPL_ID, 's.' + T.STUDENTS.STD_ID])
             .where(data);
+};
+
+// Поиск сотрудников с фильтрацией
+exports.getEmployees = (knex, data, role_arr, pst_arr) => {
+    if (role_arr !== undefined && pst_arr !== undefined) {
+        return knex({p: T.PEOPLE.NAME, e: T.EMPLOYEES.NAME, ep: T.EMP_PST.NAME, r: T.ROLE.NAME})
+            .distinct('p.*', 'e.*')
+            .select('p.*', 'e.*')
+            .whereRaw('?? = ??', ['p.' + T.PEOPLE.PEPL_ID, 'e.' + T.EMPLOYEES.EMP_ID])
+            .whereRaw('?? = ??', ['e.' + T.EMPLOYEES.EMP_ID, 'ep.' + T.EMP_PST.EMP_ID])
+            .whereRaw('?? = ??', ['p.' + T.PEOPLE.PEPL_ID, 'r.' + T.ROLE.PEPL_ID])
+            .whereIn('ep.' + T.EMP_PST.PST_ID, pst_arr)
+            .whereIn('r.' + T.ROLE.ROLE_NAME, role_arr)
+            .where(data);
+    } else {
+        if(role_arr !== undefined){
+            return knex({p: T.PEOPLE.NAME, e: T.EMPLOYEES.NAME, ep: T.EMP_PST.NAME, r: T.ROLE.NAME})
+                .distinct('p.*', 'e.*')
+                .select('p.*', 'e.*')
+                .whereRaw('?? = ??', ['p.' + T.PEOPLE.PEPL_ID, 'e.' + T.EMPLOYEES.EMP_ID])
+                .whereRaw('?? = ??', ['p.' + T.PEOPLE.PEPL_ID, 'r.' + T.ROLE.PEPL_ID])
+                .whereIn('r.' + T.ROLE.ROLE_NAME, role_arr)
+                .where(data);
+        }
+        if(pst_arr !== undefined){
+            return knex({p: T.PEOPLE.NAME, e: T.EMPLOYEES.NAME, ep: T.EMP_PST.NAME, r: T.ROLE.NAME})
+                .distinct('p.*', 'e.*')
+                .select('p.*', 'e.*')
+                .whereRaw('?? = ??', ['p.' + T.PEOPLE.PEPL_ID, 'e.' + T.EMPLOYEES.EMP_ID])
+                .whereRaw('?? = ??', ['e.' + T.EMPLOYEES.EMP_ID, 'ep.' + T.EMP_PST.EMP_ID])
+                .whereIn('ep.' + T.EMP_PST.PST_ID, pst_arr)
+                .where(data);
+        }
+        if(role_arr === undefined && pst_arr === undefined){
+            return knex({p: T.PEOPLE.NAME, e: T.EMPLOYEES.NAME})
+                .distinct('p.*', 'e.*')
+                .select('p.*', 'e.*')
+                .whereRaw('?? = ??', ['p.' + T.PEOPLE.PEPL_ID, 'e.' + T.EMPLOYEES.EMP_ID])
+                .where(data);
+        }
+    }
 };
 
 // Получить информацию сотрудника по ID

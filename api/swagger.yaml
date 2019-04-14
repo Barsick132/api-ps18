@@ -3,7 +3,7 @@ swagger: "2.0"
 info:
   description: "Это API (swagger 2.0) системы автоматизации психолого-педагогическ\
     ого сопровождения субъектов образовательной деятельности для школы №18."
-  version: "1.0.14"
+  version: "1.0.15"
   title: "PsychoSys18"
   contact:
     email: "antony.nor@yandex.ru"
@@ -1457,12 +1457,12 @@ paths:
       - JWT: []
       x-swagger-router-controller: "Users"
     x-swagger-router-controller: "users"
-  /getEmployee:
+  /getEmployees:
     post:
       tags:
       - "users"
-      summary: "Поиск сотрудников с фильтрацией"
-      operationId: "getEmployee"
+      summary: "Поиск сотрудников с фильтрацией (Admin)"
+      operationId: "getEmployees"
       consumes:
       - "application/json"
       produces:
@@ -4976,7 +4976,7 @@ definitions:
         example: "Б"
       std_graduated:
         type: "boolean"
-        example: "true"
+        example: true
       pepl_login:
         type: "string"
         example: "Student"
@@ -5044,21 +5044,19 @@ definitions:
           std_class: "7Б"
           std_date_issue: "2023-06-01"
       status: "OK"
-  getEmployee_post_array:
-    properties:
-      pst_id:
-        type: "integer"
-        format: "int32"
-        example: 1
   body_29:
     type: "object"
     properties:
       role_array:
         $ref: "#/definitions/Role"
-      post_array:
+      pst_arr:
         type: "array"
+        example:
+        - 1
+        - 2
         items:
-          $ref: "#/definitions/getEmployee_post_array"
+          type: "integer"
+          format: "int32"
       pepl_login:
         type: "string"
         example: "Admin"
