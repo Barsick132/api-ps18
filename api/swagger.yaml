@@ -3,7 +3,7 @@ swagger: "2.0"
 info:
   description: "Это API (swagger 2.0) системы автоматизации психолого-педагогическ\
     ого сопровождения субъектов образовательной деятельности для школы №18."
-  version: "1.0.15"
+  version: "1.0.16"
   title: "PsychoSys18"
   contact:
     email: "antony.nor@yandex.ru"
@@ -1383,7 +1383,7 @@ paths:
     post:
       tags:
       - "users"
-      summary: "Получение данных пользователя"
+      summary: "Получить информацию об одном пользователе (Admin)"
       operationId: "getUser"
       consumes:
       - "application/json"
@@ -1497,12 +1497,12 @@ paths:
       - JWT: []
       x-swagger-router-controller: "Users"
     x-swagger-router-controller: "users"
-  /getParent:
+  /getParents:
     post:
       tags:
       - "users"
-      summary: "Поиск родителей с фильтрацией"
-      operationId: "getParent"
+      summary: "Поиск родителей с фильтрацией (Admin)"
+      operationId: "getParents"
       consumes:
       - "application/json"
       produces:
@@ -2894,10 +2894,10 @@ definitions:
         type: "string"
         example: "18:30:00"
       wd_break_begin:
-        type: ["string","null"]
+        type: ["string", "null"]
         example: "13:00:00"
       wd_break_end:
-        type: ["string","null"]
+        type: ["string", "null"]
         example: "14:00:00"
       wd_duration:
         type: "integer"
@@ -4358,19 +4358,19 @@ definitions:
   updPersonalData_emp_data:
     properties:
       emp_skype:
-        type: ["string","null"]
+        type: ["string", "null"]
         example: "emplAdmin"
       emp_discord:
-        type: ["string","null"]
+        type: ["string", "null"]
         example: "emplAdmin#1232"
       emp_hangouts:
-        type: ["string","null"]
+        type: ["string", "null"]
         example: "admin@gmail.com"
       emp_viber:
-        type: ["string","null"]
+        type: ["string", "null"]
         example: "9045556432"
       emp_vk:
-        type: ["string","null"]
+        type: ["string", "null"]
         example: "empadmin"
   updPersonalData_prnt_data:
     properties:
@@ -4384,7 +4384,7 @@ definitions:
         type: "string"
         example: "17Б"
       prnt_flat:
-        type: ["string","null"]
+        type: ["string", "null"]
         example: "45"
   body_26:
     type: "object"
@@ -4408,10 +4408,10 @@ definitions:
         type: "boolean"
         example: true
       pepl_phone:
-        type: ["string","null"]
+        type: ["string", "null"]
         example: "9045556432"
       pepl_email:
-        type: ["string","null"]
+        type: ["string", "null"]
         example: "admin@mail.ru"
       emp_data:
         $ref: "#/definitions/updPersonalData_emp_data"
@@ -4881,6 +4881,47 @@ definitions:
         type: "integer"
         format: "int32"
         example: 1
+  inline_response_200_26_payload_emp_data:
+    required:
+    - "pst_arr"
+    properties:
+      emp_skype:
+        type: "string"
+        example: "emplAdmin"
+      emp_discord:
+        type: "string"
+        example: "emplAdmin#1232"
+      emp_hangouts:
+        type: "string"
+        example: "admin@gmail.com"
+      emp_viber:
+        type: "string"
+        example: "9568734554"
+      emp_vk:
+        type: "string"
+        example: "empadmin"
+      emp_date_enrollment:
+        type: "string"
+        format: "date"
+        example: "1997-11-22"
+      pst_arr:
+        type: "array"
+        example:
+        - "Администратор"
+        - "Педагог-психолог"
+        items:
+          type: "string"
+    description: "Данные сотрудника"
+    example:
+      emp_vk: "empadmin"
+      emp_skype: "emplAdmin"
+      emp_viber: "9568734554"
+      pst_arr:
+      - "Администратор"
+      - "Педагог-психолог"
+      emp_hangouts: "admin@gmail.com"
+      emp_date_enrollment: "1997-11-22"
+      emp_discord: "emplAdmin#1232"
   inline_response_200_26_payload:
     required:
     - "pepl_data"
@@ -4891,7 +4932,7 @@ definitions:
       pepl_data:
         $ref: "#/definitions/People"
       emp_data:
-        $ref: "#/definitions/Employee"
+        $ref: "#/definitions/inline_response_200_26_payload_emp_data"
       prnt_data:
         $ref: "#/definitions/Parent"
       std_data:
@@ -4902,6 +4943,9 @@ definitions:
         emp_vk: "empadmin"
         emp_skype: "emplAdmin"
         emp_viber: "9568734554"
+        pst_arr:
+        - "Администратор"
+        - "Педагог-психолог"
         emp_hangouts: "admin@gmail.com"
         emp_date_enrollment: "1997-11-22"
         emp_discord: "emplAdmin#1232"
@@ -4938,6 +4982,9 @@ definitions:
           emp_vk: "empadmin"
           emp_skype: "emplAdmin"
           emp_viber: "9568734554"
+          pst_arr:
+          - "Администратор"
+          - "Педагог-психолог"
           emp_hangouts: "admin@gmail.com"
           emp_date_enrollment: "1997-11-22"
           emp_discord: "emplAdmin#1232"
@@ -5449,7 +5496,7 @@ definitions:
         type: "string"
         example: "Педагог-психолог"
       pst_description:
-        type: ["string","null"]
+        type: ["string", "null"]
   inline_response_200_34:
     required:
     - "status"

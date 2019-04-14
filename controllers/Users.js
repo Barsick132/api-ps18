@@ -107,9 +107,14 @@ module.exports.getEmployees = function getEmployee(req, res, next) {
         });
 };
 
-module.exports.getParent = function getParent(req, res, next) {
-    var body = req.swagger.params['body'].value;
-    Users.getParent(body)
+module.exports.getParents = function getParent(req, res, next) {
+    if (req.error) {
+        utils.writeJson(res, {status: req.error});
+        return;
+    }
+
+    const body = req.swagger.params['body'].value;
+    Users.getParents(req, body)
         .then(function (response) {
             utils.writeJson(res, response);
         })
@@ -135,6 +140,11 @@ module.exports.getStudents = function getStudent(req, res, next) {
 };
 
 module.exports.getUser = function getUser(req, res, next) {
+    if (req.error) {
+        utils.writeJson(res, {status: req.error});
+        return;
+    }
+
     const body = req.swagger.params['body'].value;
     Users.getUser(req, body)
         .then(function (response) {

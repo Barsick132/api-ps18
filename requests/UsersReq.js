@@ -70,11 +70,19 @@ exports.getConfParentAddressByID = (knex, pepl_id) => {
         .andWhere(T.PARENTS.PRNT_CONFIRM, 1);
 };
 
+// Получить значение подтверждения регистрации родителя по ID
 exports.getConfParentById = (knex, prnt_id) => {
     return knex(T.PARENTS.NAME)
         .columns(T.PARENTS.PRNT_CONFIRM)
         .select()
         .where(T.PARENTS.PRNT_ID, prnt_id);
+};
+
+// Получить данные родителя по ID
+exports.getParentById = (knex, pepl_id) => {
+    return knex(T.PARENTS.NAME)
+        .select()
+        .where(T.PARENTS.PRNT_ID, pepl_id);
 };
 
 // Вернуть полную информацию о детях родителя
@@ -194,7 +202,7 @@ exports.getEmployees = (knex, data, role_arr, pst_arr) => {
             .whereIn('r.' + T.ROLE.ROLE_NAME, role_arr)
             .where(data);
     } else {
-        if(role_arr !== undefined){
+        if (role_arr !== undefined) {
             return knex({p: T.PEOPLE.NAME, e: T.EMPLOYEES.NAME, ep: T.EMP_PST.NAME, r: T.ROLE.NAME})
                 .distinct('p.*', 'e.*')
                 .select('p.*', 'e.*')
@@ -203,7 +211,7 @@ exports.getEmployees = (knex, data, role_arr, pst_arr) => {
                 .whereIn('r.' + T.ROLE.ROLE_NAME, role_arr)
                 .where(data);
         }
-        if(pst_arr !== undefined){
+        if (pst_arr !== undefined) {
             return knex({p: T.PEOPLE.NAME, e: T.EMPLOYEES.NAME, ep: T.EMP_PST.NAME, r: T.ROLE.NAME})
                 .distinct('p.*', 'e.*')
                 .select('p.*', 'e.*')
@@ -212,13 +220,32 @@ exports.getEmployees = (knex, data, role_arr, pst_arr) => {
                 .whereIn('ep.' + T.EMP_PST.PST_ID, pst_arr)
                 .where(data);
         }
-        if(role_arr === undefined && pst_arr === undefined){
+        if (role_arr === undefined && pst_arr === undefined) {
             return knex({p: T.PEOPLE.NAME, e: T.EMPLOYEES.NAME})
                 .distinct('p.*', 'e.*')
                 .select('p.*', 'e.*')
                 .whereRaw('?? = ??', ['p.' + T.PEOPLE.PEPL_ID, 'e.' + T.EMPLOYEES.EMP_ID])
                 .where(data);
         }
+    }
+};
+
+// Поиск родителей с фильтрацией
+exports.getParents = (knex, data, std_id) => {
+    if (std_id) {
+        return knex({p: T.PEOPLE.NAME, prnt: T.PARENTS.NAME, sp: T.STD_PRNT.NAME})
+            .distinct('p.*', 'prnt.*')
+            .select('p.*', 'prnt.*')
+            .whereRaw('?? = ??', ['p.' + T.PEOPLE.PEPL_ID, 'prnt.' + T.PARENTS.PRNT_ID])
+            .whereRaw('?? = ??', ['prnt.' + T.PARENTS.PRNT_ID, 'sp.' + T.STD_PRNT.PRNT_ID])
+            .whereRaw('?? = ?', ['sp.' + T.STD_PRNT.STD_ID, std_id])
+            .where(data);
+    } else {
+        return knex({p: T.PEOPLE.NAME, prnt: T.PARENTS.NAME})
+            .distinct('p.*', 'prnt.*')
+            .select('p.*', 'prnt.*')
+            .whereRaw('?? = ??', ['p.' + T.PEOPLE.PEPL_ID, 'prnt.' + T.PARENTS.PRNT_ID])
+            .where(data);
     }
 };
 
