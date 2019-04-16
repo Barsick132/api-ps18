@@ -80,17 +80,6 @@ module.exports.getPersonsToBeRec = function getPersonsToBeRec(req, res, next) {
         });
 };
 
-module.exports.bindParentAndStud = function bindParentAndStud(req, res, next) {
-    var body = req.swagger.params['body'].value;
-    Users.bindParentAndStud(body)
-        .then(function (response) {
-            utils.writeJson(res, response);
-        })
-        .catch(function (response) {
-            utils.writeJson(res, response);
-        });
-};
-
 module.exports.getEmployees = function getEmployee(req, res, next) {
     if (req.error) {
         utils.writeJson(res, {status: req.error});

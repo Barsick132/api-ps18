@@ -13,37 +13,6 @@ const UsersReq = require('../requests/UsersReq');
 
 const FILE = './service/AuthService.js';
 
-/**
- * Автопроверка подтверждения регистрации
- *
- * body List ID родителя
- * returns inline_response_200_20
- **/
-exports.autoCheckParentReg = function (body) {
-    return new Promise(function (resolve, reject) {
-        var examples = {};
-        examples['application/json'] = {
-            "payload": [{
-                "cr_id": 1,
-                "cr_teacher_fullname": "OK",
-                "cr_class": "OK",
-                "cr_child_fullname": "OK"
-            }, {
-                "cr_id": 1,
-                "cr_teacher_fullname": "OK",
-                "cr_class": "OK",
-                "cr_child_fullname": "OK"
-            }],
-            "status": "OK"
-        };
-        if (Object.keys(examples).length > 0) {
-            resolve(examples[Object.keys(examples)[0]]);
-        } else {
-            resolve();
-        }
-    });
-}
-
 
 /**
  * Подтверждение регистрации родителей
@@ -71,94 +40,119 @@ exports.confirmParentReg = function (body) {
  *
  * returns inline_response_200_19
  **/
-exports.getListConfirmReg = function () {
+exports.getListConfirmReg = function (req) {
+    const METHOD = 'getListConfirmReg()';
+    console.log(FILE, METHOD);
+
     return new Promise(function (resolve, reject) {
-        var examples = {};
-        examples['application/json'] = {
-            "payload": [{
-                "prnt_id": 2,
-                "cr_array": [{
-                    "cr_first_child": "Семен",
-                    "cr_last_teacher": "Иванович",
-                    "cr_id": 1,
-                    "cr_class": "7Б",
-                    "cr_first_teacher": "Иван",
-                    "cr_second_child": "Тарасов",
-                    "cr_last_child": "Львович",
-                    "cr_second_teacher": "Иванов"
-                }, {
-                    "cr_first_child": "Семен",
-                    "cr_last_teacher": "Иванович",
-                    "cr_id": 1,
-                    "cr_class": "7Б",
-                    "cr_first_teacher": "Иван",
-                    "cr_second_child": "Тарасов",
-                    "cr_last_child": "Львович",
-                    "cr_second_teacher": "Иванов"
-                }],
-                "pepl_data": {
-                    "pepl_first_name": "Иван",
-                    "pepl_gender": true,
-                    "pepl_second_name": "Иванов",
-                    "pepl_last_name": "Иванович",
-                    "pepl_email": "admin@mail.ru",
-                    "pepl_phone": "9568734554",
-                    "pepl_birthday": "1977-01-19"
-                },
-                "prnt_data": {
-                    "prnt_flat": "45",
-                    "prnt_home": "17Б",
-                    "prnt_confirm": 0,
-                    "prnt_city": "Липецк",
-                    "prnt_street": "Ангарская"
-                }
-            }, {
-                "prnt_id": 2,
-                "cr_array": [{
-                    "cr_first_child": "Семен",
-                    "cr_last_teacher": "Иванович",
-                    "cr_id": 1,
-                    "cr_class": "7Б",
-                    "cr_first_teacher": "Иван",
-                    "cr_second_child": "Тарасов",
-                    "cr_last_child": "Львович",
-                    "cr_second_teacher": "Иванов"
-                }, {
-                    "cr_first_child": "Семен",
-                    "cr_last_teacher": "Иванович",
-                    "cr_id": 1,
-                    "cr_class": "7Б",
-                    "cr_first_teacher": "Иван",
-                    "cr_second_child": "Тарасов",
-                    "cr_last_child": "Львович",
-                    "cr_second_teacher": "Иванов"
-                }],
-                "pepl_data": {
-                    "pepl_first_name": "Иван",
-                    "pepl_gender": true,
-                    "pepl_second_name": "Иванов",
-                    "pepl_last_name": "Иванович",
-                    "pepl_email": "admin@mail.ru",
-                    "pepl_phone": "9568734554",
-                    "pepl_birthday": "1977-01-19"
-                },
-                "prnt_data": {
-                    "prnt_flat": "45",
-                    "prnt_home": "17Б",
-                    "prnt_confirm": 0,
-                    "prnt_city": "Липецк",
-                    "prnt_street": "Ангарская"
-                }
-            }],
-            "status": "OK"
+        const STATUS = {
+            NOT_FOUND_STUDENT: 'NOT_FOUND_STUDENT',
+            NOT_FOUND_TEACHER: 'NOT_FOUND_TEACHER',
+            NOT_FOUND_CLASS: 'NOT_FOUND_CLASS',
+            NOT_FOUND_CONFIRM_REG: 'NOT_FOUND_CONFIRM_REG',
+            NOT_FOUND_PARENTS_ON_CONF: 'NOT_FOUND_PARENTS_ON_CONF',
+            NOT_ACCESS: 'NOT_ACCESS',
+            NOT_AUTH: 'NOT_AUTH',
+            UNKNOWN_ERROR: 'UNKNOWN_ERROR',
+            OK: 'OK'
         };
-        if (Object.keys(examples).length > 0) {
-            resolve(examples[Object.keys(examples)[0]]);
-        } else {
-            resolve();
+
+        let result = {};
+        let payload = {};
+
+        if (!req.isAuthenticated()) {
+            console.error('Not Authenticated');
+            reject({status: STATUS.NOT_AUTH});
+            return;
         }
+
+        if (!UsersReq.checkRole(req.user.roles, ROLE.ADMIN)) {
+            console.error('Not Admin');
+            reject({status: STATUS.NOT_ACCESS});
+            return;
+        }
+
+        UsersReq.getOnConfParents(knex)
+            .then((res) => {
+                if (res.length === 0) {
+                    throw new Error(STATUS.NOT_FOUND_PARENTS_ON_CONF);
+                }
+
+                console.log('Found ' + res.length + ' Parents On Conf');
+                payload = res.map(prnt => {
+                    return {
+                        prnt_id: prnt.prnt_id,
+                        pepl_data: {
+                            pepl_second_name: prnt.pepl_second_name,
+                            pepl_first_name: prnt.pepl_first_name,
+                            pepl_last_name: prnt.pepl_last_name,
+                            pepl_gender: prnt.pepl_gender,
+                            pepl_birthday: prnt.pepl_birthday,
+                            pepl_phone: prnt.pepl_phone,
+                            pepl_email: prnt.pepl_email
+                        },
+                        prnt_data: {
+                            prnt_city: prnt.prnt_city,
+                            prnt_street: prnt.prnt_street,
+                            prnt_home: prnt.prnt_home,
+                            prnt_flat: prnt.prnt_flat
+                        }
+                    }
+                });
+
+                return AuthReq.getConfsParentsById(knex, res.map(prnt => prnt.pepl_id));
+            })
+            .then((res) => {
+                if(res.length === 0){
+                    throw new Error(STATUS.NOT_FOUND_CONFIRM_REG);
+                }
+
+                console.log('Found ' + res.length + ' Confirm Reg');
+                payload.forEach(item => {
+                    item.cr_array = res.filter(cr => cr.prnt_id === item.prnt_id);
+                    item.cr_array.forEach(i => {
+                        i.auto_check_data = {
+                            cr_child_fullname: (i.ch_second_name !== null && i.ch_first_name !== null && i.ch_last_name !== null)?
+                                STATUS.OK: STATUS.NOT_FOUND_STUDENT,
+                            cr_teacher_fullname: (i.tch_second_name !== null && i.tch_first_name !== null && i.tch_last_name !== null)?
+                                STATUS.OK: STATUS.NOT_FOUND_TEACHER,
+                            cr_class: (i.std_class_letter !== null && i.std_stayed_two_year !== null && i.std_date_receipt !== null)?
+                                STATUS.OK:STATUS.NOT_FOUND_CLASS,
+                            std_id: i.std_id
+                        };
+
+                        delete i.prnt_id;
+                        delete i.emp_id;
+                        delete i.ch_second_name;
+                        delete i.ch_first_name;
+                        delete i.ch_last_name;
+                        delete i.tch_second_name;
+                        delete i.tch_first_name;
+                        delete i.tch_last_name;
+                        delete i.std_stayed_two_year;
+                        delete i.std_date_receipt;
+                        delete i.std_class_letter;
+                    })
+                });
+
+                result = {
+                    status: STATUS.OK,
+                    payload: payload
+                };
+
+                resolve(result);
+            })
+            .catch((err) => {
+                console.error(err);
+                if (err.message === STATUS.NOT_FOUND_PARENTS_ON_CONF) {
+                    result = {status: err.message};
+                } else {
+                    result = {status: STATUS.UNKNOWN_ERROR};
+                }
+                reject(result);
+            });
     });
-}
+};
 
 
 /**

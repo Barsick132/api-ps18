@@ -78,6 +78,14 @@ exports.getConfParentById = (knex, prnt_id) => {
         .where(T.PARENTS.PRNT_ID, prnt_id);
 };
 
+// Список запросов на регистрацию
+exports.getOnConfParents = (knex) => {
+    return knex({pepl: T.PEOPLE.NAME, prnt: T.PARENTS.NAME})
+        .select()
+        .whereRaw('?? = ??', [T.PEOPLE.PEPL_ID, T.PARENTS.PRNT_ID])
+        .where(T.PARENTS.PRNT_CONFIRM, 0);
+};
+
 // Получить данные родителя по ID
 exports.getParentById = (knex, pepl_id) => {
     return knex(T.PARENTS.NAME)
@@ -178,7 +186,7 @@ exports.getStudents = (knex, data, std_parallel, std_graduated) => {
                     's.' + T.STUDENTS.STD_STAYED_TWO_YEAR, 's.' + T.STUDENTS.STD_DATE_ISSUE,
                     's.' + T.STUDENTS.STD_DATE_RECEIPT, 's.' + T.STUDENTS.STD_STAYED_TWO_YEAR,
                     's.' + T.STUDENTS.STD_DATE_RECEIPT, 's.' + T.STUDENTS.STD_STAYED_TWO_YEAR,
-                    's.' + T.STUDENTS.STD_DATE_RECEIPT, 's.' + T.STUDENTS.STD_STAYED_TWO_YEAR,]))
+                    's.' + T.STUDENTS.STD_DATE_RECEIPT, 's.' + T.STUDENTS.STD_STAYED_TWO_YEAR]))
             .whereRaw('?? = ??', ['p.' + T.PEOPLE.PEPL_ID, 's.' + T.STUDENTS.STD_ID])
             .where(data);
     else

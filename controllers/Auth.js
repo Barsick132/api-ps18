@@ -3,16 +3,6 @@
 var utils = require('../utils/writer.js');
 var Auth = require('../service/AuthService');
 
-module.exports.autoCheckParentReg = function autoCheckParentReg(req, res, next) {
-    var body = req.swagger.params['body'].value;
-    Auth.autoCheckParentReg(body)
-        .then(function (response) {
-            utils.writeJson(res, response);
-        })
-        .catch(function (response) {
-            utils.writeJson(res, response);
-        });
-};
 
 module.exports.confirmParentReg = function confirmParentReg(req, res, next) {
     var body = req.swagger.params['body'].value;
@@ -26,7 +16,12 @@ module.exports.confirmParentReg = function confirmParentReg(req, res, next) {
 };
 
 module.exports.getListConfirmReg = function getListConfirmReg(req, res, next) {
-    Auth.getListConfirmReg()
+    if(req.error) {
+        utils.writeJson(res, {status: req.error});
+        return;
+    }
+
+    Auth.getListConfirmReg(req)
         .then(function (response) {
             utils.writeJson(res, response);
         })

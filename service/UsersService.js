@@ -813,27 +813,6 @@ exports.getPersonsToBeRec = function (req) {
 
 
 /**
- * Привязка ученика к родителю
- *
- * body Body_29 ID ученика и родителя
- * returns inline_response_200_6
- **/
-exports.bindParentAndStud = function (body) {
-    return new Promise(function (resolve, reject) {
-        var examples = {};
-        examples['application/json'] = {
-            "status": "OK"
-        };
-        if (Object.keys(examples).length > 0) {
-            resolve(examples[Object.keys(examples)[0]]);
-        } else {
-            resolve();
-        }
-    });
-}
-
-
-/**
  * Поиск сотрудников с фильтрацией
  *
  * body Body_27 Параметры поиска сотрудника
