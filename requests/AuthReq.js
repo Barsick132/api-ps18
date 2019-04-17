@@ -38,16 +38,16 @@ exports.getConfsParentsById = (knex, prnt_id_arr) => {
                 .whereIn('cr.' + T.CONFIRM_REG.PRNT_ID, prnt_id_arr)
                 .leftOuterJoin(function () {
                     this.select({
-                            ch_second_name: 'p.' + T.PEOPLE.PEPL_SECOND_NAME,
-                            ch_first_name: 'p.' + T.PEOPLE.PEPL_FIRST_NAME,
-                            ch_last_name: 'p.' + T.PEOPLE.PEPL_LAST_NAME,
-                            std_id: 's.' + T.STUDENTS.STD_ID,
-                            emp_id: 's.' + T.STUDENTS.EMP_ID,
-                            std_date_receipt: 's.' + T.STUDENTS.STD_DATE_RECEIPT,
-                            std_stayed_two_year: 's.' + T.STUDENTS.STD_STAYED_TWO_YEAR,
-                            std_class_letter: 's.' + T.STUDENTS.STD_CLASS_LETTER
-                        })
-                        .from({p: T.PEOPLE.NAME, s: T.STUDENTS.NAME, r: T.ROLE.NAME})
+                        ch_second_name: 'p.' + T.PEOPLE.PEPL_SECOND_NAME,
+                        ch_first_name: 'p.' + T.PEOPLE.PEPL_FIRST_NAME,
+                        ch_last_name: 'p.' + T.PEOPLE.PEPL_LAST_NAME,
+                        std_id: 's.' + T.STUDENTS.STD_ID,
+                        std_emp_id: 's.' + T.STUDENTS.EMP_ID,
+                        std_date_receipt: 's.' + T.STUDENTS.STD_DATE_RECEIPT,
+                        std_stayed_two_year: 's.' + T.STUDENTS.STD_STAYED_TWO_YEAR,
+                        std_class_letter: 's.' + T.STUDENTS.STD_CLASS_LETTER
+                    })
+                        .from({p: T.PEOPLE.NAME, s: T.STUDENTS.NAME, r: T.ROLE.NAME, sp: T.STD_PRNT.NAME})
                         .whereRaw('?? = ?? and ?? = ?', ['r.' + T.ROLE.PEPL_ID, 'p.' + T.PEOPLE.PEPL_ID, 'r.' + T.ROLE.ROLE_NAME, ROLE.STUDENT])
                         .andWhereRaw('?? = ??', ['s.' + T.STUDENTS.STD_ID, 'p.' + T.PEOPLE.PEPL_ID])
                         .as('studs')
@@ -80,8 +80,94 @@ exports.getConfsParentsById = (knex, prnt_id_arr) => {
             this.on('child_pepl.' + T.CONFIRM_REG.CR_SECOND_TEACHER, 'teachs.tch_second_name')
                 .andOn('child_pepl.' + T.CONFIRM_REG.CR_FIRST_TEACHER, 'teachs.tch_first_name')
                 .andOn('child_pepl.' + T.CONFIRM_REG.CR_LAST_TEACHER, 'teachs.tch_last_name')
-                .andOn('child_pepl.emp_id', 'teachs.emp_id')
+                .andOn('child_pepl.std_emp_id', 'teachs.emp_id')
         });
+};
+
+exports.setConfirmParentReg = function (knex, body) {
+
+    return new Promise((resolve, reject) => {
+        const STATUS = {
+            BAD_REQUEST: 'BAD_REQUEST',
+            NOT_FOUND_ADDED_DATA: 'NOT_FOUND_ADDED_DATA',
+            NOT_FOUND_UPDATED_PARENT: 'NOT_FOUND_UPDATED_PARENT',
+            UNKNOWN_ERROR: 'UNKNOWN_ERROR'
+        };
+
+        let result = {};
+
+        if (body.prnt_confirm === 1 && body.std_id_arr !== undefined && body.std_id_arr.length !== 0) {
+            const prnt_std_arr = body.std_id_arr.map(std_id => {
+                return {
+                    prnt_id: body.prnt_id,
+                    std_id: std_id
+                }
+            });
+
+            knex.transaction(function (trx) {
+                return knex(T.STD_PRNT.NAME)
+                    .transacting(trx)
+                    .insert(prnt_std_arr)
+                    .returning('*')
+                    .then((res) => {
+                        if (res.length === 0) {
+                            throw new Error(STATUS.NOT_FOUND_ADDED_DATA);
+                        }
+
+                        console.log('Added ' + res.length + ' Records');
+                        return knex(T.PARENTS.NAME)
+                            .transacting(trx)
+                            .update({prnt_confirm: 1})
+                            .where(T.PARENTS.PRNT_ID, body.prnt_id)
+                            .returning(T.PARENTS.PRNT_ID);
+                    })
+                    .then((res) => {
+                        if (res.length === 0) {
+                            throw new Error(STATUS.NOT_FOUND_UPDATED_PARENT);
+                        }
+
+                        console.log('Updated Parent');
+                        resolve(res);
+                        trx.commit();
+                    })
+                    .catch((err) => {
+                        if (err.message === STATUS.NOT_FOUND_ADDED_DATA ||
+                            err.message === STATUS.NOT_FOUND_UPDATED_PARENT)
+                            result = {status: err.message};
+                        else
+                            result = {status: STATUS.UNKNOWN_ERROR};
+                        resolve(result);
+
+                        trx.rollback(err);
+                    })
+            })
+        } else {
+            if (body.prnt_confirm === 2) {
+                return knex(T.PARENTS.NAME)
+                    .update({prnt_confirm: 2})
+                    .where(T.PARENTS.PRNT_ID, body.prnt_id)
+                    .returning(T.PARENTS.PRNT_ID)
+                    .then((res) => {
+                        if (res.length === 0) {
+                            throw new Error(STATUS.NOT_FOUND_UPDATED_PARENT);
+                        }
+
+                        console.log('Updated Parent');
+                        resolve(res);
+                    })
+                    .catch((err) => {
+                        if (err.message === STATUS.NOT_FOUND_UPDATED_PARENT)
+                            result = {status: err.message};
+                        else
+                            result = {status: STATUS.UNKNOWN_ERROR};
+                        resolve(result);
+                    });
+            }else {
+                result = {status: STATUS.BAD_REQUEST};
+                resolve(result);
+            }
+        }
+    });
 };
 
 exports.insertPepl = function (knex, trx, pepl_data) {

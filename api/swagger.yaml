@@ -3866,6 +3866,10 @@ definitions:
       cr_class:
         type: "string"
         example: "7Б"
+      std_emp_id:
+        type: "integer"
+        format: "int32"
+        example: 4
       auto_check_data:
         $ref: "#/definitions/inline_response_200_19_auto_check_data"
     example:

@@ -1,12 +1,17 @@
 'use strict';
 
-var utils = require('../utils/writer.js');
-var Auth = require('../service/AuthService');
+const utils = require('../utils/writer.js');
+const Auth = require('../service/AuthService');
 
 
 module.exports.confirmParentReg = function confirmParentReg(req, res, next) {
-    var body = req.swagger.params['body'].value;
-    Auth.confirmParentReg(body)
+    if(req.error) {
+        utils.writeJson(res, {status: req.error});
+        return;
+    }
+
+    const body = req.swagger.params['body'].value;
+    Auth.confirmParentReg(req, body)
         .then(function (response) {
             utils.writeJson(res, response);
         })

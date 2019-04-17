@@ -20,19 +20,51 @@ const FILE = './service/AuthService.js';
  * body Body_23 ID родителя и статус подтверждения
  * returns inline_response_200_6
  **/
-exports.confirmParentReg = function (body) {
+exports.confirmParentReg = function (req, body) {
+    const METHOD = 'confirmParentReg()';
+    console.log(FILE, METHOD);
+
     return new Promise(function (resolve, reject) {
-        var examples = {};
-        examples['application/json'] = {
-            "status": "OK"
+        const STATUS = {
+            NOT_FOUND_UPDATED_DATA: 'NOT_FOUND_UPDATED_DATA',
+            BAD_REQUEST: 'BAD_REQUEST',
+            NOT_ACCESS: 'NOT_ACCESS',
+            NOT_AUTH: 'NOT_AUTH',
+            UNKNOWN_ERROR: 'UNKNOWN_ERROR',
+            OK: 'OK'
         };
-        if (Object.keys(examples).length > 0) {
-            resolve(examples[Object.keys(examples)[0]]);
-        } else {
-            resolve();
+
+        let result = {};
+        let payload = {};
+
+        if (!req.isAuthenticated()) {
+            console.error('Not Authenticated');
+            reject({status: STATUS.NOT_AUTH});
+            return;
         }
+
+        if (!UsersReq.checkRole(req.user.roles, ROLE.ADMIN)) {
+            console.error('Not Admin');
+            reject({status: STATUS.NOT_ACCESS});
+            return;
+        }
+
+        AuthReq.setConfirmParentReg(knex, body)
+            .then((res) => {
+                if (res.status !== undefined) {
+                    reject(res);
+                    return;
+                }
+
+                result = {status: STATUS.OK};
+                resolve(result);
+            })
+            .catch((err) => {
+                console.error(err);
+                reject(err);
+            })
     });
-}
+};
 
 
 /**
@@ -103,7 +135,7 @@ exports.getListConfirmReg = function (req) {
                 return AuthReq.getConfsParentsById(knex, res.map(prnt => prnt.pepl_id));
             })
             .then((res) => {
-                if(res.length === 0){
+                if (res.length === 0) {
                     throw new Error(STATUS.NOT_FOUND_CONFIRM_REG);
                 }
 
@@ -112,17 +144,19 @@ exports.getListConfirmReg = function (req) {
                     item.cr_array = res.filter(cr => cr.prnt_id === item.prnt_id);
                     item.cr_array.forEach(i => {
                         i.auto_check_data = {
-                            cr_child_fullname: (i.ch_second_name !== null && i.ch_first_name !== null && i.ch_last_name !== null)?
-                                STATUS.OK: STATUS.NOT_FOUND_STUDENT,
-                            cr_teacher_fullname: (i.tch_second_name !== null && i.tch_first_name !== null && i.tch_last_name !== null)?
-                                STATUS.OK: STATUS.NOT_FOUND_TEACHER,
-                            cr_class: (i.std_class_letter !== null && i.std_stayed_two_year !== null && i.std_date_receipt !== null)?
-                                STATUS.OK:STATUS.NOT_FOUND_CLASS,
+                            cr_child_fullname: (i.ch_second_name !== null && i.ch_first_name !== null && i.ch_last_name !== null) ?
+                                STATUS.OK : STATUS.NOT_FOUND_STUDENT,
+                            cr_teacher_fullname: ((i.tch_second_name !== null && i.tch_first_name !== null && i.tch_last_name !== null) ||
+                                (i.tch_second_name === null && i.tch_first_name === null && i.tch_last_name === null && i.std_emp_id === null)) ?
+                                STATUS.OK : STATUS.NOT_FOUND_TEACHER,
+                            cr_class: (i.std_class_letter !== null && i.std_stayed_two_year !== null && i.std_date_receipt !== null) ?
+                                STATUS.OK : STATUS.NOT_FOUND_CLASS,
                             std_id: i.std_id
                         };
 
                         delete i.prnt_id;
                         delete i.emp_id;
+                        delete i.std_id;
                         delete i.ch_second_name;
                         delete i.ch_first_name;
                         delete i.ch_last_name;
