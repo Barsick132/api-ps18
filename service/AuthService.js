@@ -196,6 +196,7 @@ exports.getListConfirmReg = function (req) {
  **/
 exports.login = function (req) {
     const METHOD = 'login()';
+    console.log(FILE, METHOD);
 
     return new Promise(function (resolve, reject) {
         const STATUS = {

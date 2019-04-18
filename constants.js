@@ -7,6 +7,15 @@ module.exports.ROLE = {
     PSYCHOLOGIST: 'Psychologist'
 };
 
+module.exports.CONTACT_NAME = {
+    SKYPE: 'skype',
+    DISCORD: 'discord',
+    HANGOUTS: 'hangouts',
+    VIBER: 'viber',
+    VK: 'vk',
+    PHONE: 'phone'
+};
+
 module.exports.PERIOD_FIX = {
     WEEK: 'week',
     MONTH: 'month',

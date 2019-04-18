@@ -712,8 +712,7 @@ exports.updPersonalData = function (req, body) {
             })
             .catch((err) => {
                 console.error(err);
-                result = {status: STATUS.UNKNOWN_ERROR};
-                reject(result);
+                reject(err);
             })
     });
 };

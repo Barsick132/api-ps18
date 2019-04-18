@@ -354,8 +354,7 @@ exports.getEmpGraphic = function (req, body) {
             })
             .catch((err) => {
                 console.log(err);
-                result = {status: STATUS.UNKNOWN_ERROR};
-                reject(result)
+                reject(err);
             })
     });
 };
@@ -452,29 +451,65 @@ exports.setJournal = function (body) {
  * body Body_13 ID человека, ID записи, статус Онлайн, способ связи, личный контакт
  * returns inline_response_200_12
  **/
-exports.setToRecord = function (body) {
+exports.setToRecord = function (req, body) {
+    const METHOD = 'setToRecord()';
+    console.log(FILE, METHOD);
+
     return new Promise(function (resolve, reject) {
-        var examples = {};
-        examples['application/json'] = {
-            "payload": {
-                "rec_time": "12:00:00",
-                "rec_online": true,
-                "wd_date": "2019-03-03",
-                "pepl_id": 3,
-                "cont_value": "student132",
-                "wd_duration": 30,
-                "emp_id": 1,
-                "cont_name": "skype"
-            },
-            "status": "OK"
+        const STATUS = {
+            ACCOUNT_REJECT: 'ACCOUNT_REJECT',
+            ACCOUNT_UNDER_REVIEW: 'ACCOUNT_UNDER_REVIEW',
+            NOT_ACCESS: 'NOT_ACCESS',
+            NOT_AUTH: 'NOT_AUTH',
+            UNKNOWN_ERROR: 'UNKNOWN_ERROR',
+            OK: 'OK'
         };
-        if (Object.keys(examples).length > 0) {
-            resolve(examples[Object.keys(examples)[0]]);
-        } else {
-            resolve();
+
+        let result = {};
+        let payload = {};
+        let employee = false;
+
+        // Проверка аутентификации пользователя
+        if (!req.isAuthenticated()) {
+            console.error('Not Authenticated');
+            reject({status: STATUS.NOT_AUTH});
+            return;
         }
+
+        if (UsersReq.checkRole(req.user.roles, ROLE.PARENT)) {
+            switch (req.user.prnt_data.prnt_confirm) {
+                case 0: {
+                    console.error('Account Under Review');
+                    reject({status: STATUS.ACCOUNT_UNDER_REVIEW});
+                    return;
+                }
+                case 2: {
+                    console.error('Account Reject');
+                    reject({status: STATUS.ACCOUNT_REJECT});
+                    return
+                }
+            }
+        }
+
+        if (UsersReq.checkRole(req.user.roles, ROLE.EMPLOYEE)) {
+            employee = true;
+        }
+
+        RecordsReq.setToRecord(knex, body, req.user.pepl_id, employee)
+            .then(res => {
+                result = {
+                    status: STATUS.OK,
+                    payload: res
+                };
+
+                resolve(result);
+            })
+            .catch(err => {
+                console.error(err.status);
+                reject(err);
+            });
     });
-}
+};
 
 
 /**

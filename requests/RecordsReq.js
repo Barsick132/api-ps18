@@ -2,6 +2,7 @@ const FILE = './requests/RecordsReq.js';
 const ROLE = require('../constants').ROLE;
 const T = require('../constants').TABLES;
 const PERIOD_FIX = require('../constants').PERIOD_FIX;
+const CONTACT_NAME = require('../constants').CONTACT_NAME;
 const Promise = require('bluebird');
 const _ = require('underscore');
 
@@ -427,9 +428,11 @@ exports.getWdWithRecForUpd = function getWdWithRecForUpd(wd_arr_valid, wd_with_r
 
 /**
  *
- * Метод удаления рабочих дней
+ * Запросы к БД
  *
  */
+
+// Метод удаления рабочих дней
 exports.delWorkingDays = (knex, emp_id, wd_arr_del) => {
     return new Promise((resolve, reject) => {
         const STATUS = {
@@ -511,11 +514,7 @@ exports.delWorkingDays = (knex, emp_id, wd_arr_del) => {
     })
 };
 
-/**
- *
- * Метод обновления рабочих дней
- *
- */
+// Метод обновления рабочих дней
 exports.updWorkingDays = (knex, emp_id, wd_arr_upd) => {
     return new Promise((resolve, reject) => {
         const STATUS = {
@@ -717,11 +716,7 @@ exports.updWorkingDays = (knex, emp_id, wd_arr_upd) => {
     })
 };
 
-/**
- *
- * Метод добавления рабочих дней
- *
- */
+// Метод добавления рабочих дней
 exports.insertWorkingDays = (knex, emp_id, wd_arr_add) => {
     return new Promise((resolve, reject) => {
         const STATUS = {
@@ -863,11 +858,7 @@ exports.insertWorkingDays = (knex, emp_id, wd_arr_add) => {
     });
 };
 
-/**
- *
- * Метод получения рабочих дней с записями
- *
- */
+// Метод получения рабочих дней с записями
 exports.getEmpGraphic = (knex, objRequest) => {
     const STATUS = {
         NOT_FOUND_WD: 'NOT_FOUND_WD',
@@ -1022,3 +1013,204 @@ exports.getEmpGraphic = (knex, objRequest) => {
             });
     })
 };
+
+// Метод регистрации записи к себе или к кому-то
+exports.setToRecord = (knex, body, pepl_id, employee) => {
+    return new Promise((resolve, reject) => {
+        const STATUS = {
+            NOT_FOUND_UPDATED_RECORD: 'NOT_FOUND_UPDATED_RECORD',
+            CAN_ONLY_REC_A_CLIENT_TO_YOURSELF: 'CAN_ONLY_REC_A_CLIENT_TO_YOURSELF',
+            NOT_FOUND_CONT_NAME: 'NOT_FOUND_CONT_NAME',
+            NOT_FOUND_SKYPE_AT_EMP: 'NOT_FOUND_SKYPE_AT_EMP',
+            NOT_FOUND_DISCORD_AT_EMP: 'NOT_FOUND_DISCORD_AT_EMP',
+            NOT_FOUND_HANGOUTS_AT_EMP: 'NOT_FOUND_HANGOUTS_AT_EMP',
+            NOT_FOUND_VIBER_AT_EMP: 'NOT_FOUND_VIBER_AT_EMP',
+            NOT_FOUND_VK_AT_EMP: 'NOT_FOUND_VK_AT_EMP',
+            CAN_NOT_SIGN_UP_TO_YOURSELF: 'CAN_NOT_SIGN_UP_TO_YOURSELF',
+            NOT_FOUND_EMP_TO_BE_REC: 'NOT_FOUND_EMP_TO_BE_REC',
+            UNKNOWN_ERROR: 'UNKNOWN_ERROR'
+        };
+
+        let result = {};
+        let emp_wd = {};
+
+        return knex({p: T.PEOPLE.NAME, e: T.EMPLOYEES.NAME, rec: T.RECORDS.NAME, wd: T.WORKING_DAYS.NAME})
+            .distinct('p.*', 'e.*', 'wd.*')
+            .select('p.*', 'e.*', 'wd.*')
+            .where('rec.' + T.RECORDS.REC_ID, body.rec_id)
+            .whereNull('rec.' + T.RECORDS.PEPL_ID)
+            .whereRaw('?? = ??', ['rec.' + T.RECORDS.WD_ID, 'wd.' + T.WORKING_DAYS.WD_ID])
+            .whereRaw('?? = ??', ['wd.' + T.WORKING_DAYS.EMP_ID, 'e.' + T.EMPLOYEES.EMP_ID])
+            .whereRaw('?? = ??', ['p.' + T.PEOPLE.PEPL_ID, 'e.' + T.EMPLOYEES.EMP_ID])
+            .then(res => {
+                if (res.length !== 1) {
+                    throw new Error(STATUS.NOT_FOUND_EMP_TO_BE_REC);
+                }
+
+                emp_wd = res[0];
+                let rec_pepl_id;
+                if (body.pepl_id === undefined) {
+                    if (emp_wd.pepl_id === pepl_id) {
+                        throw new Error(STATUS.CAN_NOT_SIGN_UP_TO_YOURSELF);
+                    }
+                    rec_pepl_id = pepl_id;
+                } else {
+                    if (body.pepl_id === pepl_id && emp_wd.pepl_id === pepl_id) {
+                        throw new Error(STATUS.CAN_NOT_SIGN_UP_TO_YOURSELF);
+                    }
+                    if (body.pepl_id !== pepl_id && emp_wd.pepl_id !== pepl_id) {
+                        throw new Error(STATUS.CAN_ONLY_REC_A_CLIENT_TO_YOURSELF);
+                    }
+                    rec_pepl_id = body.pepl_id;
+                }
+
+                let rec_obj = {
+                    pepl_id: rec_pepl_id
+                };
+                if (body.rec_online) {
+                    rec_obj.rec_online = true;
+
+                    switch (body.cont_name) {
+                        case CONTACT_NAME.SKYPE: {
+                            if (emp_wd.emp_skype) {
+                                rec_obj.cont_name = body.cont_name;
+                                if (body.cont_value !== undefined) {
+                                    rec_obj.cont_value = body.cont_value;
+                                }
+                                break;
+                            } else {
+                                throw new Error(STATUS.NOT_FOUND_SKYPE_AT_EMP);
+                            }
+                        }
+                        case CONTACT_NAME.DISCORD: {
+                            if (emp_wd.emp_discord) {
+                                rec_obj.cont_name = body.cont_name;
+                                if (body.cont_value !== undefined) {
+                                    rec_obj.cont_value = body.cont_value;
+                                }
+                                break;
+                            } else {
+                                throw new Error(STATUS.NOT_FOUND_DISCORD_AT_EMP);
+                            }
+                        }
+                        case CONTACT_NAME.HANGOUTS: {
+                            if (emp_wd.emp_hangouts) {
+                                rec_obj.cont_name = body.cont_name;
+                                if (body.cont_value !== undefined) {
+                                    rec_obj.cont_value = body.cont_value;
+                                }
+                                break;
+                            } else {
+                                throw new Error(STATUS.NOT_FOUND_HANGOUTS_AT_EMP);
+                            }
+                        }
+                        case CONTACT_NAME.VIBER: {
+                            if (emp_wd.emp_viber) {
+                                rec_obj.cont_name = body.cont_name;
+                                if (body.cont_value !== undefined) {
+                                    rec_obj.cont_value = body.cont_value;
+                                }
+                                break;
+                            } else {
+                                throw new Error(STATUS.NOT_FOUND_VIBER_AT_EMP);
+                            }
+                        }
+                        case CONTACT_NAME.VK: {
+                            if (emp_wd.emp_vk) {
+                                rec_obj.cont_name = body.cont_name;
+                                if (body.cont_value !== undefined) {
+                                    rec_obj.cont_value = body.cont_value;
+                                }
+                                break;
+                            } else {
+                                throw new Error(STATUS.NOT_FOUND_VK_AT_EMP);
+                            }
+                        }
+                        default: {
+                            throw new Error(STATUS.NOT_FOUND_CONT_NAME)
+                        }
+                    }
+                } else {
+                    rec_obj.rec_online = false;
+
+                    rec_obj.cont_name = CONTACT_NAME.PHONE;
+                    if (body.cont_value !== undefined) {
+                        // Клиент указал номер для связи
+                        rec_obj.cont_value = body.cont_value;
+                    }
+                }
+
+                return knex(T.RECORDS.NAME)
+                    .update(rec_obj)
+                    .where(T.RECORDS.REC_ID, body.rec_id)
+                    .returning('*');
+            })
+            .then(res => {
+                if (res.length === 0) {
+                    throw new Error(STATUS.NOT_FOUND_UPDATED_RECORD);
+                }
+
+                console.log('Updated ' + res.length + ' Records');
+                let rec = res[0];
+                result = {
+                    pepl_id: rec.pepl_id,
+                    emp_id: emp_wd.emp_id,
+                    wd_date: this.getDateString(emp_wd.wd_date),
+                    rec_time: rec.rec_time,
+                    wd_duration: emp_wd.wd_duration,
+                    rec_online: rec.rec_online,
+                    cont_name: rec.cont_name
+                };
+
+                if(rec.cont_value!==null){
+                    result.cont_value = rec.cont_value;
+                }else {
+                    switch (result.cont_name){
+                        case CONTACT_NAME.SKYPE: {
+                            result.emp_cont_value = emp_wd.emp_skype;
+                            break;
+                        }
+                        case CONTACT_NAME.DISCORD: {
+                            result.emp_cont_value = emp_wd.emp_discord;
+                            break;
+                        }
+                        case CONTACT_NAME.HANGOUTS: {
+                            result.emp_cont_value = emp_wd.emp_hangouts;
+                            break;
+                        }
+                        case CONTACT_NAME.VIBER: {
+                            result.emp_cont_value = emp_wd.emp_viber;
+                            break;
+                        }
+                        case CONTACT_NAME.VK: {
+                            result.emp_cont_value = emp_wd.emp_vk;
+                            break;
+                        }
+                        case CONTACT_NAME.PHONE: {
+                            result.emp_cont_value = emp_wd.pepl_phone;
+                            break;
+                        }
+                    }
+                }
+
+                resolve(result);
+            })
+            .catch(err => {
+                if (err.message === STATUS.NOT_FOUND_EMP_TO_BE_REC ||
+                    err.message === STATUS.NOT_FOUND_UPDATED_RECORD ||
+                    err.message === STATUS.CAN_NOT_SIGN_UP_TO_YOURSELF ||
+                    err.message === STATUS.NOT_FOUND_SKYPE_AT_EMP ||
+                    err.message === STATUS.NOT_FOUND_DISCORD_AT_EMP ||
+                    err.message === STATUS.NOT_FOUND_HANGOUTS_AT_EMP ||
+                    err.message === STATUS.NOT_FOUND_VIBER_AT_EMP ||
+                    err.message === STATUS.NOT_FOUND_VK_AT_EMP ||
+                    err.message === STATUS.NOT_FOUND_CONT_NAME) {
+                    result = {status: err.message};
+                } else {
+                    result = {status: STATUS.UNKNOWN_ERROR};
+                }
+                reject(result);
+            })
+    })
+};
+
