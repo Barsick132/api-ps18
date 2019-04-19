@@ -14,19 +14,58 @@ const FILE = './service/RecordsService.js';
  * body Body_14 ID записи
  * returns inline_response_200_6
  **/
-exports.cancelRecord = function (body) {
+exports.cancelRecord = function (req, body) {
+    const METHOD = 'cancelRecord()';
+    console.log(FILE, METHOD);
+
     return new Promise(function (resolve, reject) {
-        var examples = {};
-        examples['application/json'] = {
-            "status": "OK"
+        const STATUS = {
+            ACCOUNT_REJECT: 'ACCOUNT_REJECT',
+            ACCOUNT_UNDER_REVIEW: 'ACCOUNT_UNDER_REVIEW',
+            NOT_ACCESS: 'NOT_ACCESS',
+            NOT_AUTH: 'NOT_AUTH',
+            UNKNOWN_ERROR: 'UNKNOWN_ERROR',
+            OK: 'OK'
         };
-        if (Object.keys(examples).length > 0) {
-            resolve(examples[Object.keys(examples)[0]]);
-        } else {
-            resolve();
+
+        let result = {};
+
+        // Проверка аутентификации пользователя
+        if (!req.isAuthenticated()) {
+            console.error('Not Authenticated');
+            reject({status: STATUS.NOT_AUTH});
+            return;
         }
+
+        if (UsersReq.checkRole(req.user.roles, ROLE.PARENT)) {
+            switch (req.user.prnt_data.prnt_confirm) {
+                case 0: {
+                    console.error('Account Under Review');
+                    reject({status: STATUS.ACCOUNT_UNDER_REVIEW});
+                    return;
+                }
+                case 2: {
+                    console.error('Account Reject');
+                    reject({status: STATUS.ACCOUNT_REJECT});
+                    return
+                }
+            }
+        }
+
+        RecordsReq.cancelRecord(knex, body.rec_id, req.user.pepl_id)
+            .then(res => {
+                result = {
+                    status: STATUS.OK
+                };
+
+                resolve(result);
+            })
+            .catch(err => {
+                console.error(err.status);
+                reject(err);
+            })
     });
-}
+};
 
 
 /**
@@ -353,7 +392,7 @@ exports.getEmpGraphic = function (req, body) {
                 resolve(result);
             })
             .catch((err) => {
-                console.log(err);
+                console.error(err.status);
                 reject(err);
             })
     });
@@ -466,8 +505,6 @@ exports.setToRecord = function (req, body) {
         };
 
         let result = {};
-        let payload = {};
-        let employee = false;
 
         // Проверка аутентификации пользователя
         if (!req.isAuthenticated()) {
@@ -491,11 +528,7 @@ exports.setToRecord = function (req, body) {
             }
         }
 
-        if (UsersReq.checkRole(req.user.roles, ROLE.EMPLOYEE)) {
-            employee = true;
-        }
-
-        RecordsReq.setToRecord(knex, body, req.user.pepl_id, employee)
+        RecordsReq.setToRecord(knex, body, req.user.pepl_id)
             .then(res => {
                 result = {
                     status: STATUS.OK,

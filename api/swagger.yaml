@@ -3,7 +3,7 @@ swagger: "2.0"
 info:
   description: "Это API (swagger 2.0) системы автоматизации психолого-педагогическ\
     ого сопровождения субъектов образовательной деятельности для школы №18."
-  version: "1.0.18"
+  version: "1.0.17"
   title: "PsychoSys18"
   contact:
     email: "antony.nor@yandex.ru"
@@ -611,7 +611,7 @@ paths:
     post:
       tags:
       - "records"
-      summary: "Записаться на прием к сотруднику"
+      summary: "Записаться на прием к сотруднику (ALL)"
       operationId: "setToRecord"
       consumes:
       - "application/json"
@@ -621,9 +621,9 @@ paths:
       - in: "body"
         name: "body"
         description: "1. ID человека (**не обязательно**, если записывается лично\
-          ),\n2. ID записи,\n3. Статус Онлайн/Оффлайн,\n4. Способ связи (**не обяз\
-          ательно**, если записывается лично),\n5. Личный контакт (**не обязательн\
-          о**, если записывается лично)"
+          ),\n2. ID записи,\n3. Статус Онлайн/Оффлайн,\n4. Способ связи (**по-умол\
+          чанию** *phone*),\n5. Личный контакт (**не указ.**, если нужен контакт с\
+          отрудника для связи)"
         required: true
         schema:
           $ref: "#/definitions/body_13"
@@ -652,7 +652,7 @@ paths:
     post:
       tags:
       - "records"
-      summary: "Отмена записи"
+      summary: "Отмена записи (ALL)"
       operationId: "cancelRecord"
       consumes:
       - "application/json"
@@ -3013,14 +3013,14 @@ definitions:
         example: "student132"
       emp_cont_value:
         type: "string"
-        example: "employee132"
+        example: "employee"
     example:
       rec_time: "12:00:00"
       rec_online: true
       wd_date: "2019-03-03"
       pepl_id: 3
       cont_value: "student132"
-      emp_cont_value: "employee132"
+      emp_cont_value: "employee"
       wd_duration: 30
       emp_id: 1
       cont_name: "skype"
@@ -3040,7 +3040,7 @@ definitions:
         wd_date: "2019-03-03"
         pepl_id: 3
         cont_value: "student132"
-        emp_cont_value: "employee132"
+        emp_cont_value: "employee"
         wd_duration: 30
         emp_id: 1
         cont_name: "skype"

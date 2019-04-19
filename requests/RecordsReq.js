@@ -1015,7 +1015,7 @@ exports.getEmpGraphic = (knex, objRequest) => {
 };
 
 // Метод регистрации записи к себе или к кому-то
-exports.setToRecord = (knex, body, pepl_id, employee) => {
+exports.setToRecord = (knex, body, pepl_id) => {
     return new Promise((resolve, reject) => {
         const STATUS = {
             NOT_FOUND_UPDATED_RECORD: 'NOT_FOUND_UPDATED_RECORD',
@@ -1039,6 +1039,11 @@ exports.setToRecord = (knex, body, pepl_id, employee) => {
             .select('p.*', 'e.*', 'wd.*')
             .where('rec.' + T.RECORDS.REC_ID, body.rec_id)
             .whereNull('rec.' + T.RECORDS.PEPL_ID)
+            .where(function () {
+                this.whereRaw('?? > current_date', ['wd.' + T.WORKING_DAYS.WD_DATE])
+                    .orWhereRaw('?? = current_date', ['wd.' + T.WORKING_DAYS.WD_DATE])
+                    .andWhereRaw('?? > current_time', ['rec.' + T.RECORDS.REC_TIME])
+            })
             .whereRaw('?? = ??', ['rec.' + T.RECORDS.WD_ID, 'wd.' + T.WORKING_DAYS.WD_ID])
             .whereRaw('?? = ??', ['wd.' + T.WORKING_DAYS.EMP_ID, 'e.' + T.EMPLOYEES.EMP_ID])
             .whereRaw('?? = ??', ['p.' + T.PEOPLE.PEPL_ID, 'e.' + T.EMPLOYEES.EMP_ID])
@@ -1162,10 +1167,10 @@ exports.setToRecord = (knex, body, pepl_id, employee) => {
                     cont_name: rec.cont_name
                 };
 
-                if(rec.cont_value!==null){
+                if (rec.cont_value !== null) {
                     result.cont_value = rec.cont_value;
-                }else {
-                    switch (result.cont_name){
+                } else {
+                    switch (result.cont_name) {
                         case CONTACT_NAME.SKYPE: {
                             result.emp_cont_value = emp_wd.emp_skype;
                             break;
@@ -1199,6 +1204,7 @@ exports.setToRecord = (knex, body, pepl_id, employee) => {
                 if (err.message === STATUS.NOT_FOUND_EMP_TO_BE_REC ||
                     err.message === STATUS.NOT_FOUND_UPDATED_RECORD ||
                     err.message === STATUS.CAN_NOT_SIGN_UP_TO_YOURSELF ||
+                    err.message === STATUS.CAN_ONLY_REC_A_CLIENT_TO_YOURSELF ||
                     err.message === STATUS.NOT_FOUND_SKYPE_AT_EMP ||
                     err.message === STATUS.NOT_FOUND_DISCORD_AT_EMP ||
                     err.message === STATUS.NOT_FOUND_HANGOUTS_AT_EMP ||
@@ -1212,5 +1218,76 @@ exports.setToRecord = (knex, body, pepl_id, employee) => {
                 reject(result);
             })
     })
+};
+
+// Отменить запись
+exports.cancelRecord = function (knex, rec_id, pepl_id) {
+    return new Promise((resolve, reject) => {
+        const STATUS = {
+            NOT_FOUND_UPDATED_REC: 'NOT_FOUND_UPDATED_REC',
+            CAN_ONLY_REC_A_CLIENT_TO_YOURSELF: 'CAN_ONLY_REC_A_CLIENT_TO_YOURSELF',
+            CAN_NOT_SIGN_UP_TO_YOURSELF: 'CAN_NOT_SIGN_UP_TO_YOURSELF',
+            NOT_FOUND_EMP_WD_REC: 'NOT_FOUND_EMP_WD_REC',
+            UNKNOWN_ERROR: 'UNKNOWN_ERROR'
+        };
+
+        let result = {};
+
+        return knex({p: T.PEOPLE.NAME, e: T.EMPLOYEES.NAME, rec: T.RECORDS.NAME, wd: T.WORKING_DAYS.NAME})
+            .select()
+            .where('rec.' + T.RECORDS.REC_ID, rec_id)
+            .where(function () {
+                this.where('rec.' + T.RECORDS.PEPL_ID, pepl_id)
+                    .orWhere('e.' + T.WORKING_DAYS.EMP_ID, pepl_id)
+                    .whereNotNull('rec.' + T.RECORDS.PEPL_ID)
+            })
+            .where(function () {
+                this.whereRaw('?? > current_date', ['wd.' + T.WORKING_DAYS.WD_DATE])
+                    .orWhereRaw('?? = current_date', ['wd.' + T.WORKING_DAYS.WD_DATE])
+                    .andWhereRaw('?? > current_time', ['rec.' + T.RECORDS.REC_TIME])
+            })
+            .whereRaw('?? = ??', ['rec.' + T.RECORDS.WD_ID, 'wd.' + T.WORKING_DAYS.WD_ID])
+            .whereRaw('?? = ??', ['wd.' + T.WORKING_DAYS.EMP_ID, 'e.' + T.EMPLOYEES.EMP_ID])
+            .whereRaw('?? = ??', ['p.' + T.PEOPLE.PEPL_ID, 'e.' + T.EMPLOYEES.EMP_ID])
+            .then(res => {
+                if (res.length !== 1) {
+                    throw new Error(STATUS.NOT_FOUND_EMP_WD_REC);
+                }
+
+                console.log('Found Emp Wd Rec');
+                return knex(T.RECORDS.NAME)
+                    .update({
+                        pepl_id: null,
+                        rec_online: false,
+                        rec_not_come: false,
+                        cont_name: null,
+                        cont_value: null,
+                    })
+                    .where(T.RECORDS.REC_ID, rec_id)
+                    .returning('*');
+            })
+            .then(res => {
+                if (res.length === 0) {
+                    throw new Error(STATUS.NOT_FOUND_UPDATED_REC);
+                }
+
+                console.log('Updated ' + res.length + ' Rec');
+                result = res;
+                resolve(result);
+            })
+            .catch(err => {
+                if (err.message === STATUS.NOT_FOUND_EMP_WD_REC ||
+                    err.message === STATUS.CAN_NOT_SIGN_UP_TO_YOURSELF ||
+                    err.message === STATUS.CAN_ONLY_REC_A_CLIENT_TO_YOURSELF ||
+                    err.message === STATUS.NOT_FOUND_UPDATED_REC
+                ) {
+                    result = {status: err.message};
+                } else {
+                    result = {status: STATUS.UNKNOWN_ERROR};
+                }
+                reject(result);
+            })
+    });
+
 };
 

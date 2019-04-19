@@ -4,8 +4,13 @@ var utils = require('../utils/writer.js');
 var Records = require('../service/RecordsService');
 
 module.exports.cancelRecord = function cancelRecord(req, res, next) {
-    var body = req.swagger.params['body'].value;
-    Records.cancelRecord(body)
+    if (req.error) {
+        utils.writeJson(res, {status: req.error});
+        return;
+    }
+
+    const body = req.swagger.params['body'].value;
+    Records.cancelRecord(req, body)
         .then(function (response) {
             utils.writeJson(res, response);
         })
