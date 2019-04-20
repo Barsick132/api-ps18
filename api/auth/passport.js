@@ -29,7 +29,7 @@ passport.use(
             const knex = require('../../index').knex;
             UsersReq.getPeplByLogin(knex, username)
                 .then((res) => {
-                    console.log('Getting User');
+                    console.log('\tGetting User');
                     if (res.length !== 0 && AuthReq.encryptPassword(password, res[0].pepl_salt) === res[0].pepl_hash_pass) {
                         data.user = res[0];
                         return RolesReq.getUserRoles(knex, data.user.pepl_id);
@@ -39,7 +39,7 @@ passport.use(
                 })
                 .then((res) => {
                     if (res === undefined) return;
-                    console.log('Getting User Role');
+                    console.log('\tGetting User Role');
 
                     if (res.length === 0) {
                         return done(STATUS.NOT_ROLES_USER);
@@ -48,11 +48,11 @@ passport.use(
                     data.user.roles = res.map(item => item.role_name);
 
                     if (!UsersReq.checkRole(data.user.roles, ROLE.PARENT)) {
-                        console.log('Not A Parent');
+                        console.log('\tNot A Parent');
                         return done(null, data);
                     }
 
-                    console.log('Is A Parent');
+                    console.log('\tIs A Parent');
                     return UsersReq.getConfParentById(knex, data.user.pepl_id);
                 })
                 .then((res) => {
@@ -62,7 +62,7 @@ passport.use(
                         return done(STATUS.NOT_FOUND_PARENT_INFO);
                     }
 
-                    console.log('Found Confirm Reg');
+                    console.log('\tFound Confirm Reg');
                     data.user.prnt_data = {
                         prnt_confirm: res[0].prnt_confirm
                     };
@@ -97,7 +97,7 @@ passport.use(
             const knex = require('../../index').knex;
             UsersReq.getPeplById(knex, jwt_payload.pepl_id)
                 .then((res) => {
-                    console.log('Getting User');
+                    console.log('\tGetting User');
                     if (res.length !== 1) {
                         return done(STATUS.NOT_AUTH);
                     }
@@ -107,7 +107,7 @@ passport.use(
                 })
                 .then((res) => {
                     if (res === undefined) return;
-                    console.log('Getting User Role');
+                    console.log('\tGetting User Role');
 
                     if (res.length === 0) {
                         return done(STATUS.NOT_ROLES_USER);
@@ -116,11 +116,11 @@ passport.use(
                     data.user.roles = res.map(item => item.role_name);
 
                     if (!UsersReq.checkRole(data.user.roles, ROLE.PARENT)) {
-                        console.log('Not A Parent');
+                        console.log('\tNot A Parent');
                         return done(null, data);
                     }
 
-                    console.log('Is A Parent');
+                    console.log('\tIs A Parent');
                     return UsersReq.getConfParentById(knex, data.user.pepl_id);
                 })
                 .then((res) => {
@@ -130,7 +130,7 @@ passport.use(
                         return done(STATUS.NOT_FOUND_PARENT_INFO);
                     }
 
-                    console.log('Found Confirm Reg');
+                    console.log('\tFound Confirm Reg');
                     data.user.prnt_data = {
                         prnt_confirm: res[0].prnt_confirm
                     };

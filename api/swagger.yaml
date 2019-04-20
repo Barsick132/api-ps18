@@ -3,7 +3,7 @@ swagger: "2.0"
 info:
   description: "Это API (swagger 2.0) системы автоматизации психолого-педагогическ\
     ого сопровождения субъектов образовательной деятельности для школы №18."
-  version: "1.0.17"
+  version: "1.0.18"
   title: "PsychoSys18"
   contact:
     email: "antony.nor@yandex.ru"
@@ -4853,9 +4853,17 @@ definitions:
         items:
           type: "string"
           example: ""
+      cont_available:
+        type: "array"
+        items:
+          type: "string"
+          example: ""
     description: "Данные пользователя"
     example:
       pepl_first_name: "Иван"
+      cont_available:
+      - ""
+      - ""
       pepl_login: "Admin"
       pepl_second_name: "Иванов"
       pst_arr:
@@ -4877,6 +4885,9 @@ definitions:
     example:
       payload:
       - pepl_first_name: "Иван"
+        cont_available:
+        - ""
+        - ""
         pepl_login: "Admin"
         pepl_second_name: "Иванов"
         pst_arr:
@@ -4885,6 +4896,9 @@ definitions:
         pepl_id: 1
         pepl_last_name: "Иванович"
       - pepl_first_name: "Иван"
+        cont_available:
+        - ""
+        - ""
         pepl_login: "Admin"
         pepl_second_name: "Иванов"
         pst_arr:

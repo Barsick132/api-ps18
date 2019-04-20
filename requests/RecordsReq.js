@@ -1288,6 +1288,62 @@ exports.cancelRecord = function (knex, rec_id, pepl_id) {
                 reject(result);
             })
     });
+};
 
+// Метод, позволяющий отметить, что пользователь не явился по записи
+exports.skipRecord = (knex, rec_id, pepl_id) => {
+    return new Promise((resolve, reject) => {
+        const STATUS ={
+            NOT_FOUND_UPDATED_REC: 'NOT_FOUND_UPDATED_REC',
+            NOT_FOUND_SKIPED_REC: 'NOT_FOUND_SKIPED_REC',
+            UNKNOWN_ERROR: 'UNKNOWN_ERROR'
+        };
+
+        let result ={};
+
+        return knex({p: T.PEOPLE.NAME, wd: T.WORKING_DAYS.NAME, rec: T.RECORDS.NAME})
+            .select('p.' + T.PEOPLE.PEPL_ID + ' as emp_id', 'wd.' + T.WORKING_DAYS.WD_DATE, 'rec.*')
+            .whereRaw('?? = ??', ['wd.' + T.WORKING_DAYS.EMP_ID, 'p.' + T.PEOPLE.PEPL_ID])
+            .whereRaw('?? = ??', ['wd.' + T.WORKING_DAYS.WD_ID, 'rec.' + T.RECORDS.WD_ID])
+            .whereNotNull('rec.' + T.RECORDS.PEPL_ID)
+            .where(function () {
+                this.whereRaw('?? < current_date', ['wd.' + T.WORKING_DAYS.WD_DATE])
+                    .orWhereRaw('?? = current_date', ['wd.' + T.WORKING_DAYS.WD_DATE])
+                    .andWhereRaw('?? < current_time', ['rec.' + T.RECORDS.REC_TIME])
+            })
+            .andWhere('rec.' + T.RECORDS.REC_ID, rec_id)
+            .andWhere('p.' + T.PEOPLE.PEPL_ID, pepl_id)
+            .andWhere('rec.' + T.RECORDS.REC_NOT_COME, false)
+            .then(res => {
+                if(res.length === 0) {
+                    throw new Error(STATUS.NOT_FOUND_SKIPED_REC);
+                }
+
+                console.log('Found Rec To Skip');
+                return knex(T.RECORDS.NAME)
+                    .update(T.RECORDS.REC_NOT_COME, true)
+                    .where(T.RECORDS.REC_ID, rec_id)
+                    .returning('*');
+            })
+            .then(res=> {
+                if(res.length === 0){
+                    throw new Error(STATUS.NOT_FOUND_UPDATED_REC);
+                }
+
+                console.log('Updated ' + res.length + ' Rec');
+                result = res;
+                resolve(result);
+            })
+            .catch(err => {
+                if (err.message === STATUS.NOT_FOUND_SKIPED_REC ||
+                    err.message === STATUS.NOT_FOUND_UPDATED_REC
+                ) {
+                    result = {status: err.message};
+                } else {
+                    result = {status: STATUS.UNKNOWN_ERROR};
+                }
+                reject(result);
+            })
+    })
 };
 

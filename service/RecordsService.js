@@ -662,17 +662,47 @@ exports.setPersonalGraphic = function (req, body) {
  * body Body_15 ID записи
  * returns inline_response_200_6
  **/
-exports.skipRecord = function (body) {
+exports.skipRecord = function (req, body) {
+    const METHOD = 'skipRecord()';
+    console.log(FILE, METHOD);
+
     return new Promise(function (resolve, reject) {
-        var examples = {};
-        examples['application/json'] = {
-            "status": "OK"
+        const STATUS = {
+            NOT_FOUND_DATA: 'NOT_FOUND_DATA',
+            NOT_ACCESS: 'NOT_ACCESS',
+            NOT_AUTH: 'NOT_AUTH',
+            UNKNOWN_ERROR: 'UNKNOWN_ERROR',
+            OK: 'OK'
         };
-        if (Object.keys(examples).length > 0) {
-            resolve(examples[Object.keys(examples)[0]]);
-        } else {
-            resolve();
+
+        let result = {};
+        let payload = {};
+
+        // Проверка аутентификации пользователя
+        if (!req.isAuthenticated()) {
+            console.error('Not Authenticated');
+            reject({status: STATUS.NOT_AUTH});
+            return;
         }
+
+        if (!UsersReq.checkRole(req.user.roles, ROLE.EMPLOYEE)) {
+            console.error('Not ' + ROLE.EMPLOYEE);
+            reject({status: STATUS.NOT_ACCESS});
+            return;
+        }
+
+        RecordsReq.skipRecord(knex, body.rec_id, req.user.pepl_id)
+            .then(res => {
+                result = {
+                    status: STATUS.OK
+                };
+
+                resolve(result);
+            })
+            .catch(err => {
+                console.error(err.status);
+                reject(err);
+            });
     });
-}
+};
 

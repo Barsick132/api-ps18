@@ -31,6 +31,7 @@ exports.getSaltAndHashPass = function getSaltAndHashPass(pass) {
 // Запрос всех подтверждений регистрации с проверками по ученикам, их классным руководителям и классам
 exports.getConfsParentsById = (knex, prnt_id_arr) => {
     return knex
+        .distinct()
         .select()
         .from(function () {
             this.select()
@@ -65,8 +66,7 @@ exports.getConfsParentsById = (knex, prnt_id_arr) => {
                 .as('child_pepl')
         })
         .leftOuterJoin(function () {
-            this
-                .select({
+            this.select({
                     emp_id: 'p.' + T.PEOPLE.PEPL_ID,
                     tch_second_name: 'p.' + T.PEOPLE.PEPL_SECOND_NAME,
                     tch_first_name: 'p.' + T.PEOPLE.PEPL_FIRST_NAME,

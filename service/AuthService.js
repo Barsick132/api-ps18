@@ -10,6 +10,7 @@ const RolesReq = require('../requests/RolesReq');
 const PostsReq = require('../requests/PostsReq');
 const AuthReq = require('../requests/AuthReq');
 const UsersReq = require('../requests/UsersReq');
+const RecordsReq = require('../requests/RecordsReq');
 
 const FILE = './service/AuthService.js';
 
@@ -119,7 +120,7 @@ exports.getListConfirmReg = function (req) {
                             pepl_first_name: prnt.pepl_first_name,
                             pepl_last_name: prnt.pepl_last_name,
                             pepl_gender: prnt.pepl_gender,
-                            pepl_birthday: prnt.pepl_birthday,
+                            pepl_birthday: RecordsReq.getDateString(prnt.pepl_birthday),
                             pepl_phone: prnt.pepl_phone,
                             pepl_email: prnt.pepl_email
                         },

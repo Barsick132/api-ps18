@@ -134,8 +134,13 @@ module.exports.setPersonalGraphic = function setPersonalGraphic(req, res, next) 
 };
 
 module.exports.skipRecord = function skipRecord(req, res, next) {
-    var body = req.swagger.params['body'].value;
-    Records.skipRecord(body)
+    if (req.error) {
+        utils.writeJson(res, {status: req.error});
+        return;
+    }
+
+    const body = req.swagger.params['body'].value;
+    Records.skipRecord(req, body)
         .then(function (response) {
             utils.writeJson(res, response);
         })

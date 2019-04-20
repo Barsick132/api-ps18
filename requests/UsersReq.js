@@ -383,14 +383,14 @@ exports.getEmpToBeRec = (knex) => {
             'p.' + T.PEOPLE.PEPL_LOGIN,
             'p.' + T.PEOPLE.PEPL_SECOND_NAME,
             'p.' + T.PEOPLE.PEPL_FIRST_NAME,
-            'p.' + T.PEOPLE.PEPL_LAST_NAME)
-        .column([
-            'p.' + T.PEOPLE.PEPL_ID,
+            'p.' + T.PEOPLE.PEPL_LAST_NAME,
+            'p.' + T.PEOPLE.PEPL_PHONE, 'e.*')
+        .select('p.' + T.PEOPLE.PEPL_ID,
             'p.' + T.PEOPLE.PEPL_LOGIN,
             'p.' + T.PEOPLE.PEPL_SECOND_NAME,
             'p.' + T.PEOPLE.PEPL_FIRST_NAME,
-            'p.' + T.PEOPLE.PEPL_LAST_NAME])
-        .select()
+            'p.' + T.PEOPLE.PEPL_LAST_NAME,
+            'p.' + T.PEOPLE.PEPL_PHONE, 'e.*')
         .whereRaw('?? = ??', ['p.' + T.PEOPLE.PEPL_ID, 'e.' + T.EMPLOYEES.EMP_ID])
         .andWhereRaw('?? = ??', ['e.' + T.EMPLOYEES.EMP_ID, 'wd.' + T.WORKING_DAYS.EMP_ID])
         .andWhereRaw('?? = ??', ['wd.' + T.WORKING_DAYS.WD_ID, 'rec.' + T.RECORDS.WD_ID])

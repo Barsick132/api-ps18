@@ -8,7 +8,7 @@ function Basic(req, def, scopes, callback) {
     console.log('\n', FILE, METHOD);
     passport.authenticate('basic', {session: false}, function (err, data, info) {
         if (err) {
-            console.error(FILE, METHOD, '\n', err);
+            console.error(FILE, METHOD, '\n\t', err);
             req.error = err;
         } else {
             if (data) console.log(FILE, METHOD, '\n', 'User Authentication');
@@ -24,13 +24,13 @@ function JWT(req, def, scopes, callback) {
     passport.authenticate('jwt', {session: false}, function (err, data, info) {
         req.roles = RolesReq.getAllRoles();
         if (err) {
-            console.error(FILE, METHOD, '\n', err);
+            console.error(FILE, METHOD, '\n\t', err);
             req.error = err;
         } else {
             if (info && info.message === 'jwt expired') {
                 req.error = 'JWT_EXPIRED'
             }
-            if (data) console.log(FILE, METHOD, '\n', 'User Authentication');
+            if (data) console.log(FILE, METHOD, '\n\t', 'User Authentication');
             req.user = data.user;
         }
         callback();

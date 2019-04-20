@@ -8,6 +8,7 @@ const RecordsReq = require('../requests/RecordsReq');
 const AuthReq = require('../requests/AuthReq');
 const ROLE = require('../constants').ROLE;
 const T = require('../constants').TABLES;
+const CONT_NAME = require('../constants').CONTACT_NAME;
 
 const FILE = './service/UsersService.js';
 
@@ -264,7 +265,7 @@ exports.getTeachers = function (req) {
                             pepl_first_name: item.pepl_first_name,
                             pepl_last_name: item.pepl_last_name,
                             pepl_gender: item.pepl_gender,
-                            pepl_birthday: item.pepl_birthday,
+                            pepl_birthday: RecordsReq.getDateString(item.pepl_birthday),
                             pepl_phone: item.pepl_phone,
                             pepl_email: item.pepl_email
                         },
@@ -274,7 +275,7 @@ exports.getTeachers = function (req) {
                             emp_hangouts: item.emp_hangouts,
                             emp_viber: item.emp_viber,
                             emp_vk: item.emp_vk,
-                            emp_date_enrollment: item.emp_date_enrollment
+                            emp_date_enrollment: item.emp_date_enrollment !== null ? RecordsReq.getDateString(item.emp_date_enrollment) : null
                         }
                     }
                 });
@@ -435,7 +436,7 @@ exports.getPersonalData = function (req) {
                 pepl_first_name: req.user.pepl_first_name,
                 pepl_last_name: req.user.pepl_last_name,
                 pepl_gender: req.user.pepl_gender,
-                pepl_birthday: req.user.pepl_birthday,
+                pepl_birthday: RecordsReq.getDateString(req.user.pepl_birthday),
                 pepl_phone: req.user.pepl_phone,
                 pepl_email: req.user.pepl_email
             }
@@ -480,6 +481,8 @@ exports.getPersonalData = function (req) {
                     }
                     case ROLE.EMPLOYEE: {
                         payload.emp_data = {};
+                        additional_data.emp_date_enrollment = additional_data.emp_date_enrollment !== null ?
+                            RecordsReq.getDateString(additional_data.emp_date_enrollment) : null;
                         payload.emp_data.main_data = additional_data;
                         return PostsReq.getEmpPosts(knex, req.user.pepl_id);
                     }
@@ -543,7 +546,7 @@ exports.getPersonalData = function (req) {
  *
  */
 exports.updPersonalData = function (req, body) {
-    const METHOD = 'getPersonsToBeRec()';
+    const METHOD = 'updPersonalData()';
     console.log(FILE, METHOD);
 
     return new Promise(function (resolve, reject) {
@@ -707,7 +710,10 @@ exports.updPersonalData = function (req, body) {
                     }
                 }
 
-                result = res;
+                result = {
+                    status: STATUS.OK,
+                    payload: res
+                };
                 resolve(result);
             })
             .catch((err) => {
@@ -768,7 +774,37 @@ exports.getPersonsToBeRec = function (req) {
                 }
 
                 console.log('Emp To Be Rec Found');
-                payload = res;
+                payload = res.map(emp => {
+                    emp.available_cont = [];
+                    if (emp.emp_skype !== null) {
+                        emp.available_cont.push(CONT_NAME.SKYPE);
+                    }
+                    delete emp.emp_skype;
+                    if (emp.emp_discord !== null) {
+                        emp.available_cont.push(CONT_NAME.DISCORD);
+                    }
+                    delete emp.emp_discord;
+                    if (emp.emp_hangouts !== null) {
+                        emp.available_cont.push(CONT_NAME.HANGOUTS);
+                    }
+                    delete emp.emp_hangouts;
+                    if (emp.emp_viber !== null) {
+                        emp.available_cont.push(CONT_NAME.VIBER);
+                    }
+                    delete emp.emp_viber;
+                    if (emp.emp_vk !== null) {
+                        emp.available_cont.push(CONT_NAME.VK);
+                    }
+                    delete emp.emp_vk;
+                    if (emp.pepl_phone !== null) {
+                        emp.available_cont.push(CONT_NAME.PHONE);
+                    }
+                    delete emp.pepl_phone;
+                    delete emp.emp_date_enrollment;
+                    delete emp.emp_id;
+
+                    return emp;
+                });
 
                 return PostsReq.getSeveralEmpPosts(knex, res.map(item => {
                     return item.pepl_id
