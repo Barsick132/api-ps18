@@ -688,7 +688,7 @@ paths:
     post:
       tags:
       - "records"
-      summary: "Отметить, что клиент не явился по записи"
+      summary: "Отметить, что клиент не явился по записи (Employee)"
       operationId: "skipRecord"
       consumes:
       - "application/json"
@@ -724,7 +724,7 @@ paths:
     post:
       tags:
       - "records"
-      summary: "Перенос записи на другое время или день"
+      summary: "Перенос записи на другое время или день (ALL)"
       operationId: "moveRecord"
       consumes:
       - "application/json"
@@ -2818,10 +2818,10 @@ definitions:
         type: "string"
         example: "18:30:00"
       wd_break_begin:
-        type: ["string","null"]
+        type: ["string", "null"]
         example: "13:00:00"
       wd_break_end:
-        type: ["string","null"]
+        type: ["string", "null"]
         example: "14:00:00"
       wd_duration:
         type: "integer"
@@ -4379,19 +4379,19 @@ definitions:
   updPersonalData_emp_data:
     properties:
       emp_skype:
-        type: ["string","null"]
+        type: ["string", "null"]
         example: "emplAdmin"
       emp_discord:
-        type: ["string","null"]
+        type: ["string", "null"]
         example: "emplAdmin#1232"
       emp_hangouts:
-        type: ["string","null"]
+        type: ["string", "null"]
         example: "admin@gmail.com"
       emp_viber:
-        type: ["string","null"]
+        type: ["string", "null"]
         example: "9045556432"
       emp_vk:
-        type: ["string","null"]
+        type: ["string", "null"]
         example: "empadmin"
   updPersonalData_prnt_data:
     properties:
@@ -4405,7 +4405,7 @@ definitions:
         type: "string"
         example: "17Б"
       prnt_flat:
-        type: ["string","null"]
+        type: ["string", "null"]
         example: "45"
   body_25:
     type: "object"
@@ -4429,10 +4429,10 @@ definitions:
         type: "boolean"
         example: true
       pepl_phone:
-        type: ["string","null"]
+        type: ["string", "null"]
         example: "9045556432"
       pepl_email:
-        type: ["string","null"]
+        type: ["string", "null"]
         example: "admin@mail.ru"
       emp_data:
         $ref: "#/definitions/updPersonalData_emp_data"
@@ -4578,9 +4578,11 @@ definitions:
         $ref: "#/definitions/Employee"
       pst_arr:
         type: "array"
+        example:
+        - "Администратор"
+        - "Учитель информатики"
         items:
           type: "string"
-          example: ""
     example:
       main_data:
         emp_vk: "empadmin"
@@ -4590,8 +4592,8 @@ definitions:
         emp_date_enrollment: "1997-11-22"
         emp_discord: "emplAdmin#1232"
       pst_arr:
-      - ""
-      - ""
+      - "Администратор"
+      - "Учитель информатики"
   inline_response_200_24_payload_prnt_data_prnt_childrens:
     required:
     - "pepl_data"
@@ -4702,8 +4704,8 @@ definitions:
           emp_date_enrollment: "1997-11-22"
           emp_discord: "emplAdmin#1232"
         pst_arr:
-        - ""
-        - ""
+        - "Администратор"
+        - "Учитель информатики"
       role_array: ""
       pepl_data:
         pepl_first_name: "Иван"
@@ -4773,8 +4775,8 @@ definitions:
             emp_date_enrollment: "1997-11-22"
             emp_discord: "emplAdmin#1232"
           pst_arr:
-          - ""
-          - ""
+          - "Администратор"
+          - "Учитель информатики"
         role_array: ""
         pepl_data:
           pepl_first_name: "Иван"
@@ -5517,7 +5519,7 @@ definitions:
         type: "string"
         example: "Педагог-психолог"
       pst_description:
-        type: ["string","null"]
+        type: ["string", "null"]
   inline_response_200_34:
     required:
     - "status"

@@ -80,8 +80,13 @@ module.exports.getEmpGraphic = function getEmpGraphic(req, res, next) {
 };
 
 module.exports.moveRecord = function moveRecord(req, res, next) {
-    var body = req.swagger.params['body'].value;
-    Records.moveRecord(body)
+    if (req.error) {
+        utils.writeJson(res, {status: req.error});
+        return;
+    }
+
+    const  body = req.swagger.params['body'].value;
+    Records.moveRecord(req, body)
         .then(function (response) {
             utils.writeJson(res, response);
         })

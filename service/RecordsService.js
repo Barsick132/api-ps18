@@ -405,27 +405,40 @@ exports.getEmpGraphic = function (req, body) {
  * body Body_16 ID записи и ID записи на которую переносим
  * returns inline_response_200_12
  **/
-exports.moveRecord = function (body) {
+exports.moveRecord = function (req, body) {
+    const METHOD = 'moveRecord()';
+    console.log(FILE, METHOD);
+
     return new Promise(function (resolve, reject) {
-        var examples = {};
-        examples['application/json'] = {
-            "payload": {
-                "rec_time": "12:00:00",
-                "rec_online": true,
-                "wd_date": "2019-03-03",
-                "pepl_id": 3,
-                "cont_value": "student132",
-                "wd_duration": 30,
-                "emp_id": 1,
-                "cont_name": "skype"
-            },
-            "status": "OK"
+        const STATUS = {
+            NOT_ACCESS: 'NOT_ACCESS',
+            NOT_AUTH: 'NOT_AUTH',
+            OK: 'OK'
         };
-        if (Object.keys(examples).length > 0) {
-            resolve(examples[Object.keys(examples)[0]]);
-        } else {
-            resolve();
+
+        let result = {};
+        let payload = {};
+
+        // Проверка аутентификации пользователя
+        if (!req.isAuthenticated()) {
+            console.error('Not Authenticated');
+            reject({status: STATUS.NOT_AUTH});
+            return;
         }
+
+        RecordsReq.moveRecord(knex, body.rec_id, body.new_rec_id, req.user.pepl_id)
+            .then(res => {
+                result = {
+                    status: STATUS.OK,
+                    payload: res
+                };
+
+                resolve(result);
+            })
+            .catch(err => {
+                console.error(err.status);
+                reject(err);
+            });
     });
 }
 
@@ -498,9 +511,7 @@ exports.setToRecord = function (req, body) {
         const STATUS = {
             ACCOUNT_REJECT: 'ACCOUNT_REJECT',
             ACCOUNT_UNDER_REVIEW: 'ACCOUNT_UNDER_REVIEW',
-            NOT_ACCESS: 'NOT_ACCESS',
             NOT_AUTH: 'NOT_AUTH',
-            UNKNOWN_ERROR: 'UNKNOWN_ERROR',
             OK: 'OK'
         };
 
@@ -668,10 +679,8 @@ exports.skipRecord = function (req, body) {
 
     return new Promise(function (resolve, reject) {
         const STATUS = {
-            NOT_FOUND_DATA: 'NOT_FOUND_DATA',
             NOT_ACCESS: 'NOT_ACCESS',
             NOT_AUTH: 'NOT_AUTH',
-            UNKNOWN_ERROR: 'UNKNOWN_ERROR',
             OK: 'OK'
         };
 

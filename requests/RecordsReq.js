@@ -1293,13 +1293,13 @@ exports.cancelRecord = function (knex, rec_id, pepl_id) {
 // Метод, позволяющий отметить, что пользователь не явился по записи
 exports.skipRecord = (knex, rec_id, pepl_id) => {
     return new Promise((resolve, reject) => {
-        const STATUS ={
+        const STATUS = {
             NOT_FOUND_UPDATED_REC: 'NOT_FOUND_UPDATED_REC',
             NOT_FOUND_SKIPED_REC: 'NOT_FOUND_SKIPED_REC',
             UNKNOWN_ERROR: 'UNKNOWN_ERROR'
         };
 
-        let result ={};
+        let result = {};
 
         return knex({p: T.PEOPLE.NAME, wd: T.WORKING_DAYS.NAME, rec: T.RECORDS.NAME})
             .select('p.' + T.PEOPLE.PEPL_ID + ' as emp_id', 'wd.' + T.WORKING_DAYS.WD_DATE, 'rec.*')
@@ -1315,7 +1315,7 @@ exports.skipRecord = (knex, rec_id, pepl_id) => {
             .andWhere('p.' + T.PEOPLE.PEPL_ID, pepl_id)
             .andWhere('rec.' + T.RECORDS.REC_NOT_COME, false)
             .then(res => {
-                if(res.length === 0) {
+                if (res.length === 0) {
                     throw new Error(STATUS.NOT_FOUND_SKIPED_REC);
                 }
 
@@ -1325,8 +1325,8 @@ exports.skipRecord = (knex, rec_id, pepl_id) => {
                     .where(T.RECORDS.REC_ID, rec_id)
                     .returning('*');
             })
-            .then(res=> {
-                if(res.length === 0){
+            .then(res => {
+                if (res.length === 0) {
                     throw new Error(STATUS.NOT_FOUND_UPDATED_REC);
                 }
 
@@ -1344,6 +1344,105 @@ exports.skipRecord = (knex, rec_id, pepl_id) => {
                 }
                 reject(result);
             })
+    })
+};
+
+exports.moveRecord = (knex, rec_id, new_rec_id, pepl_id) => {
+    return new Promise((resolve, reject) => {
+        const STATUS = {
+            YOU_CAN_TRANSFER_ONLY_YOUR_REC: 'YOU_CAN_TRANSFER_ONLY_YOUR_REC',
+            REC_ARE_NOT_SUITABLE_FOR_TRANSFER: 'REC_ARE_NOT_SUITABLE_FOR_TRANSFER',
+            UNKNOWN_ERROR: 'UNKNOWN_ERROR'
+        };
+
+        let result = {};
+
+        let old_rec = {};
+        let new_rec = {};
+
+        knex.transaction(trx => {
+            return knex({p: T.PEOPLE.NAME, wd: T.WORKING_DAYS.NAME, rec: T.RECORDS.NAME})
+                .transacting(trx)
+                .select('p.' + T.PEOPLE.PEPL_ID + ' as emp_id', 'wd.' + T.WORKING_DAYS.WD_DATE, 'rec.*')
+                .whereRaw('?? = ??', ['wd.' + T.WORKING_DAYS.EMP_ID, 'p.' + T.PEOPLE.PEPL_ID])
+                .whereRaw('?? = ??', ['wd.' + T.WORKING_DAYS.WD_ID, 'rec.' + T.RECORDS.WD_ID])
+                .where(function () {
+                    this.whereRaw('?? > current_date', ['wd.' + T.WORKING_DAYS.WD_DATE])
+                        .orWhereRaw('?? = current_date', ['wd.' + T.WORKING_DAYS.WD_DATE])
+                        .andWhereRaw('?? > current_time', ['rec.' + T.RECORDS.REC_TIME])
+                })
+                .where(function () {
+                    this.whereNotNull('rec.' + T.RECORDS.PEPL_ID)
+                        .andWhere('rec.' + T.RECORDS.REC_ID, rec_id)
+                        .orWhere('rec.' + T.RECORDS.REC_ID, new_rec_id)
+                        .whereNull('rec.' + T.RECORDS.PEPL_ID)
+                })
+                .orderBy(['wd.' + T.WORKING_DAYS.WD_DATE, 'rec.' + T.RECORDS.REC_TIME])
+                .then(res => {
+                    if (res.length !== 2) {
+                        throw new Error(STATUS.REC_ARE_NOT_SUITABLE_FOR_TRANSFER);
+                    }
+
+                    old_rec = res.find(rec => rec.rec_id === rec_id);
+                    new_rec = res.find(rec => rec.rec_id === new_rec_id);
+
+                    if ((old_rec.pepl_id === pepl_id || old_rec.emp_id !== pepl_id || new_rec.emp_id !== pepl_id) &&
+                        (old_rec.pepl_id !== pepl_id || new_rec.emp_id === pepl_id)) {
+                        // Перенос клиента или своей записи
+                        throw new Error(STATUS.YOU_CAN_TRANSFER_ONLY_YOUR_REC);
+                    }
+
+                    return knex(T.RECORDS.NAME)
+                        .transacting(trx)
+                        .update({
+                            pepl_id: old_rec.pepl_id,
+                            rec_online: old_rec.rec_online,
+                            rec_not_come: old_rec.rec_not_come,
+                            cont_name: old_rec.cont_name,
+                            cont_value: old_rec.cont_value
+                        })
+                        .where(T.RECORDS.REC_ID, new_rec_id);
+                })
+                .then(res => {
+                    return knex(T.RECORDS.NAME)
+                        .transacting(trx)
+                        .update({
+                            pepl_id: null,
+                            rec_online: false,
+                            rec_not_come: false,
+                            cont_name: null,
+                            cont_value: null
+                        })
+                        .where(T.RECORDS.REC_ID, rec_id);
+                })
+                .then(res => {
+                    result = {
+                        pepl_id: old_rec.pepl_id,
+                        emp_id: new_rec.emp_id,
+                        wd_date: this.getDateString(new_rec.wd_date),
+                        rec_time: new_rec.rec_time,
+                        wd_duration: new_rec.wd_duration,
+                        rec_online: old_rec.rec_online,
+                        cont_name: old_rec.cont_name,
+                        cont_value: old_rec.cont_value
+                    };
+                    resolve(result);
+
+                    trx.commit()
+                })
+                .catch(err => {
+                    if (err.message === STATUS.REC_ARE_NOT_SUITABLE_FOR_TRANSFER ||
+                        err.message === STATUS.YOU_CAN_TRANSFER_ONLY_YOUR_REC
+                    ) {
+                        result = {status: err.message};
+                    } else {
+                        result = {status: STATUS.UNKNOWN_ERROR};
+                    }
+                    reject(result);
+
+                    trx.rollback(err);
+                })
+        })
     })
 };
 
