@@ -20,8 +20,13 @@ module.exports.cancelRecord = function cancelRecord(req, res, next) {
 };
 
 module.exports.changeRecord = function changeRecord(req, res, next) {
-    var body = req.swagger.params['body'].value;
-    Records.changeRecord(body)
+    if (req.error) {
+        utils.writeJson(res, {status: req.error});
+        return;
+    }
+
+    const body = req.swagger.params['body'].value;
+    Records.changeRecord(req, body)
         .then(function (response) {
             utils.writeJson(res, response);
         })

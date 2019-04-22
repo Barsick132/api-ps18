@@ -74,19 +74,57 @@ exports.cancelRecord = function (req, body) {
  * body Body_17 ID записи и/или ID онлайн статуса и/или контактные данные
  * returns inline_response_200_6
  **/
-exports.changeRecord = function (body) {
+exports.changeRecord = function (req, body) {
+    const METHOD = 'changeRecord()';
+    console.log(FILE, METHOD);
+
     return new Promise(function (resolve, reject) {
-        var examples = {};
-        examples['application/json'] = {
-            "status": "OK"
+        const STATUS = {
+            ACCOUNT_REJECT: 'ACCOUNT_REJECT',
+            ACCOUNT_UNDER_REVIEW: 'ACCOUNT_UNDER_REVIEW',
+            NOT_AUTH: 'NOT_AUTH',
+            OK: 'OK'
         };
-        if (Object.keys(examples).length > 0) {
-            resolve(examples[Object.keys(examples)[0]]);
-        } else {
-            resolve();
+
+        let result = {};
+
+        // Проверка аутентификации пользователя
+        if (!req.isAuthenticated()) {
+            console.error('Not Authenticated');
+            reject({status: STATUS.NOT_AUTH});
+            return;
         }
+
+        if (UsersReq.checkRole(req.user.roles, ROLE.PARENT)) {
+            switch (req.user.prnt_data.prnt_confirm) {
+                case 0: {
+                    console.error('Account Under Review');
+                    reject({status: STATUS.ACCOUNT_UNDER_REVIEW});
+                    return;
+                }
+                case 2: {
+                    console.error('Account Reject');
+                    reject({status: STATUS.ACCOUNT_REJECT});
+                    return
+                }
+            }
+        }
+
+        RecordsReq.changeRecord(knex, body, req.user.pepl_id)
+            .then(res => {
+                result = {
+                    status: STATUS.OK,
+                    payload: res
+                };
+
+                resolve(result);
+            })
+            .catch(err => {
+                console.error(err.status);
+                reject(err);
+            })
     });
-}
+};
 
 
 /**

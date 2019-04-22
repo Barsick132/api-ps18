@@ -3,7 +3,7 @@ swagger: "2.0"
 info:
   description: "Это API (swagger 2.0) системы автоматизации психолого-педагогическ\
     ого сопровождения субъектов образовательной деятельности для школы №18."
-  version: "1.0.18"
+  version: "1.0.19"
   title: "PsychoSys18"
   contact:
     email: "antony.nor@yandex.ru"
@@ -762,7 +762,7 @@ paths:
     post:
       tags:
       - "records"
-      summary: "Изменить тип записи и контакты"
+      summary: "Изменить тип записи и/или контакты (ALL) *Для клиентов*"
       operationId: "changeRecord"
       consumes:
       - "application/json"
@@ -777,7 +777,7 @@ paths:
           $ref: "#/definitions/body_17"
       responses:
         200:
-          description: "Статус выполнения запроса"
+          description: "Статус запроса и общая информация"
           schema:
             type: "object"
             required:
@@ -786,6 +786,8 @@ paths:
               status:
                 type: "string"
                 example: "OK"
+              payload:
+                $ref: "#/definitions/inline_response_200_12_payload"
         400:
           description: "Invalid data"
         default:

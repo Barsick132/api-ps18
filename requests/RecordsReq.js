@@ -1081,6 +1081,8 @@ exports.setToRecord = (knex, body, pepl_id) => {
                                 rec_obj.cont_name = body.cont_name;
                                 if (body.cont_value !== undefined) {
                                     rec_obj.cont_value = body.cont_value;
+                                } else {
+                                    rec_obj.cont_value = null;
                                 }
                                 break;
                             } else {
@@ -1092,6 +1094,8 @@ exports.setToRecord = (knex, body, pepl_id) => {
                                 rec_obj.cont_name = body.cont_name;
                                 if (body.cont_value !== undefined) {
                                     rec_obj.cont_value = body.cont_value;
+                                } else {
+                                    rec_obj.cont_value = null;
                                 }
                                 break;
                             } else {
@@ -1103,6 +1107,8 @@ exports.setToRecord = (knex, body, pepl_id) => {
                                 rec_obj.cont_name = body.cont_name;
                                 if (body.cont_value !== undefined) {
                                     rec_obj.cont_value = body.cont_value;
+                                } else {
+                                    rec_obj.cont_value = null;
                                 }
                                 break;
                             } else {
@@ -1114,6 +1120,8 @@ exports.setToRecord = (knex, body, pepl_id) => {
                                 rec_obj.cont_name = body.cont_name;
                                 if (body.cont_value !== undefined) {
                                     rec_obj.cont_value = body.cont_value;
+                                } else {
+                                    rec_obj.cont_value = null;
                                 }
                                 break;
                             } else {
@@ -1125,6 +1133,8 @@ exports.setToRecord = (knex, body, pepl_id) => {
                                 rec_obj.cont_name = body.cont_name;
                                 if (body.cont_value !== undefined) {
                                     rec_obj.cont_value = body.cont_value;
+                                } else {
+                                    rec_obj.cont_value = null;
                                 }
                                 break;
                             } else {
@@ -1142,6 +1152,8 @@ exports.setToRecord = (knex, body, pepl_id) => {
                     if (body.cont_value !== undefined) {
                         // Клиент указал номер для связи
                         rec_obj.cont_value = body.cont_value;
+                    } else {
+                        rec_obj.cont_value = null;
                     }
                 }
 
@@ -1363,7 +1375,7 @@ exports.moveRecord = (knex, rec_id, new_rec_id, pepl_id) => {
         knex.transaction(trx => {
             return knex({p: T.PEOPLE.NAME, wd: T.WORKING_DAYS.NAME, rec: T.RECORDS.NAME})
                 .transacting(trx)
-                .select('p.' + T.PEOPLE.PEPL_ID + ' as emp_id', 'wd.' + T.WORKING_DAYS.WD_DATE, 'rec.*')
+                .select('p.' + T.PEOPLE.PEPL_ID + ' as emp_id', 'wd.' + T.WORKING_DAYS.WD_DATE, 'wd.' + T.WORKING_DAYS.WD_DURATION, 'rec.*')
                 .whereRaw('?? = ??', ['wd.' + T.WORKING_DAYS.EMP_ID, 'p.' + T.PEOPLE.PEPL_ID])
                 .whereRaw('?? = ??', ['wd.' + T.WORKING_DAYS.WD_ID, 'rec.' + T.RECORDS.WD_ID])
                 .where(function () {
@@ -1387,7 +1399,7 @@ exports.moveRecord = (knex, rec_id, new_rec_id, pepl_id) => {
                     new_rec = res.find(rec => rec.rec_id === new_rec_id);
 
                     if ((old_rec.pepl_id === pepl_id || old_rec.emp_id !== pepl_id || new_rec.emp_id !== pepl_id) &&
-                        (old_rec.pepl_id !== pepl_id || new_rec.emp_id === pepl_id)) {
+                        (old_rec.pepl_id !== pepl_id || new_rec.emp_id === pepl_id || old_rec.emp_id !== new_rec.emp_id)) {
                         // Перенос клиента или своей записи
                         throw new Error(STATUS.YOU_CAN_TRANSFER_ONLY_YOUR_REC);
                     }
@@ -1443,6 +1455,208 @@ exports.moveRecord = (knex, rec_id, new_rec_id, pepl_id) => {
                     trx.rollback(err);
                 })
         })
+    })
+};
+
+// Изменение данных записи
+exports.changeRecord = (knex, body, pepl_id) => {
+    return new Promise((resolve, reject) => {
+        const STATUS = {
+            NOT_FOUND_UPDATED_RECORD: 'NOT_FOUND_UPDATED_RECORD',
+            CAN_ONLY_REC_A_CLIENT_TO_YOURSELF: 'CAN_ONLY_REC_A_CLIENT_TO_YOURSELF',
+            NOT_FOUND_CONT_NAME: 'NOT_FOUND_CONT_NAME',
+            NOT_FOUND_SKYPE_AT_EMP: 'NOT_FOUND_SKYPE_AT_EMP',
+            NOT_FOUND_DISCORD_AT_EMP: 'NOT_FOUND_DISCORD_AT_EMP',
+            NOT_FOUND_HANGOUTS_AT_EMP: 'NOT_FOUND_HANGOUTS_AT_EMP',
+            NOT_FOUND_VIBER_AT_EMP: 'NOT_FOUND_VIBER_AT_EMP',
+            NOT_FOUND_VK_AT_EMP: 'NOT_FOUND_VK_AT_EMP',
+            CAN_NOT_SIGN_UP_TO_YOURSELF: 'CAN_NOT_SIGN_UP_TO_YOURSELF',
+            NOT_FOUND_VALID_REC: 'NOT_FOUND_VALID_REC',
+            UNKNOWN_ERROR: 'UNKNOWN_ERROR'
+        };
+
+        let result = {};
+        let emp_wd = {};
+
+        return knex({p: T.PEOPLE.NAME, e: T.EMPLOYEES.NAME, rec: T.RECORDS.NAME, wd: T.WORKING_DAYS.NAME})
+            .distinct('p.*', 'e.*', 'wd.*')
+            .select('p.*', 'e.*', 'wd.*')
+            .where('rec.' + T.RECORDS.REC_ID, body.rec_id)
+            .andWhere('rec.' + T.RECORDS.PEPL_ID, pepl_id)
+            .andWhere('p.' + T.PEOPLE.PEPL_ID, '<>', pepl_id)
+            .where(function () {
+                this.whereRaw('?? > current_date', ['wd.' + T.WORKING_DAYS.WD_DATE])
+                    .orWhereRaw('?? = current_date', ['wd.' + T.WORKING_DAYS.WD_DATE])
+                    .andWhereRaw('?? > current_time', ['rec.' + T.RECORDS.REC_TIME])
+            })
+            .whereRaw('?? = ??', ['rec.' + T.RECORDS.WD_ID, 'wd.' + T.WORKING_DAYS.WD_ID])
+            .whereRaw('?? = ??', ['wd.' + T.WORKING_DAYS.EMP_ID, 'e.' + T.EMPLOYEES.EMP_ID])
+            .whereRaw('?? = ??', ['p.' + T.PEOPLE.PEPL_ID, 'e.' + T.EMPLOYEES.EMP_ID])
+            .then(res => {
+                if (res.length !== 1) {
+                    throw new Error(STATUS.NOT_FOUND_VALID_REC);
+                }
+
+                emp_wd = res[0];
+                let rec_obj = {};
+
+                if (body.rec_online) {
+                    rec_obj.rec_online = true;
+
+                    switch (body.cont_name) {
+                        case CONTACT_NAME.SKYPE: {
+                            if (emp_wd.emp_skype) {
+                                rec_obj.cont_name = body.cont_name;
+                                if (body.cont_value !== undefined) {
+                                    rec_obj.cont_value = body.cont_value;
+                                } else {
+                                    rec_obj.cont_value = null;
+                                }
+                                break;
+                            } else {
+                                throw new Error(STATUS.NOT_FOUND_SKYPE_AT_EMP);
+                            }
+                        }
+                        case CONTACT_NAME.DISCORD: {
+                            if (emp_wd.emp_discord) {
+                                rec_obj.cont_name = body.cont_name;
+                                if (body.cont_value !== undefined) {
+                                    rec_obj.cont_value = body.cont_value;
+                                } else {
+                                    rec_obj.cont_value = null;
+                                }
+                                break;
+                            } else {
+                                throw new Error(STATUS.NOT_FOUND_DISCORD_AT_EMP);
+                            }
+                        }
+                        case CONTACT_NAME.HANGOUTS: {
+                            if (emp_wd.emp_hangouts) {
+                                rec_obj.cont_name = body.cont_name;
+                                if (body.cont_value !== undefined) {
+                                    rec_obj.cont_value = body.cont_value;
+                                } else {
+                                    rec_obj.cont_value = null;
+                                }
+                                break;
+                            } else {
+                                throw new Error(STATUS.NOT_FOUND_HANGOUTS_AT_EMP);
+                            }
+                        }
+                        case CONTACT_NAME.VIBER: {
+                            if (emp_wd.emp_viber) {
+                                rec_obj.cont_name = body.cont_name;
+                                if (body.cont_value !== undefined) {
+                                    rec_obj.cont_value = body.cont_value;
+                                } else {
+                                    rec_obj.cont_value = null;
+                                }
+                                break;
+                            } else {
+                                throw new Error(STATUS.NOT_FOUND_VIBER_AT_EMP);
+                            }
+                        }
+                        case CONTACT_NAME.VK: {
+                            if (emp_wd.emp_vk) {
+                                rec_obj.cont_name = body.cont_name;
+                                if (body.cont_value !== undefined) {
+                                    rec_obj.cont_value = body.cont_value;
+                                } else {
+                                    rec_obj.cont_value = null;
+                                }
+                                break;
+                            } else {
+                                throw new Error(STATUS.NOT_FOUND_VK_AT_EMP);
+                            }
+                        }
+                        default: {
+                            throw new Error(STATUS.NOT_FOUND_CONT_NAME)
+                        }
+                    }
+                } else {
+                    rec_obj.rec_online = false;
+
+                    rec_obj.cont_name = CONTACT_NAME.PHONE;
+                    if (body.cont_value !== undefined) {
+                        // Клиент указал номер для связи
+                        rec_obj.cont_value = body.cont_value;
+                    } else {
+                        rec_obj.cont_value = null;
+                    }
+                }
+
+                return knex(T.RECORDS.NAME)
+                    .update(rec_obj)
+                    .where(T.RECORDS.REC_ID, body.rec_id)
+                    .returning('*');
+            })
+            .then(res => {
+                if (res.length === 0) {
+                    throw new Error(STATUS.NOT_FOUND_UPDATED_RECORD);
+                }
+
+                console.log('Updated ' + res.length + ' Records');
+                let rec = res[0];
+                result = {
+                    pepl_id: rec.pepl_id,
+                    emp_id: emp_wd.emp_id,
+                    wd_date: this.getDateString(emp_wd.wd_date),
+                    rec_time: rec.rec_time,
+                    wd_duration: emp_wd.wd_duration,
+                    rec_online: rec.rec_online,
+                    cont_name: rec.cont_name
+                };
+
+                if (rec.cont_value !== null) {
+                    result.cont_value = rec.cont_value;
+                } else {
+                    switch (result.cont_name) {
+                        case CONTACT_NAME.SKYPE: {
+                            result.emp_cont_value = emp_wd.emp_skype;
+                            break;
+                        }
+                        case CONTACT_NAME.DISCORD: {
+                            result.emp_cont_value = emp_wd.emp_discord;
+                            break;
+                        }
+                        case CONTACT_NAME.HANGOUTS: {
+                            result.emp_cont_value = emp_wd.emp_hangouts;
+                            break;
+                        }
+                        case CONTACT_NAME.VIBER: {
+                            result.emp_cont_value = emp_wd.emp_viber;
+                            break;
+                        }
+                        case CONTACT_NAME.VK: {
+                            result.emp_cont_value = emp_wd.emp_vk;
+                            break;
+                        }
+                        case CONTACT_NAME.PHONE: {
+                            result.emp_cont_value = emp_wd.pepl_phone;
+                            break;
+                        }
+                    }
+                }
+
+                resolve(result);
+            })
+            .catch(err => {
+                if (err.message === STATUS.NOT_FOUND_VALID_REC ||
+                    err.message === STATUS.NOT_FOUND_UPDATED_RECORD ||
+                    err.message === STATUS.CAN_NOT_SIGN_UP_TO_YOURSELF ||
+                    err.message === STATUS.CAN_ONLY_REC_A_CLIENT_TO_YOURSELF ||
+                    err.message === STATUS.NOT_FOUND_SKYPE_AT_EMP ||
+                    err.message === STATUS.NOT_FOUND_DISCORD_AT_EMP ||
+                    err.message === STATUS.NOT_FOUND_HANGOUTS_AT_EMP ||
+                    err.message === STATUS.NOT_FOUND_VIBER_AT_EMP ||
+                    err.message === STATUS.NOT_FOUND_VK_AT_EMP ||
+                    err.message === STATUS.NOT_FOUND_CONT_NAME) {
+                    result = {status: err.message};
+                } else {
+                    result = {status: STATUS.UNKNOWN_ERROR};
+                }
+                reject(result);
+            })
     })
 };
 
