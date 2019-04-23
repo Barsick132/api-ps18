@@ -47,8 +47,13 @@ module.exports.getJournal = function getJournal(req, res, next) {
 };
 
 module.exports.getOneRecord = function getOneRecord(req, res, next) {
-    var body = req.swagger.params['body'].value;
-    Records.getOneRecord(body)
+    if (req.error) {
+        utils.writeJson(res, {status: req.error});
+        return;
+    }
+
+    const body = req.swagger.params['body'].value;
+    Records.getOneRecord(req, body)
         .then(function (response) {
             utils.writeJson(res, response);
         })
@@ -58,8 +63,13 @@ module.exports.getOneRecord = function getOneRecord(req, res, next) {
 };
 
 module.exports.getRecordsFromWD = function getRecordsFromWD(req, res, next) {
-    var body = req.swagger.params['body'].value;
-    Records.getRecordsFromWD(body)
+    if (req.error) {
+        utils.writeJson(res, {status: req.error});
+        return;
+    }
+
+    const body = req.swagger.params['body'].value;
+    Records.getRecordsFromWD(req, body)
         .then(function (response) {
             utils.writeJson(res, response);
         })

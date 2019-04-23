@@ -177,29 +177,57 @@ exports.getJournal = function (body) {
  * body Body_18 ID записи
  * returns inline_response_200_12
  **/
-exports.getOneRecord = function (body) {
+exports.getOneRecord = function (req, body) {
+    const METHOD = 'getOneRecord()';
+    console.log(FILE, METHOD);
+
     return new Promise(function (resolve, reject) {
-        var examples = {};
-        examples['application/json'] = {
-            "payload": {
-                "rec_time": "12:00:00",
-                "rec_online": true,
-                "wd_date": "2019-03-03",
-                "pepl_id": 3,
-                "cont_value": "student132",
-                "wd_duration": 30,
-                "emp_id": 1,
-                "cont_name": "skype"
-            },
-            "status": "OK"
+        const STATUS = {
+            ACCOUNT_REJECT: 'ACCOUNT_REJECT',
+            ACCOUNT_UNDER_REVIEW: 'ACCOUNT_UNDER_REVIEW',
+            NOT_AUTH: 'NOT_AUTH',
+            OK: 'OK'
         };
-        if (Object.keys(examples).length > 0) {
-            resolve(examples[Object.keys(examples)[0]]);
-        } else {
-            resolve();
+
+        let result = {};
+
+        // Проверка аутентификации пользователя
+        if (!req.isAuthenticated()) {
+            console.error('Not Authenticated');
+            reject({status: STATUS.NOT_AUTH});
+            return;
         }
+
+        if (UsersReq.checkRole(req.user.roles, ROLE.PARENT)) {
+            switch (req.user.prnt_data.prnt_confirm) {
+                case 0: {
+                    console.error('Account Under Review');
+                    reject({status: STATUS.ACCOUNT_UNDER_REVIEW});
+                    return;
+                }
+                case 2: {
+                    console.error('Account Reject');
+                    reject({status: STATUS.ACCOUNT_REJECT});
+                    return
+                }
+            }
+        }
+
+        RecordsReq.getOneRecord(knex, body.rec_id, req.user.pepl_id)
+            .then(res => {
+                result = {
+                    status: STATUS.OK,
+                    payload: res
+                };
+
+                resolve(result);
+            })
+            .catch(err => {
+                console.error(err.status);
+                reject(err);
+            })
     });
-}
+};
 
 
 /**

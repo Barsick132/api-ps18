@@ -3,7 +3,7 @@ swagger: "2.0"
 info:
   description: "Это API (swagger 2.0) системы автоматизации психолого-педагогическ\
     ого сопровождения субъектов образовательной деятельности для школы №18."
-  version: "1.0.19"
+  version: "1.0.20"
   title: "PsychoSys18"
   contact:
     email: "antony.nor@yandex.ru"
@@ -815,7 +815,7 @@ paths:
           $ref: "#/definitions/body_18"
       responses:
         200:
-          description: "Статус запроса и данные о записи"
+          description: "Статус запроса и общая информация"
           schema:
             type: "object"
             required:
@@ -825,7 +825,7 @@ paths:
                 type: "string"
                 example: "OK"
               payload:
-                $ref: "#/definitions/inline_response_200_13_payload"
+                $ref: "#/definitions/inline_response_200_12_payload"
         400:
           description: "Invalid data"
         default:

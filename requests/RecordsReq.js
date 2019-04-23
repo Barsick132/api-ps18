@@ -1660,3 +1660,94 @@ exports.changeRecord = (knex, body, pepl_id) => {
     })
 };
 
+exports.getOneRecord = function (knex, rec_id, pepl_id) {
+    return new Promise((resolve, reject) => {
+        const STATUS = {
+            NOT_FOUND_VALID_REC: 'NOT_FOUND_VALID_REC',
+            UNKNOWN_ERROR: 'UNKNOWN_ERROR'
+        };
+
+        let result = {};
+
+        return knex({p: T.PEOPLE.NAME, e: T.EMPLOYEES.NAME, rec: T.RECORDS.NAME, wd: T.WORKING_DAYS.NAME})
+            .distinct('rec.' + T.RECORDS.PEPL_ID, 'wd.' + T.WORKING_DAYS.WD_DATE, 'rec.' + T.RECORDS.REC_TIME,
+                'wd.' + T.WORKING_DAYS.WD_DURATION, 'rec.' + T.RECORDS.REC_ONLINE, 'rec.' + T.RECORDS.CONT_NAME,
+                'rec.' + T.RECORDS.CONT_VALUE, 'e.*')
+            .select({
+                pepl_id: 'rec.' + T.RECORDS.PEPL_ID,
+                wd_date: 'wd.' + T.WORKING_DAYS.WD_DATE,
+                rec_time: 'rec.' + T.RECORDS.REC_TIME,
+                wd_duration: 'wd.' + T.WORKING_DAYS.WD_DURATION,
+                rec_online: 'rec.' + T.RECORDS.REC_ONLINE,
+                cont_name: 'rec.' + T.RECORDS.CONT_NAME,
+                cont_value: 'rec.' + T.RECORDS.CONT_VALUE
+            }, 'e.*')
+            .where('rec.' + T.RECORDS.REC_ID, rec_id)
+            .where(function () {
+                this.where('rec.' + T.RECORDS.PEPL_ID, pepl_id)
+                    .orWhere('p.' + T.PEOPLE.PEPL_ID, pepl_id)
+            })
+            .whereRaw('?? = ??', ['rec.' + T.RECORDS.WD_ID, 'wd.' + T.WORKING_DAYS.WD_ID])
+            .whereRaw('?? = ??', ['wd.' + T.WORKING_DAYS.EMP_ID, 'e.' + T.EMPLOYEES.EMP_ID])
+            .whereRaw('?? = ??', ['p.' + T.PEOPLE.PEPL_ID, 'e.' + T.EMPLOYEES.EMP_ID])
+            .then(res => {
+                if(res.length !== 1){
+                    throw new Error(STATUS.NOT_FOUND_VALID_REC);
+                }
+
+                console.log('Found Record');
+                let emp_wd = res[0];
+                result = {
+                    pepl_id: emp_wd.pepl_id,
+                    emp_id: emp_wd.emp_id,
+                    wd_date: this.getDateString(emp_wd.wd_date),
+                    rec_time: emp_wd.rec_time,
+                    wd_duration: emp_wd.wd_duration,
+                    rec_online: emp_wd.rec_online,
+                    cont_name: emp_wd.cont_name
+                };
+
+                if (emp_wd.cont_value !== null) {
+                    result.cont_value = emp_wd.cont_value;
+                } else {
+                    switch (result.cont_name) {
+                        case CONTACT_NAME.SKYPE: {
+                            result.emp_cont_value = emp_wd.emp_skype;
+                            break;
+                        }
+                        case CONTACT_NAME.DISCORD: {
+                            result.emp_cont_value = emp_wd.emp_discord;
+                            break;
+                        }
+                        case CONTACT_NAME.HANGOUTS: {
+                            result.emp_cont_value = emp_wd.emp_hangouts;
+                            break;
+                        }
+                        case CONTACT_NAME.VIBER: {
+                            result.emp_cont_value = emp_wd.emp_viber;
+                            break;
+                        }
+                        case CONTACT_NAME.VK: {
+                            result.emp_cont_value = emp_wd.emp_vk;
+                            break;
+                        }
+                        case CONTACT_NAME.PHONE: {
+                            result.emp_cont_value = emp_wd.pepl_phone;
+                            break;
+                        }
+                    }
+                }
+
+                resolve(result);
+            })
+            .catch(err => {
+                if (err.message === STATUS.NOT_FOUND_VALID_REC) {
+                    result = {status: err.message};
+                } else {
+                    result = {status: STATUS.UNKNOWN_ERROR};
+                }
+                reject(result);
+            })
+    })
+};
+
