@@ -101,7 +101,20 @@ module.exports.TABLES = {
         CONT_NAME: 'cont_name',
         CONT_VALUE: 'cont_value'
     },
-    VISITS: 'visits',
+    VISITS: {
+        NAME: 'visits',
+        VST_ID: 'vst_id',
+        REC_ID: 'rec_id',
+        EMP_ID: 'emp_id',
+        VST_DT: 'vst_dt',
+        VST_AGE: 'vst_age',
+        VST_GENDER: 'vst_gender',
+        VST_NAME: 'vst_name',
+        VST_REASON: 'vst_reason',
+        VST_PROBLEM: 'vst_problem',
+        VST_RESULT: 'vst_result',
+        VST_CONSULTANT: 'vst_consultant'
+    },
     TESTS: 'tests',
     AVAILABLE_TESTS: 'available_tests',
     TEST_RESULTS: 'test_results',

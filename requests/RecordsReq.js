@@ -1359,6 +1359,7 @@ exports.skipRecord = (knex, rec_id, pepl_id) => {
     })
 };
 
+// Перенос записи
 exports.moveRecord = (knex, rec_id, new_rec_id, pepl_id) => {
     return new Promise((resolve, reject) => {
         const STATUS = {
@@ -1660,6 +1661,7 @@ exports.changeRecord = (knex, body, pepl_id) => {
     })
 };
 
+// Запрос информации одной конкретной записи с проверкой на принадлежность
 exports.getOneRecord = function (knex, rec_id, pepl_id) {
     return new Promise((resolve, reject) => {
         const STATUS = {
@@ -1691,7 +1693,7 @@ exports.getOneRecord = function (knex, rec_id, pepl_id) {
             .whereRaw('?? = ??', ['wd.' + T.WORKING_DAYS.EMP_ID, 'e.' + T.EMPLOYEES.EMP_ID])
             .whereRaw('?? = ??', ['p.' + T.PEOPLE.PEPL_ID, 'e.' + T.EMPLOYEES.EMP_ID])
             .then(res => {
-                if(res.length !== 1){
+                if (res.length !== 1) {
                     throw new Error(STATUS.NOT_FOUND_VALID_REC);
                 }
 
@@ -1751,3 +1753,166 @@ exports.getOneRecord = function (knex, rec_id, pepl_id) {
     })
 };
 
+// Получение информации о зарегистрированных записях на конкретный день
+exports.getRecordsFromWD = function (knex, wd_id, pepl_id) {
+    return new Promise((resolve, reject) => {
+        const STATUS = {
+            NOT_FOUND_RECORDS_AT_WD: 'NOT_FOUND_RECORDS_AT_WD',
+            NOT_FOUND_VALID_WD: 'NOT_FOUND_VALID_WD',
+            UNKNOWN_ERROR: 'UNKNOWN_ERROR'
+        };
+
+        let result = {};
+        let emp_wd = {};
+
+        return knex({p: T.PEOPLE.NAME, e: T.EMPLOYEES.NAME, wd: T.WORKING_DAYS.NAME})
+            .distinct('p.*', 'e.*', 'wd.*')
+            .select('p.*', 'e.*', 'wd.*')
+            .where('wd.' + T.WORKING_DAYS.WD_ID, wd_id)
+            .where('p.' + T.PEOPLE.PEPL_ID, pepl_id)
+            .whereRaw('?? = ??', ['wd.' + T.WORKING_DAYS.EMP_ID, 'e.' + T.EMPLOYEES.EMP_ID])
+            .whereRaw('?? = ??', ['p.' + T.PEOPLE.PEPL_ID, 'e.' + T.EMPLOYEES.EMP_ID])
+            .then(res => {
+                if (res.length !== 1) {
+                    throw new Error(STATUS.NOT_FOUND_VALID_WD);
+                }
+
+                console.log('Found Valid WD');
+                emp_wd = res[0];
+                return knex(T.RECORDS.NAME)
+                    .select()
+                    .where(T.RECORDS.WD_ID, wd_id)
+                    .whereNotNull(T.RECORDS.PEPL_ID)
+                    .orderBy(T.RECORDS.REC_TIME);
+            })
+            .then(res => {
+                if (res.length === 0) {
+                    throw new Error(STATUS.NOT_FOUND_RECORDS_AT_WD);
+                }
+
+                console.log('Found ' + res.length + ' Rec At WD');
+                result = {
+                    wd_id: emp_wd.wd_id,
+                    wd_date: this.getDateString(emp_wd.wd_date),
+                    wd_data: {
+                        wd_time_begin: emp_wd.wd_time_begin,
+                        wd_time_end: emp_wd.wd_time_end,
+                        wd_break_begin: emp_wd.wd_break_begin,
+                        wd_break_end: emp_wd.wd_break_end,
+                        wd_duration: emp_wd.wd_duration
+                    }
+                };
+
+                result.rec_array = res.map(rec => {
+                    return {
+                        rec_id: rec.rec_id,
+                        rec_data: {
+                            pepl_id: rec.pepl_id,
+                            rec_time: rec.rec_time,
+                            rec_online: rec.rec_online,
+                            rec_not_come: rec.rec_not_come,
+                            cont_name: rec.cont_name,
+                            cont_value: rec.cont_value
+                        }
+                    }
+                });
+
+                resolve(result);
+            })
+            .catch(err => {
+                if (err.message === STATUS.NOT_FOUND_VALID_WD ||
+                    err.message === STATUS.NOT_FOUND_RECORDS_AT_WD) {
+                    result = {status: err.message};
+                } else {
+                    result = {status: STATUS.UNKNOWN_ERROR};
+                }
+                reject(result);
+            })
+    })
+};
+
+// Получить журнал записей
+exports.getJournal = function (knex, body, pepl_id) {
+    return new Promise((resolve, reject) => {
+        const STATUS = {
+            NOT_FOUND_VALID_VISITS: 'NOT_FOUND_VALID_VISITS',
+            UNKNOWN_ERROR: 'UNKNOWN_ERROR',
+            BAD_REQUEST: 'BAD_REQUEST'
+        };
+
+        let result = {};
+
+        return new Promise((resolve, reject) => {
+            if (body.byDate !== undefined && (
+                body.byDate.vst_date_begin !== undefined ||
+                body.byDate.vst_date_end !== undefined)) {
+                if (body.byDate.vst_date_begin !== undefined && body.byDate.vst_date_end !== undefined) {
+                    return knex(T.VISITS.NAME)
+                        .where(T.VISITS.EMP_ID, pepl_id)
+                        .andWhereRaw('??::date <= ?', [T.VISITS.VST_DT, body.byDate.vst_date_end])
+                        .andWhereRaw('??::date >= ?', [T.VISITS.VST_DT, body.byDate.vst_date_begin])
+                        .orderBy(T.VISITS.VST_DT, 'desc')
+                        .then(res => resolve(res))
+                        .catch(err => reject(err));
+                } else {
+                    if (body.byDate.vst_date_begin !== undefined) {
+                        return knex(T.VISITS.NAME)
+                            .where(T.VISITS.EMP_ID, pepl_id)
+                            .andWhereRaw('??::date >= ?', [T.VISITS.VST_DT, body.byDate.vst_date_begin])
+                            .orderBy(T.VISITS.VST_DT, 'desc')
+                            .then(res => resolve(res))
+                            .catch(err => reject(err));
+                    } else {
+                        return knex(T.VISITS.NAME)
+                            .where(T.VISITS.EMP_ID, pepl_id)
+                            .andWhereRaw('??::date <= ?', [T.VISITS.VST_DT, body.byDate.vst_date_end])
+                            .orderBy(T.VISITS.VST_DT, 'desc')
+                            .then(res => resolve(res))
+                            .catch(err => reject(err));
+                    }
+                }
+            } else {
+                if (body.inCount !== undefined && body.inCount.vst_N !== undefined) {
+                    if (body.inCount.vst_F !== undefined) {
+                        return knex(T.VISITS.NAME)
+                            .where(T.VISITS.EMP_ID, pepl_id)
+                            .orderBy(T.VISITS.VST_DT, 'desc')
+                            .limit(body.inCount.vst_N)
+                            .offset(body.inCount.vst_F)
+                            .then(res => resolve(res))
+                            .catch(err => reject(err));
+                    } else {
+                        return knex(T.VISITS.NAME)
+                            .where(T.VISITS.EMP_ID, pepl_id)
+                            .orderBy(T.VISITS.VST_DT, 'desc')
+                            .limit(body.inCount.vst_N)
+                            .offset(body.inCount.vst_F)
+                            .then(res => resolve(res))
+                            .catch(err => reject(err));
+                    }
+                } else {
+                    throw new Error(STATUS.BAD_REQUEST);
+                }
+            }
+        })
+            .then(res => {
+                if (res.length === 0) {
+                    throw new Error(STATUS.NOT_FOUND_VALID_VISITS);
+                }
+
+                console.log('Found ' + res.length + ' Visits');
+                resolve(res);
+            })
+            .catch(err => {
+                if (err.message === STATUS.NOT_FOUND_VALID_VISITS ||
+                    err.message === STATUS.BAD_REQUEST) {
+                    result = {status: err.message};
+                } else {
+                    result = {status: STATUS.UNKNOWN_ERROR};
+                }
+                reject(result);
+            })
+
+
+    })
+};

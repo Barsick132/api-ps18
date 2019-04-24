@@ -3,7 +3,7 @@ swagger: "2.0"
 info:
   description: "Это API (swagger 2.0) системы автоматизации психолого-педагогическ\
     ого сопровождения субъектов образовательной деятельности для школы №18."
-  version: "1.0.20"
+  version: "1.0.21"
   title: "PsychoSys18"
   contact:
     email: "antony.nor@yandex.ru"
@@ -800,7 +800,7 @@ paths:
     post:
       tags:
       - "records"
-      summary: "Получение сведений об одной записи"
+      summary: "Получение сведений об одной записи (ALL)"
       operationId: "getOneRecord"
       consumes:
       - "application/json"
@@ -838,7 +838,7 @@ paths:
     post:
       tags:
       - "records"
-      summary: "Получить зарегистрированные записи по рабочему дню"
+      summary: "Получить зарегистрированные записи по рабочему дню (Employee)"
       operationId: "getRecordsFromWD"
       consumes:
       - "application/json"
@@ -863,9 +863,7 @@ paths:
                 type: "string"
                 example: "OK"
               payload:
-                type: "array"
-                items:
-                  $ref: "#/definitions/inline_response_200_14_payload"
+                $ref: "#/definitions/inline_response_200_10_payload"
         400:
           description: "Invalid data"
         default:
@@ -918,7 +916,7 @@ paths:
     post:
       tags:
       - "records"
-      summary: "Получение записей за период или последние N с шагом F"
+      summary: "Получение записей за период или последние N с шагом F (Psychologist)"
       operationId: "getJournal"
       consumes:
       - "application/json"
@@ -2820,10 +2818,10 @@ definitions:
         type: "string"
         example: "18:30:00"
       wd_break_begin:
-        type: ["string", "null"]
+        type: ["string","null"]
         example: "13:00:00"
       wd_break_end:
-        type: ["string", "null"]
+        type: ["string","null"]
         example: "14:00:00"
       wd_duration:
         type: "integer"
@@ -3185,60 +3183,6 @@ definitions:
         type: "integer"
         format: "int32"
         example: 1
-  inline_response_200_14_payload:
-    required:
-    - "emp_id"
-    - "pepl_id"
-    - "rec_id"
-    - "rec_online"
-    - "rec_time"
-    - "wd_date"
-    - "wd_duration"
-    properties:
-      rec_id:
-        type: "integer"
-        format: "int32"
-        example: 9
-      pepl_id:
-        type: "integer"
-        format: "int32"
-        example: 3
-      emp_id:
-        type: "integer"
-        format: "int32"
-        example: 1
-      wd_date:
-        type: "string"
-        format: "date"
-        example: "2019-03-03"
-      rec_time:
-        type: "string"
-        example: "12:00:00"
-      wd_duration:
-        type: "integer"
-        format: "int32"
-        example: 30
-      rec_online:
-        type: "boolean"
-        example: true
-      cont_name:
-        type: "string"
-        example: "skype"
-        description: "Не обязательно,только при личном визите Value:\n  - skype\n\
-          \  - discord\n  - hangouts\n  - viber\n  - vk\n  - phone\n"
-      cont_value:
-        type: "string"
-        example: "student132"
-    example:
-      rec_time: "12:00:00"
-      rec_online: true
-      wd_date: "2019-03-03"
-      pepl_id: 3
-      cont_value: "student132"
-      rec_id: 9
-      wd_duration: 30
-      emp_id: 1
-      cont_name: "skype"
   inline_response_200_14:
     required:
     - "status"
@@ -3247,29 +3191,34 @@ definitions:
         type: "string"
         example: "OK"
       payload:
-        type: "array"
-        items:
-          $ref: "#/definitions/inline_response_200_14_payload"
+        $ref: "#/definitions/inline_response_200_10_payload"
     example:
       payload:
-      - rec_time: "12:00:00"
-        rec_online: true
         wd_date: "2019-03-03"
-        pepl_id: 3
-        cont_value: "student132"
-        rec_id: 9
-        wd_duration: 30
-        emp_id: 1
-        cont_name: "skype"
-      - rec_time: "12:00:00"
-        rec_online: true
-        wd_date: "2019-03-03"
-        pepl_id: 3
-        cont_value: "student132"
-        rec_id: 9
-        wd_duration: 30
-        emp_id: 1
-        cont_name: "skype"
+        wd_id: 1
+        rec_array:
+        - rec_id: 7
+          rec_data:
+            rec_time: "11:00:00"
+            rec_online: true
+            pepl_id: 3
+            cont_value: "student132"
+            rec_not_come: false
+            cont_name: "skype"
+        - rec_id: 7
+          rec_data:
+            rec_time: "11:00:00"
+            rec_online: true
+            pepl_id: 3
+            cont_value: "student132"
+            rec_not_come: false
+            cont_name: "skype"
+        wd_data:
+          wd_time_begin: "8:00:00"
+          wd_break_begin: "13:00:00"
+          wd_break_end: "14:00:00"
+          wd_time_end: "18:30:00"
+          wd_duration: 30
       status: "OK"
   setJournal_vst_arr_del:
     required:
@@ -3520,8 +3469,6 @@ definitions:
             rec_id: 7
       status: "OK"
   getJournal_byDate:
-    required:
-    - "vst_date_begin"
     properties:
       vst_date_begin:
         type: "string"
@@ -3553,6 +3500,7 @@ definitions:
         $ref: "#/definitions/getJournal_inCount"
   inline_response_200_16_payload:
     required:
+    - "emp_id"
     - "vst_age"
     - "vst_consultant"
     - "vst_dt"
@@ -3567,6 +3515,10 @@ definitions:
         type: "integer"
         format: "int32"
         example: 1
+      emp_id:
+        type: "integer"
+        format: "int32"
+        example: 4
       rec_id:
         type: "integer"
         format: "int32"
@@ -3607,6 +3559,7 @@ definitions:
       rec_id: 7
       vst_age: 13
       vst_dt: "2019-03-03T11:00:00.000Z"
+      emp_id: 4
       vst_gender: true
   inline_response_200_16:
     required:
@@ -3630,6 +3583,7 @@ definitions:
         rec_id: 7
         vst_age: 13
         vst_dt: "2019-03-03T11:00:00.000Z"
+        emp_id: 4
         vst_gender: true
       - vst_problem: "Угнетение учениками"
         vst_name: "Тарасов Семен Львович"
@@ -3640,6 +3594,7 @@ definitions:
         rec_id: 7
         vst_age: 13
         vst_dt: "2019-03-03T11:00:00.000Z"
+        emp_id: 4
         vst_gender: true
       status: "OK"
   signup_emp_data_pst_arr:
@@ -4381,19 +4336,19 @@ definitions:
   updPersonalData_emp_data:
     properties:
       emp_skype:
-        type: ["string", "null"]
+        type: ["string","null"]
         example: "emplAdmin"
       emp_discord:
-        type: ["string", "null"]
+        type: ["string","null"]
         example: "emplAdmin#1232"
       emp_hangouts:
-        type: ["string", "null"]
+        type: ["string","null"]
         example: "admin@gmail.com"
       emp_viber:
-        type: ["string", "null"]
+        type: ["string","null"]
         example: "9045556432"
       emp_vk:
-        type: ["string", "null"]
+        type: ["string","null"]
         example: "empadmin"
   updPersonalData_prnt_data:
     properties:
@@ -4407,7 +4362,7 @@ definitions:
         type: "string"
         example: "17Б"
       prnt_flat:
-        type: ["string", "null"]
+        type: ["string","null"]
         example: "45"
   body_25:
     type: "object"
@@ -4431,10 +4386,10 @@ definitions:
         type: "boolean"
         example: true
       pepl_phone:
-        type: ["string", "null"]
+        type: ["string","null"]
         example: "9045556432"
       pepl_email:
-        type: ["string", "null"]
+        type: ["string","null"]
         example: "admin@mail.ru"
       emp_data:
         $ref: "#/definitions/updPersonalData_emp_data"
@@ -5521,7 +5476,7 @@ definitions:
         type: "string"
         example: "Педагог-психолог"
       pst_description:
-        type: ["string", "null"]
+        type: ["string","null"]
   inline_response_200_34:
     required:
     - "status"

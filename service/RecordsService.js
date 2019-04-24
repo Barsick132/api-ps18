@@ -133,42 +133,47 @@ exports.changeRecord = function (req, body) {
  * body Body_21 Либо получаем записи за период, либо фильтруем по количеству
  * returns inline_response_200_15
  **/
-exports.getJournal = function (body) {
+exports.getJournal = function (req, body) {
+    const METHOD = 'getJournal()';
+    console.log(FILE, METHOD);
+
     return new Promise(function (resolve, reject) {
-        var examples = {};
-        examples['application/json'] = {
-            "payload": [{
-                "vst_problem": "Угнетение учениками",
-                "vst_name": "Тарасов Семен Львович",
-                "vst_id": 1,
-                "vst_consultant": "Иванов Иван иванович",
-                "vst_reason": "Стресс",
-                "vst_result": "Стресс",
-                "rec_id": 7,
-                "vst_age": 13,
-                "vst_dt": "2019-03-03T11:00:00.000Z",
-                "vst_gender": true
-            }, {
-                "vst_problem": "Угнетение учениками",
-                "vst_name": "Тарасов Семен Львович",
-                "vst_id": 1,
-                "vst_consultant": "Иванов Иван иванович",
-                "vst_reason": "Стресс",
-                "vst_result": "Стресс",
-                "rec_id": 7,
-                "vst_age": 13,
-                "vst_dt": "2019-03-03T11:00:00.000Z",
-                "vst_gender": true
-            }],
-            "status": "OK"
+        const STATUS = {
+            NOT_ACCESS: 'NOT_ACCESS',
+            NOT_AUTH: 'NOT_AUTH',
+            OK: 'OK'
         };
-        if (Object.keys(examples).length > 0) {
-            resolve(examples[Object.keys(examples)[0]]);
-        } else {
-            resolve();
+
+        let result = {};
+
+        // Проверка аутентификации пользователя
+        if (!req.isAuthenticated()) {
+            console.error('Not Authenticated');
+            reject({status: STATUS.NOT_AUTH});
+            return;
         }
+
+        if (!UsersReq.checkRole(req.user.roles, ROLE.PSYCHOLOGIST)) {
+            console.error('Not ' + ROLE.PSYCHOLOGIST);
+            reject({status: STATUS.NOT_ACCESS});
+            return;
+        }
+
+        RecordsReq.getJournal(knex, body, req.user.pepl_id)
+            .then(res => {
+                result = {
+                    status: STATUS.OK,
+                    payload: res
+                };
+
+                resolve(result);
+            })
+            .catch(err => {
+                console.error(err.status);
+                reject(err);
+            })
     });
-}
+};
 
 
 /**
@@ -236,40 +241,47 @@ exports.getOneRecord = function (req, body) {
  * body Body_19 ID рабочего дня
  * returns inline_response_200_13
  **/
-exports.getRecordsFromWD = function (body) {
+exports.getRecordsFromWD = function (req, body) {
+    const METHOD = 'getRecordsFromWD()';
+    console.log(FILE, METHOD);
+
     return new Promise(function (resolve, reject) {
-        var examples = {};
-        examples['application/json'] = {
-            "payload": [{
-                "rec_time": "12:00:00",
-                "rec_online": true,
-                "wd_date": "2019-03-03",
-                "pepl_id": 3,
-                "cont_value": "student132",
-                "rec_id": 9,
-                "wd_duration": 30,
-                "emp_id": 1,
-                "cont_name": "skype"
-            }, {
-                "rec_time": "12:00:00",
-                "rec_online": true,
-                "wd_date": "2019-03-03",
-                "pepl_id": 3,
-                "cont_value": "student132",
-                "rec_id": 9,
-                "wd_duration": 30,
-                "emp_id": 1,
-                "cont_name": "skype"
-            }],
-            "status": "OK"
+        const STATUS = {
+            NOT_ACCESS: 'NOT_ACCESS',
+            NOT_AUTH: 'NOT_AUTH',
+            OK: 'OK'
         };
-        if (Object.keys(examples).length > 0) {
-            resolve(examples[Object.keys(examples)[0]]);
-        } else {
-            resolve();
+
+        let result = {};
+
+        // Проверка аутентификации пользователя
+        if (!req.isAuthenticated()) {
+            console.error('Not Authenticated');
+            reject({status: STATUS.NOT_AUTH});
+            return;
         }
+
+        if (!UsersReq.checkRole(req.user.roles, ROLE.EMPLOYEE)) {
+            console.error('Not ' + ROLE.EMPLOYEE);
+            reject({status: STATUS.NOT_ACCESS});
+            return;
+        }
+
+        RecordsReq.getRecordsFromWD(knex, body.wd_id, req.user.pepl_id)
+            .then(res => {
+                result = {
+                    status: STATUS.OK,
+                    payload: res
+                };
+
+                resolve(result);
+            })
+            .catch(err => {
+                console.error(err.status);
+                reject(err);
+            })
     });
-}
+};
 
 
 /**
@@ -477,7 +489,6 @@ exports.moveRecord = function (req, body) {
 
     return new Promise(function (resolve, reject) {
         const STATUS = {
-            NOT_ACCESS: 'NOT_ACCESS',
             NOT_AUTH: 'NOT_AUTH',
             OK: 'OK'
         };

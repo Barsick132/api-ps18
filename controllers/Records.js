@@ -36,8 +36,13 @@ module.exports.changeRecord = function changeRecord(req, res, next) {
 };
 
 module.exports.getJournal = function getJournal(req, res, next) {
-    var body = req.swagger.params['body'].value;
-    Records.getJournal(body)
+    if (req.error) {
+        utils.writeJson(res, {status: req.error});
+        return;
+    }
+
+    const body = req.swagger.params['body'].value;
+    Records.getJournal(req, body)
         .then(function (response) {
             utils.writeJson(res, response);
         })
