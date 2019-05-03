@@ -91,6 +91,11 @@ exports.getDateString = function getDateString(date) {
         month + "-" + day;
 };
 
+exports.getDateWithTime = function getDateWithString(date) {
+    let options = {year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit'};
+    return date.toLocaleDateString('ca', options);
+};
+
 exports.getDateObj = function getDateObj(date) {
     const regex = new RegExp('^(\\d{4})-(\\d{1,2})-(\\d{1,2})$');
     let match = date.match(regex);
@@ -1915,4 +1920,263 @@ exports.getJournal = function (knex, body, pepl_id) {
 
 
     })
+};
+
+// Удаление, изменение, добавление записей в журнале
+exports.setJournal = function (knex, vst_arr_del, vst_arr_upd, vst_arr_add, pepl_id) {
+    return new Promise((resolve, reject) => {
+        const STATUS = {
+            NOT_FOUND_DELETED_REC: 'NOT_FOUND_DELETED_REC',
+            NOT_FOUND_UPDATED_REC: 'NOT_FOUND_UPDATED_REC',
+            NOT_FOUND_ADDED_REC: 'NOT_FOUND_ADDED_REC',
+            UNKNOWN_ERROR: 'UNKNOWN_ERROR',
+            OK: 'OK'
+        };
+
+        let result = {};
+
+        knex.transaction(trx => {
+            return new Promise((resolve, reject) => {
+                if (vst_arr_del !== undefined && vst_arr_del.length > 0) {
+                    return knex(T.VISITS.NAME)
+                        .transacting(trx)
+                        .where(T.VISITS.EMP_ID, pepl_id)
+                        .whereIn(T.VISITS.VST_ID, vst_arr_del.map(vst => vst.vst_id))
+                        .del()
+                        .returning(T.VISITS.VST_ID)
+                        .then(res => resolve(res));
+                } else {
+                    reject(undefined);
+                }
+            })
+                .then(res => {
+                    result.vst_arr_del = {};
+                    if (res === undefined || res.length === 0) {
+                        console.error(STATUS.NOT_FOUND_DELETED_REC);
+                        result.vst_arr_del.status = STATUS.NOT_FOUND_DELETED_REC
+                    } else {
+                        console.log('Deleted ' + res.length + ' Visits');
+                        result.vst_arr_del = {
+                            status: STATUS.OK,
+                            vst_id_del: res
+                        }
+                    }
+
+                    if (vst_arr_upd !== undefined && vst_arr_upd.length > 0) {
+                        return Promise.map(vst_arr_upd, (upd_obj) => {
+                            if (upd_obj.rec_data !== undefined && upd_obj.rec_data.rec_id) {
+                                // Тут можно к объекту запроса добавить еще повод, проблему и результат
+                                // Затем делаем запрос на обновление с проверкой
+                                let req_upd_params = ['vst_reason', 'vst_problem', 'vst_result'];
+                                let req_upd_obj = {
+                                    rec_id: upd_obj.rec_data.rec_id
+                                };
+                                Object.keys(upd_obj).forEach(param => {
+                                    if (req_upd_params.some(p => p === param)) {
+                                        req_upd_obj[param] = upd_obj[param];
+                                    }
+                                });
+
+
+                                let subQuery = function (column) {
+                                    return knex('visits_history')
+                                        .select(column)
+                                        .where('emp_id', pepl_id)
+                                        .andWhere('rec_id', req_upd_obj.rec_id);
+                                };
+
+                                return knex(T.VISITS.NAME)
+                                    .update(
+                                        {
+                                            rec_id: req_upd_obj.rec_id,
+                                            vst_reason: req_upd_obj.vst_reason,
+                                            vst_problem: req_upd_obj.vst_problem,
+                                            vst_result: req_upd_obj.vst_result,
+                                            vst_dt: subQuery('vst_dt'),
+                                            vst_age: subQuery('vst_age'),
+                                            vst_gender: subQuery('vst_gender'),
+                                            vst_name: subQuery('vst_name'),
+                                            vst_consultant: subQuery('vst_consultant')
+                                        }
+                                    )
+                                    .transacting(trx)
+                                    .where(T.VISITS.VST_ID, upd_obj.vst_id)
+                                    .andWhere(T.VISITS.EMP_ID, pepl_id)
+                                    .whereExists(function () {
+                                        this.select()
+                                            .from('history_timepoints as ht')
+                                            .where('ht.rec_id', req_upd_obj.rec_id)
+                                            .andWhere('ht.emp_id', pepl_id)
+                                            .whereNotNull('ht.pepl_id')
+                                    })
+                                    .returning('*');
+                            } else {
+                                // Если привязка к записи не меняется, то собираем объект из тех параметров, что имеются
+                                // Объект должен содержать хотя бы одно изменение
+                                let req_upd_params = ['vst_reason', 'vst_problem', 'vst_result'];
+                                let req_upd_params2 = ['vst_dt', 'vst_age', 'vst_gender', 'vst_name', 'vst_consultant'];
+                                let req_upd_obj = {};
+                                Object.keys(upd_obj).forEach(param => {
+                                    if (req_upd_params.some(p => p === param)) {
+                                        req_upd_obj[param] = upd_obj[param];
+                                    }
+                                });
+                                if (upd_obj.vst_data !== undefined) {
+                                    Object.keys(upd_obj.vst_data).forEach(param => {
+                                        if (req_upd_params2.some(p => p === param)) {
+                                            req_upd_obj[param] = upd_obj.vst_data[param];
+                                            req_upd_obj.rec_id = null;
+                                        }
+                                    });
+                                }
+
+                                if (Object.keys(req_upd_obj).length === 0) {
+                                    return;
+                                }
+
+                                return knex(T.VISITS.NAME)
+                                    .update(req_upd_obj)
+                                    .transacting(trx)
+                                    .where(T.VISITS.VST_ID, upd_obj.vst_id)
+                                    .andWhere(T.VISITS.EMP_ID, pepl_id)
+                                    .returning('*');
+                            }
+                        })
+                    } else {
+                        return undefined;
+                    }
+                })
+                .then(res => {
+                    result.vst_arr_upd = {};
+                    if (res === undefined || res.length === 0 || !res.some(item => item !== undefined &&
+                        item.length > 0 &&
+                        item[0] !== undefined)) {
+                        console.error(STATUS.NOT_FOUND_UPDATED_REC);
+                        result.vst_arr_upd.status = STATUS.NOT_FOUND_UPDATED_REC
+                    } else {
+                        console.log('Updated ' + res.length + ' Visits');
+                        res = res.filter(item => item !== undefined && item.length > 0 && item[0] !== undefined);
+                        result.vst_arr_upd = {
+                            status: STATUS.OK,
+                            vst_id_upd: res.map(item => item[0].vst_id)
+                        }
+                    }
+
+                    if (vst_arr_add !== undefined && vst_arr_add.length > 0) {
+                        return Promise.map(vst_arr_add, (add_obj) => {
+                            if (add_obj.rec_data !== undefined && add_obj.rec_data.rec_id) {
+                                // Тут можно к объекту запроса добавить еще повод, проблему и результат
+                                // Затем делаем запрос на добавление с проверкой
+                                let req_add_params = ['vst_reason', 'vst_problem', 'vst_result'];
+                                let req_add_obj = {
+                                    rec_id: add_obj.rec_data.rec_id
+                                };
+                                Object.keys(add_obj).forEach(param => {
+                                    if (req_add_params.some(p => p === param)) {
+                                        req_add_obj[param] = add_obj[param];
+                                    }
+                                });
+
+
+                                let subQuery = function (column) {
+                                    return knex('visits_history')
+                                        .select(column)
+                                        .where('emp_id', pepl_id)
+                                        .andWhere('rec_id', req_add_obj.rec_id);
+                                };
+
+                                return knex(T.VISITS.NAME)
+                                    .insert(
+                                        {
+                                            rec_id: req_add_obj.rec_id,
+                                            vst_reason: req_add_obj.vst_reason,
+                                            vst_problem: req_add_obj.vst_problem,
+                                            vst_result: req_add_obj.vst_result,
+                                            vst_dt: subQuery('vst_dt'),
+                                            vst_age: subQuery('vst_age'),
+                                            vst_gender: subQuery('vst_gender'),
+                                            vst_name: subQuery('vst_name'),
+                                            vst_consultant: subQuery('vst_consultant'),
+                                            emp_id: pepl_id
+                                        }
+                                    )
+                                    .transacting(trx)
+                                    .whereExists(function () {
+                                        this.select()
+                                            .from('history_timepoints as ht')
+                                            .where('ht.rec_id', req_add_obj.rec_id)
+                                            .andWhere('ht.emp_id', pepl_id)
+                                            .whereNotNull('ht.pepl_id')
+                                    })
+                                    .returning('*');
+                            } else {
+                                // Если привязка к записи не меняется, то собираем объект из тех параметров, что имеются
+                                // Объект должен содержать хотя бы одно изменение
+                                let req_add_params = ['vst_reason', 'vst_problem', 'vst_result'];
+                                let req_add_params2 = ['vst_dt', 'vst_age', 'vst_gender', 'vst_name', 'vst_consultant'];
+                                let req_add_obj = {};
+                                Object.keys(add_obj).forEach(param => {
+                                    if (req_add_params.some(p => p === param)) {
+                                        req_add_obj[param] = add_obj[param];
+                                    }
+                                });
+                                if (add_obj.vst_data !== undefined) {
+                                    Object.keys(add_obj.vst_data).forEach(param => {
+                                        if (req_add_params2.some(p => p === param)) {
+                                            req_add_obj[param] = add_obj.vst_data[param];
+                                            req_add_obj.rec_id = null;
+                                        }
+                                    });
+                                }
+
+                                if (Object.keys(req_add_obj).length === 0) {
+                                    return;
+                                }
+
+                                req_add_obj.emp_id = pepl_id;
+
+                                return knex(T.VISITS.NAME)
+                                    .insert(req_add_obj)
+                                    .transacting(trx)
+                                    .returning('*');
+                            }
+                        })
+                    } else {
+                        return undefined;
+                    }
+                })
+                .then(res => {
+                    result.vst_arr_add = {};
+                    if (res === undefined || res.length === 0 || !res.some(item => item !== undefined &&
+                        item.length > 0 &&
+                        item[0] !== undefined)) {
+                        console.error(STATUS.NOT_FOUND_ADDED_REC);
+                        result.vst_arr_add.status = STATUS.NOT_FOUND_ADDED_REC
+                    } else {
+                        console.log('Added ' + res.length + ' Visits');
+                        res = res.filter(item => item !== undefined && item.length > 0 && item[0] !== undefined);
+                        result.vst_arr_add = {
+                            status: STATUS.OK,
+                            vst_add_res: res.map(item => {
+                                return {
+                                    rec_id: item[0].rec_id,
+                                    vst_dt: this.getDateWithTime(item[0].vst_dt)
+                                }
+                            })
+                        }
+                    }
+
+                    resolve(result);
+                })
+                .then(res => {
+                    trx.commit();
+                })
+                .catch(err => {
+                    result = {status: STATUS.UNKNOWN_ERROR};
+                    reject(result);
+
+                    trx.rollback(err);
+                })
+        });
+    });
 };

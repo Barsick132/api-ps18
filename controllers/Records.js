@@ -116,8 +116,13 @@ module.exports.moveRecord = function moveRecord(req, res, next) {
 };
 
 module.exports.setJournal = function setJournal(req, res, next) {
-    var body = req.swagger.params['body'].value;
-    Records.setJournal(body)
+    if (req.error) {
+        utils.writeJson(res, {status: req.error});
+        return;
+    }
+
+    const body = req.swagger.params['body'].value;
+    Records.setJournal(req, body)
         .then(function (response) {
             utils.writeJson(res, response);
         })

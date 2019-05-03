@@ -3,7 +3,7 @@ swagger: "2.0"
 info:
   description: "Это API (swagger 2.0) системы автоматизации психолого-педагогическ\
     ого сопровождения субъектов образовательной деятельности для школы №18."
-  version: "1.0.21"
+  version: "1.0.22"
   title: "PsychoSys18"
   contact:
     email: "antony.nor@yandex.ru"
@@ -3347,40 +3347,36 @@ definitions:
           $ref: "#/definitions/setJournal_vst_arr_upd"
   inline_response_200_15_payload_vst_arr_del:
     required:
-    - "vst_id"
     - "vst_status"
     properties:
-      vst_id:
-        type: "integer"
-        format: "int32"
-        example: 1
       vst_status:
         type: "string"
         example: "OK"
+      vst_id_del:
+        type: "array"
+        items:
+          type: "integer"
+          format: "int32"
+          example: 1
     example:
       vst_status: "OK"
-      vst_id: 1
-  inline_response_200_15_payload_rec_data:
+      vst_id_del:
+      - 1
+      - 1
+  inline_response_200_15_payload_vst_arr_add_vst_add_res:
     required:
-    - "rec_id"
+    - "vst_dt"
     properties:
       rec_id:
         type: "integer"
         format: "int32"
         example: 7
-    description: "вернется либо rec_data, либо vst_data"
-    example:
-      rec_id: 7
-  inline_response_200_15_payload_vst_data:
-    required:
-    - "vst_dt"
-    properties:
       vst_dt:
         type: "string"
         format: "date-time"
         example: "2019-03-03T11:00:00.000Z"
-    description: "вернется либо rec_data, либо vst_data"
     example:
+      rec_id: 7
       vst_dt: "2019-03-03T11:00:00.000Z"
   inline_response_200_15_payload_vst_arr_add:
     required:
@@ -3389,52 +3385,61 @@ definitions:
       vst_status:
         type: "string"
         example: "OK"
-      rec_data:
-        $ref: "#/definitions/inline_response_200_15_payload_rec_data"
-      vst_data:
-        $ref: "#/definitions/inline_response_200_15_payload_vst_data"
+      vst_add_res:
+        type: "array"
+        items:
+          $ref: "#/definitions/inline_response_200_15_payload_vst_arr_add_vst_add_res"
     example:
-      vst_data:
+      vst_add_res:
+      - rec_id: 7
+        vst_dt: "2019-03-03T11:00:00.000Z"
+      - rec_id: 7
         vst_dt: "2019-03-03T11:00:00.000Z"
       vst_status: "OK"
-      rec_data:
-        rec_id: 7
+  inline_response_200_15_payload_vst_arr_upd:
+    required:
+    - "vst_status"
+    properties:
+      vst_status:
+        type: "string"
+        example: "OK"
+      vst_id_upd:
+        type: "array"
+        items:
+          type: "integer"
+          format: "int32"
+          example: 1
+    example:
+      vst_status: "OK"
+      vst_id_upd:
+      - 1
+      - 1
   inline_response_200_15_payload:
     properties:
       vst_arr_del:
-        type: "array"
-        items:
-          $ref: "#/definitions/inline_response_200_15_payload_vst_arr_del"
+        $ref: "#/definitions/inline_response_200_15_payload_vst_arr_del"
       vst_arr_add:
-        type: "array"
-        items:
-          $ref: "#/definitions/inline_response_200_15_payload_vst_arr_add"
+        $ref: "#/definitions/inline_response_200_15_payload_vst_arr_add"
       vst_arr_upd:
-        type: "array"
-        items:
-          $ref: "#/definitions/inline_response_200_15_payload_vst_arr_del"
+        $ref: "#/definitions/inline_response_200_15_payload_vst_arr_upd"
     example:
       vst_arr_upd:
-      - vst_status: "OK"
-        vst_id: 1
-      - vst_status: "OK"
-        vst_id: 1
+        vst_status: "OK"
+        vst_id_upd:
+        - 1
+        - 1
       vst_arr_del:
-      - vst_status: "OK"
-        vst_id: 1
-      - vst_status: "OK"
-        vst_id: 1
+        vst_status: "OK"
+        vst_id_del:
+        - 1
+        - 1
       vst_arr_add:
-      - vst_data:
+        vst_add_res:
+        - rec_id: 7
+          vst_dt: "2019-03-03T11:00:00.000Z"
+        - rec_id: 7
           vst_dt: "2019-03-03T11:00:00.000Z"
         vst_status: "OK"
-        rec_data:
-          rec_id: 7
-      - vst_data:
-          vst_dt: "2019-03-03T11:00:00.000Z"
-        vst_status: "OK"
-        rec_data:
-          rec_id: 7
   inline_response_200_15:
     required:
     - "status"
@@ -3447,26 +3452,22 @@ definitions:
     example:
       payload:
         vst_arr_upd:
-        - vst_status: "OK"
-          vst_id: 1
-        - vst_status: "OK"
-          vst_id: 1
+          vst_status: "OK"
+          vst_id_upd:
+          - 1
+          - 1
         vst_arr_del:
-        - vst_status: "OK"
-          vst_id: 1
-        - vst_status: "OK"
-          vst_id: 1
+          vst_status: "OK"
+          vst_id_del:
+          - 1
+          - 1
         vst_arr_add:
-        - vst_data:
+          vst_add_res:
+          - rec_id: 7
+            vst_dt: "2019-03-03T11:00:00.000Z"
+          - rec_id: 7
             vst_dt: "2019-03-03T11:00:00.000Z"
           vst_status: "OK"
-          rec_data:
-            rec_id: 7
-        - vst_data:
-            vst_dt: "2019-03-03T11:00:00.000Z"
-          vst_status: "OK"
-          rec_data:
-            rec_id: 7
       status: "OK"
   getJournal_byDate:
     properties:

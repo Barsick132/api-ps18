@@ -526,52 +526,47 @@ exports.moveRecord = function (req, body) {
  * body Body_20 Массив ID записей в журнале (визитов), которые нужно удалить и/или массив визитов, которые нужно добавить, и/или массив визитов, которые нужно отредактировать
  * returns inline_response_200_14
  **/
-exports.setJournal = function (body) {
+exports.setJournal = function (req, body) {
+    const METHOD = 'setJournal()';
+    console.log(FILE, METHOD);
+
     return new Promise(function (resolve, reject) {
-        var examples = {};
-        examples['application/json'] = {
-            "payload": {
-                "vst_arr_upd": [{
-                    "vst_status": "OK",
-                    "vst_id": 1
-                }, {
-                    "vst_status": "OK",
-                    "vst_id": 1
-                }],
-                "vst_arr_del": [{
-                    "vst_status": "OK",
-                    "vst_id": 1
-                }, {
-                    "vst_status": "OK",
-                    "vst_id": 1
-                }],
-                "vst_arr_add": [{
-                    "vst_data": {
-                        "vst_dt": "2019-03-03T11:00:00.000Z"
-                    },
-                    "vst_status": "OK",
-                    "rec_data": {
-                        "rec_id": 7
-                    }
-                }, {
-                    "vst_data": {
-                        "vst_dt": "2019-03-03T11:00:00.000Z"
-                    },
-                    "vst_status": "OK",
-                    "rec_data": {
-                        "rec_id": 7
-                    }
-                }]
-            },
-            "status": "OK"
+        const STATUS = {
+            NOT_ACCESS: 'NOT_ACCESS',
+            NOT_AUTH: 'NOT_AUTH',
+            OK: 'OK'
         };
-        if (Object.keys(examples).length > 0) {
-            resolve(examples[Object.keys(examples)[0]]);
-        } else {
-            resolve();
+
+        let result = {};
+
+        // Проверка аутентификации пользователя
+        if (!req.isAuthenticated()) {
+            console.error('Not Authenticated');
+            reject({status: STATUS.NOT_AUTH});
+            return;
         }
+
+        if (!UsersReq.checkRole(req.user.roles, ROLE.PSYCHOLOGIST)) {
+            console.error('Not ' + ROLE.PSYCHOLOGIST);
+            reject({status: STATUS.NOT_ACCESS});
+            return;
+        }
+
+        RecordsReq.setJournal(knex, body.vst_arr_del, body.vst_arr_upd, body.vst_arr_add, req.user.pepl_id)
+            .then(res => {
+                result = {
+                    status: STATUS.OK,
+                    payload: res
+                };
+
+                resolve(result);
+            })
+            .catch(err => {
+                console.error(err.status);
+                reject(err);
+            })
     });
-}
+};
 
 
 /**
