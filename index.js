@@ -3,6 +3,7 @@
 const fs = require('fs'),
     path = require('path'),
     http = require('http');
+const bodyParser = require('body-parser');
 
 const appConnect = require('connect')();
 const swaggerTools = require('swagger-tools');
@@ -79,6 +80,9 @@ appConnect.use(function (req, res, next) {
     next();
 });
 
+//appConnect.use(bodyParser.json({limit: 2}));
+//appConnect.use(bodyParser.raw({limit: 2}));
+
 appConnect.use(passport.initialize());
 
 // Initialize the Swagger middleware
@@ -101,6 +105,8 @@ swaggerTools.initializeMiddleware(swaggerDoc, function (middleware) {
 
     // Serve the Swagger documents and Swagger UI
     appConnect.use(middleware.swaggerUi());
+
+    //appConnect.use(require("./router"));
 
     // Start the server
     http.createServer(appConnect).listen(serverPort, function () {

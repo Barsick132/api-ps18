@@ -89,7 +89,16 @@ module.exports.TABLES = {
         PST_NAME: 'pst_name',
         PST_DESCRIPTION: 'pst_description'
     },
-    FILE: 'file',
+    FILE: {
+        NAME: 'file',
+        FILE_ID: 'file_id',
+        MM_ID: 'mm_id',
+        TR_ID: 'tr_id',
+        TST_ID: 'tst_id',
+        FILE_NAME: 'file_name',
+        FILE_PATH: 'file_path',
+        FILE_DT: 'file_dt'
+    },
     RECORDS: {
         NAME: 'records',
         REC_ID: 'rec_id',
@@ -115,9 +124,23 @@ module.exports.TABLES = {
         VST_RESULT: 'vst_result',
         VST_CONSULTANT: 'vst_consultant'
     },
-    TESTS: 'tests',
-    AVAILABLE_TESTS: 'available_tests',
-    TEST_RESULTS: 'test_results',
+    TESTS: {
+        NAME: 'tests',
+        TST_ID: 'tst_id',
+        TST_NAME: 'tst_name',
+        TST_ONLINE: 'tst_online'
+    },
+    AVAILABLE_TESTS: {
+        NAME: 'available_tests',
+        STD_ID: 'std_id',
+        TST_ID: 'tst_id'
+    },
+    TEST_RESULTS: {
+        NAME: 'test_results',
+        TR_ID: 'tr_id',
+        TST_ID: 'tst_id',
+        STD_ID: 'std_id'
+    },
     WORKING_DAYS: {
         NAME: 'working_days',
         WD_ID: 'wd_id',
@@ -129,7 +152,12 @@ module.exports.TABLES = {
         WD_BREAK_END: 'wd_break_end',
         WD_DURATION: 'wd_duration'
     },
-    MENTAL_MAP: 'mental_map',
+    MENTAL_MAP: {
+        NAME: 'mental_map',
+        MM_ID: 'mm_id',
+        STD_ID: 'std_id',
+        MM_DT: 'mm_dt'
+    },
     EMP_PST: {
         NAME: 'emp/pst',
         EMP_ID: 'emp_id',

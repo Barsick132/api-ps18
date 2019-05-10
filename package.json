@@ -1,6 +1,6 @@
 {
   "name": "psychosys18",
-  "version": "1.0.22",
+  "version": "1.0.24",
   "description": "Это API (swagger 2.0) системы автоматизации психолого-педагогического сопровождения субъектов образовательной деятельности для школы №18.",
   "main": "index.js",
   "scripts": {
@@ -27,6 +27,7 @@
     "swagger-tools": "0.10.1",
     "underscore": "^1.9.1",
     "uniqid": "^5.0.3",
-    "yaml-config": "^0.3.0"
+    "yaml-config": "^0.3.0",
+    "async": "latest"
   }
 }
