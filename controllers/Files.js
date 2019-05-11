@@ -1,7 +1,8 @@
 'use strict';
 
-var utils = require('../utils/writer.js');
-var Files = require('../service/FilesService');
+const utils = require('../utils/writer.js');
+const Files = require('../service/FilesService');
+const FILE_SIZE = require('../constants').FILE_SIZE;
 
 module.exports.addFiles = function addFiles(req, res, next) {
     if (req.error) {
@@ -20,17 +21,27 @@ module.exports.addFiles = function addFiles(req, res, next) {
             file.id = param;
             body.files.push(file);
         }
-        if(paramsArr.some(p => p === param) && req.body[param]!== undefined){
+        if (paramsArr.some(p => p === param) && req.body[param] !== undefined) {
             const value = parseInt(req.body[param]);
-            if(!isNaN(value)){
+            if (!isNaN(value)) {
                 body[param] = value;
             }
         }
     });
 
-    body.files.forEach(file_info => {
-        file_info.file = req.files[file_info.id][0];
-    });
+    for(let i=0; i<body.files.length; i++){
+        if (req.files[body.files[i].id][0].size <= FILE_SIZE) {
+            body.files[i].file = req.files[body.files[i].id][0];
+        }else {
+            body.files.splice(i, 1);
+            i--;
+        }
+    }
+
+    if (body.files.length===0) {
+        utils.writeJson(res, {status: 'NOT_FOUND_VALID_FILES'});
+        return;
+    }
 
     Files.addFiles(req, body)
         .then(function (response) {

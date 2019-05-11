@@ -23,6 +23,8 @@ module.exports.PERIOD_FIX = {
     ALL: 'all'
 };
 
+module.exports.FILE_SIZE = 209715200; // 200 Мб
+
 module.exports.TABLES = {
     PEOPLE: {
         NAME: 'people',

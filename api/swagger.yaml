@@ -3,7 +3,7 @@ swagger: "2.0"
 info:
   description: "Это API (swagger 2.0) системы автоматизации психолого-педагогическ\
     ого сопровождения субъектов образовательной деятельности для школы №18."
-  version: "1.0.24"
+  version: "1.0.25"
   title: "PsychoSys18"
   contact:
     email: "antony.nor@yandex.ru"
@@ -585,8 +585,8 @@ paths:
         name: "body"
         description: "1. ID сотрудника (**не указ.**, если запрашивается **личный\
           \ график**);\n2. Указатель истории (**не указ.**, если запрашивает **кли\
-          ент**);\n3. *Фиксированный* период (*неделя*/*месяц*);\n4. *Заданный* пе\
-          риод (**не указ.**, если запрашивает **клиент**)."
+          ент**);\n3. *Фиксированный* период (*неделя*/*месяц*/*3месяц*/*все*);\n\
+          4. *Заданный* период (**не указ.**, если запрашивает **клиент**)."
         required: true
         schema:
           $ref: "#/definitions/body_10"
@@ -653,6 +653,48 @@ paths:
       - JWT: []
       x-swagger-router-controller: "Records"
     x-swagger-router-controller: "records"
+  /getPersonalRecords:
+    post:
+      tags:
+      - "records"
+      summary: "Получение собственные записи (актуальные или историю) (ALL)"
+      operationId: "getPersonalRecords"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "1. Указатель истории (по умолчанию **false**);\n2. *Фиксиров\
+          анный* период (*неделя*/*месяц*/*3месяц*/*все*);\n3. *Заданный* период (**н\
+          е указ.**, если запрашивает указан фиксированный период)."
+        required: true
+        schema:
+          $ref: "#/definitions/body_12"
+      responses:
+        200:
+          description: "Записи клиента за указанный период"
+          schema:
+            type: "object"
+            required:
+            - "status"
+            properties:
+              status:
+                type: "string"
+                example: "OK"
+              payload:
+                type: "array"
+                items:
+                  $ref: "#/definitions/inline_response_200_12_payload"
+        400:
+          description: "Invalid data"
+        default:
+          description: "Unknown Error"
+      security:
+      - JWT: []
+      x-swagger-router-controller: "Records"
+    x-swagger-router-controller: "records"
   /setToRecord:
     post:
       tags:
@@ -672,7 +714,7 @@ paths:
           отрудника для связи)"
         required: true
         schema:
-          $ref: "#/definitions/body_12"
+          $ref: "#/definitions/body_13"
       responses:
         200:
           description: "Статус запроса и общая информация"
@@ -685,7 +727,7 @@ paths:
                 type: "string"
                 example: "OK"
               payload:
-                $ref: "#/definitions/inline_response_200_12_payload"
+                $ref: "#/definitions/inline_response_200_13_payload"
         400:
           description: "Invalid data"
         default:
@@ -710,7 +752,7 @@ paths:
         description: "ID записи"
         required: true
         schema:
-          $ref: "#/definitions/body_13"
+          $ref: "#/definitions/body_14"
       responses:
         200:
           description: "Статус выполнения запроса"
@@ -746,7 +788,7 @@ paths:
         description: "ID записи"
         required: true
         schema:
-          $ref: "#/definitions/body_14"
+          $ref: "#/definitions/body_15"
       responses:
         200:
           description: "Статус выполнения запроса"
@@ -782,7 +824,7 @@ paths:
         description: "ID записи и ID записи на которую переносим"
         required: true
         schema:
-          $ref: "#/definitions/body_15"
+          $ref: "#/definitions/body_16"
       responses:
         200:
           description: "Статус запроса и информация о записи"
@@ -795,7 +837,7 @@ paths:
                 type: "string"
                 example: "OK"
               payload:
-                $ref: "#/definitions/inline_response_200_13_payload"
+                $ref: "#/definitions/inline_response_200_14_payload"
         400:
           description: "Invalid data"
         default:
@@ -820,7 +862,7 @@ paths:
         description: "ID записи и/или ID онлайн статуса и/или контактные данные"
         required: true
         schema:
-          $ref: "#/definitions/body_16"
+          $ref: "#/definitions/body_17"
       responses:
         200:
           description: "Статус запроса и общая информация"
@@ -833,7 +875,7 @@ paths:
                 type: "string"
                 example: "OK"
               payload:
-                $ref: "#/definitions/inline_response_200_12_payload"
+                $ref: "#/definitions/inline_response_200_13_payload"
         400:
           description: "Invalid data"
         default:
@@ -858,7 +900,7 @@ paths:
         description: "ID записи"
         required: true
         schema:
-          $ref: "#/definitions/body_17"
+          $ref: "#/definitions/body_18"
       responses:
         200:
           description: "Статус запроса и общая информация"
@@ -871,7 +913,7 @@ paths:
                 type: "string"
                 example: "OK"
               payload:
-                $ref: "#/definitions/inline_response_200_12_payload"
+                $ref: "#/definitions/inline_response_200_13_payload"
         400:
           description: "Invalid data"
         default:
@@ -896,7 +938,7 @@ paths:
         description: "ID рабочего дня"
         required: true
         schema:
-          $ref: "#/definitions/body_18"
+          $ref: "#/definitions/body_19"
       responses:
         200:
           description: "Статус запроса и данные о записях"
@@ -936,7 +978,7 @@ paths:
           торые нужно отредактировать"
         required: true
         schema:
-          $ref: "#/definitions/body_19"
+          $ref: "#/definitions/body_20"
       responses:
         200:
           description: "Статус запроса и результаты выполнения отдельных операций"
@@ -949,7 +991,7 @@ paths:
                 type: "string"
                 example: "OK"
               payload:
-                $ref: "#/definitions/inline_response_200_15_payload"
+                $ref: "#/definitions/inline_response_200_16_payload"
         400:
           description: "Invalid data"
         default:
@@ -974,7 +1016,7 @@ paths:
         description: "Либо получаем записи за период, либо фильтруем по количеству"
         required: true
         schema:
-          $ref: "#/definitions/body_20"
+          $ref: "#/definitions/body_21"
       responses:
         200:
           description: "Статус запроса и список записей"
@@ -989,7 +1031,7 @@ paths:
               payload:
                 type: "array"
                 items:
-                  $ref: "#/definitions/inline_response_200_16_payload"
+                  $ref: "#/definitions/inline_response_200_17_payload"
         400:
           description: "Invalid data"
         default:
@@ -1015,7 +1057,7 @@ paths:
           ые сотрудника или ученика или родителя"
         required: true
         schema:
-          $ref: "#/definitions/body_21"
+          $ref: "#/definitions/body_22"
       responses:
         200:
           description: "Данные созданного пользователя."
@@ -1028,7 +1070,7 @@ paths:
                 type: "string"
                 example: "OK"
               payload:
-                $ref: "#/definitions/inline_response_200_17_payload"
+                $ref: "#/definitions/inline_response_200_18_payload"
         400:
           description: "Invalid data"
         default:
@@ -1098,7 +1140,7 @@ paths:
                 type: "string"
                 example: "OK"
               payload:
-                $ref: "#/definitions/inline_response_200_19_payload"
+                $ref: "#/definitions/inline_response_200_20_payload"
         401:
           description: "Invalid data"
         default:
@@ -1137,7 +1179,7 @@ paths:
                 type: "string"
                 example: "OK"
               payload:
-                $ref: "#/definitions/inline_response_200_19_payload"
+                $ref: "#/definitions/inline_response_200_20_payload"
         401:
           description: "Invalid data"
         default:
@@ -1162,7 +1204,7 @@ paths:
         description: "ID родителя и статус подтверждения"
         required: true
         schema:
-          $ref: "#/definitions/body_22"
+          $ref: "#/definitions/body_23"
       responses:
         200:
           description: "Статус выполнения запроса."
@@ -1205,7 +1247,7 @@ paths:
               payload:
                 type: "array"
                 items:
-                  $ref: "#/definitions/inline_response_200_20_payload"
+                  $ref: "#/definitions/inline_response_200_21_payload"
         400:
           description: "Invalid data"
         default:
@@ -1231,7 +1273,7 @@ paths:
         description: "ID ученика"
         required: true
         schema:
-          $ref: "#/definitions/body_23"
+          $ref: "#/definitions/body_24"
       responses:
         200:
           description: "Статус запроса и данные преподавателя"
@@ -1244,7 +1286,7 @@ paths:
                 type: "string"
                 example: "OK"
               payload:
-                $ref: "#/definitions/inline_response_200_21_payload"
+                $ref: "#/definitions/inline_response_200_22_payload"
         401:
           description: "Invalid data"
         default:
@@ -1276,7 +1318,7 @@ paths:
               payload:
                 type: "array"
                 items:
-                  $ref: "#/definitions/inline_response_200_22_payload"
+                  $ref: "#/definitions/inline_response_200_23_payload"
         401:
           description: "Invalid data"
         default:
@@ -1301,7 +1343,7 @@ paths:
         description: "Обновляемые данные"
         required: true
         schema:
-          $ref: "#/definitions/body_24"
+          $ref: "#/definitions/body_25"
       responses:
         200:
           description: "Статус запроса"
@@ -1314,7 +1356,7 @@ paths:
                 type: "string"
                 example: "OK"
               payload:
-                $ref: "#/definitions/inline_response_200_23_payload"
+                $ref: "#/definitions/inline_response_200_24_payload"
         401:
           description: "Invalid data"
         default:
@@ -1344,7 +1386,7 @@ paths:
                 type: "string"
                 example: "OK"
               payload:
-                $ref: "#/definitions/inline_response_200_24_payload"
+                $ref: "#/definitions/inline_response_200_25_payload"
         400:
           description: "Invalid data"
         default:
@@ -1376,7 +1418,7 @@ paths:
               payload:
                 type: "array"
                 items:
-                  $ref: "#/definitions/inline_response_200_25_payload"
+                  $ref: "#/definitions/inline_response_200_26_payload"
         400:
           description: "Invalid data"
         default:
@@ -1401,7 +1443,7 @@ paths:
         description: "ID пользователя"
         required: true
         schema:
-          $ref: "#/definitions/body_25"
+          $ref: "#/definitions/body_26"
       responses:
         200:
           description: "Данные пользователя."
@@ -1414,7 +1456,7 @@ paths:
                 type: "string"
                 example: "OK"
               payload:
-                $ref: "#/definitions/inline_response_200_26_payload"
+                $ref: "#/definitions/inline_response_200_27_payload"
         400:
           description: "Invalid data"
         default:
@@ -1439,7 +1481,7 @@ paths:
         description: "Параметры поиска ученика"
         required: true
         schema:
-          $ref: "#/definitions/body_26"
+          $ref: "#/definitions/body_27"
       responses:
         200:
           description: "Список учеников, удовлетворяющих критериям поиска"
@@ -1454,7 +1496,7 @@ paths:
               payload:
                 type: "array"
                 items:
-                  $ref: "#/definitions/inline_response_200_24_payload_prnt_data_prnt_childrens"
+                  $ref: "#/definitions/inline_response_200_25_payload_prnt_data_prnt_childrens"
         400:
           description: "Invalid data"
         default:
@@ -1479,7 +1521,7 @@ paths:
         description: "Параметры поиска сотрудника"
         required: true
         schema:
-          $ref: "#/definitions/body_27"
+          $ref: "#/definitions/body_28"
       responses:
         200:
           description: "Список сотрудников, удовлетворяющих критериям поиска"
@@ -1494,7 +1536,7 @@ paths:
               payload:
                 type: "array"
                 items:
-                  $ref: "#/definitions/inline_response_200_28_payload"
+                  $ref: "#/definitions/inline_response_200_29_payload"
         400:
           description: "Invalid data"
         default:
@@ -1519,7 +1561,7 @@ paths:
         description: "Параметры поиска родителя"
         required: true
         schema:
-          $ref: "#/definitions/body_28"
+          $ref: "#/definitions/body_29"
       responses:
         200:
           description: "Список родителей, удовлетворяющих критериям поиска"
@@ -1534,7 +1576,7 @@ paths:
               payload:
                 type: "array"
                 items:
-                  $ref: "#/definitions/inline_response_200_29_payload"
+                  $ref: "#/definitions/inline_response_200_30_payload"
         400:
           description: "Invalid data"
         default:
@@ -1589,7 +1631,7 @@ paths:
         description: "ID пользователя"
         required: true
         schema:
-          $ref: "#/definitions/body_29"
+          $ref: "#/definitions/body_30"
       responses:
         200:
           description: "Список ролей пользователя"
@@ -1627,7 +1669,7 @@ paths:
         description: "ID пользователя и список ID ролей"
         required: true
         schema:
-          $ref: "#/definitions/body_30"
+          $ref: "#/definitions/body_31"
       responses:
         200:
           description: "Статус выполнения запроса"
@@ -1663,7 +1705,7 @@ paths:
         description: "ID пользователя и список ID ролей"
         required: true
         schema:
-          $ref: "#/definitions/body_31"
+          $ref: "#/definitions/body_32"
       responses:
         200:
           description: "Статус выполнения операции."
@@ -1699,7 +1741,7 @@ paths:
         description: "ID сотрудника"
         required: true
         schema:
-          $ref: "#/definitions/body_32"
+          $ref: "#/definitions/body_33"
       responses:
         200:
           description: "Статус и список должностей сотрудника"
@@ -1739,7 +1781,7 @@ paths:
         description: "ID сотрудника и список ID должностей"
         required: true
         schema:
-          $ref: "#/definitions/body_33"
+          $ref: "#/definitions/body_34"
       responses:
         200:
           description: "Статус выполнения запроса и id добавленных должностей."
@@ -1781,7 +1823,7 @@ paths:
         description: "ID сотрудника и список ID должностей"
         required: true
         schema:
-          $ref: "#/definitions/body_34"
+          $ref: "#/definitions/body_35"
       responses:
         200:
           description: "Статус выполнения операции и id удаленных должностей."
@@ -1857,7 +1899,7 @@ paths:
         schema:
           type: "array"
           items:
-            $ref: "#/definitions/body_35"
+            $ref: "#/definitions/body_36"
       responses:
         200:
           description: "Статус выполнения запроса"
@@ -1895,7 +1937,7 @@ paths:
         schema:
           type: "array"
           items:
-            $ref: "#/definitions/body_36"
+            $ref: "#/definitions/body_37"
       responses:
         200:
           description: "Статус выполнения запроса и массив ID обновленных должност\
@@ -3025,6 +3067,143 @@ definitions:
       status: "OK"
   body_12:
     type: "object"
+    properties:
+      wd_history:
+        type: "boolean"
+        example: true
+      wd_period_fix:
+        type: "string"
+        example: "week"
+        description: "Value:\n  - week\n  - month\n  - 3month\n  - all\n"
+      wd_period_begin:
+        type: "string"
+        format: "date"
+        example: "2019-04-01"
+      wd_period_end:
+        type: "string"
+        format: "date"
+        example: "2019-04-07"
+  inline_response_200_12_rec_array:
+    required:
+    - "rec_data"
+    - "rec_id"
+    properties:
+      rec_id:
+        type: "integer"
+        format: "int32"
+        example: 7
+      emp_fullname:
+        type: "string"
+        example: "Иванов Иван Иванович"
+      rec_data:
+        $ref: "#/definitions/Record"
+    example:
+      rec_id: 7
+      rec_data:
+        rec_time: "11:00:00"
+        rec_online: true
+        pepl_id: 3
+        cont_value: "student132"
+        rec_not_come: false
+        cont_name: "skype"
+      emp_fullname: "Иванов Иван Иванович"
+  inline_response_200_12_payload:
+    required:
+    - "wd_date"
+    - "wd_id"
+    properties:
+      wd_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+      wd_date:
+        type: "string"
+        format: "date"
+        example: "2019-03-03"
+      rec_array:
+        type: "array"
+        items:
+          $ref: "#/definitions/inline_response_200_12_rec_array"
+    example:
+      wd_date: "2019-03-03"
+      wd_id: 1
+      rec_array:
+      - rec_id: 7
+        rec_data:
+          rec_time: "11:00:00"
+          rec_online: true
+          pepl_id: 3
+          cont_value: "student132"
+          rec_not_come: false
+          cont_name: "skype"
+        emp_fullname: "Иванов Иван Иванович"
+      - rec_id: 7
+        rec_data:
+          rec_time: "11:00:00"
+          rec_online: true
+          pepl_id: 3
+          cont_value: "student132"
+          rec_not_come: false
+          cont_name: "skype"
+        emp_fullname: "Иванов Иван Иванович"
+  inline_response_200_12:
+    required:
+    - "status"
+    properties:
+      status:
+        type: "string"
+        example: "OK"
+      payload:
+        type: "array"
+        items:
+          $ref: "#/definitions/inline_response_200_12_payload"
+    example:
+      payload:
+      - wd_date: "2019-03-03"
+        wd_id: 1
+        rec_array:
+        - rec_id: 7
+          rec_data:
+            rec_time: "11:00:00"
+            rec_online: true
+            pepl_id: 3
+            cont_value: "student132"
+            rec_not_come: false
+            cont_name: "skype"
+          emp_fullname: "Иванов Иван Иванович"
+        - rec_id: 7
+          rec_data:
+            rec_time: "11:00:00"
+            rec_online: true
+            pepl_id: 3
+            cont_value: "student132"
+            rec_not_come: false
+            cont_name: "skype"
+          emp_fullname: "Иванов Иван Иванович"
+      - wd_date: "2019-03-03"
+        wd_id: 1
+        rec_array:
+        - rec_id: 7
+          rec_data:
+            rec_time: "11:00:00"
+            rec_online: true
+            pepl_id: 3
+            cont_value: "student132"
+            rec_not_come: false
+            cont_name: "skype"
+          emp_fullname: "Иванов Иван Иванович"
+        - rec_id: 7
+          rec_data:
+            rec_time: "11:00:00"
+            rec_online: true
+            pepl_id: 3
+            cont_value: "student132"
+            rec_not_come: false
+            cont_name: "skype"
+          emp_fullname: "Иванов Иван Иванович"
+      status: "OK"
+  body_13:
+    type: "object"
     required:
     - "rec_id"
     - "rec_online"
@@ -3048,7 +3227,7 @@ definitions:
       cont_value:
         type: "string"
         example: "student132"
-  inline_response_200_12_payload:
+  inline_response_200_13_payload:
     required:
     - "emp_id"
     - "pepl_id"
@@ -3100,7 +3279,7 @@ definitions:
       wd_duration: 30
       emp_id: 1
       cont_name: "skype"
-  inline_response_200_12:
+  inline_response_200_13:
     required:
     - "status"
     properties:
@@ -3108,7 +3287,7 @@ definitions:
         type: "string"
         example: "OK"
       payload:
-        $ref: "#/definitions/inline_response_200_12_payload"
+        $ref: "#/definitions/inline_response_200_13_payload"
     example:
       payload:
         rec_time: "12:00:00"
@@ -3121,15 +3300,6 @@ definitions:
         emp_id: 1
         cont_name: "skype"
       status: "OK"
-  body_13:
-    type: "object"
-    required:
-    - "rec_id"
-    properties:
-      rec_id:
-        type: "integer"
-        format: "int32"
-        example: 9
   body_14:
     type: "object"
     required:
@@ -3140,6 +3310,15 @@ definitions:
         format: "int32"
         example: 9
   body_15:
+    type: "object"
+    required:
+    - "rec_id"
+    properties:
+      rec_id:
+        type: "integer"
+        format: "int32"
+        example: 9
+  body_16:
     type: "object"
     required:
     - "new_rec_id"
@@ -3153,7 +3332,7 @@ definitions:
         type: "integer"
         format: "int32"
         example: 10
-  inline_response_200_13_payload:
+  inline_response_200_14_payload:
     required:
     - "emp_id"
     - "pepl_id"
@@ -3201,7 +3380,7 @@ definitions:
       wd_duration: 30
       emp_id: 1
       cont_name: "skype"
-  inline_response_200_13:
+  inline_response_200_14:
     required:
     - "status"
     properties:
@@ -3209,7 +3388,7 @@ definitions:
         type: "string"
         example: "OK"
       payload:
-        $ref: "#/definitions/inline_response_200_13_payload"
+        $ref: "#/definitions/inline_response_200_14_payload"
     example:
       payload:
         rec_time: "12:00:00"
@@ -3221,7 +3400,7 @@ definitions:
         emp_id: 1
         cont_name: "skype"
       status: "OK"
-  body_16:
+  body_17:
     type: "object"
     required:
     - "rec_id"
@@ -3241,7 +3420,7 @@ definitions:
       cont_value:
         type: "string"
         example: "9652354488"
-  body_17:
+  body_18:
     type: "object"
     required:
     - "rec_id"
@@ -3250,7 +3429,7 @@ definitions:
         type: "integer"
         format: "int32"
         example: 9
-  body_18:
+  body_19:
     type: "object"
     required:
     - "wd_id"
@@ -3259,7 +3438,7 @@ definitions:
         type: "integer"
         format: "int32"
         example: 1
-  inline_response_200_14:
+  inline_response_200_15:
     required:
     - "status"
     properties:
@@ -3406,7 +3585,7 @@ definitions:
         $ref: "#/definitions/setJournal_rec_data_1"
       vst_data:
         $ref: "#/definitions/setJournal_vst_data_1"
-  body_19:
+  body_20:
     type: "object"
     properties:
       vst_arr_del:
@@ -3421,7 +3600,7 @@ definitions:
         type: "array"
         items:
           $ref: "#/definitions/setJournal_vst_arr_upd"
-  inline_response_200_15_payload_vst_arr_del:
+  inline_response_200_16_payload_vst_arr_del:
     required:
     - "vst_status"
     properties:
@@ -3439,7 +3618,7 @@ definitions:
       vst_id_del:
       - 1
       - 1
-  inline_response_200_15_payload_vst_arr_add_vst_add_res:
+  inline_response_200_16_payload_vst_arr_add_vst_add_res:
     required:
     - "vst_dt"
     properties:
@@ -3454,7 +3633,7 @@ definitions:
     example:
       rec_id: 7
       vst_dt: "2019-03-03T11:00:00.000Z"
-  inline_response_200_15_payload_vst_arr_add:
+  inline_response_200_16_payload_vst_arr_add:
     required:
     - "vst_status"
     properties:
@@ -3464,7 +3643,7 @@ definitions:
       vst_add_res:
         type: "array"
         items:
-          $ref: "#/definitions/inline_response_200_15_payload_vst_arr_add_vst_add_res"
+          $ref: "#/definitions/inline_response_200_16_payload_vst_arr_add_vst_add_res"
     example:
       vst_add_res:
       - rec_id: 7
@@ -3472,7 +3651,7 @@ definitions:
       - rec_id: 7
         vst_dt: "2019-03-03T11:00:00.000Z"
       vst_status: "OK"
-  inline_response_200_15_payload_vst_arr_upd:
+  inline_response_200_16_payload_vst_arr_upd:
     required:
     - "vst_status"
     properties:
@@ -3490,14 +3669,14 @@ definitions:
       vst_id_upd:
       - 1
       - 1
-  inline_response_200_15_payload:
+  inline_response_200_16_payload:
     properties:
       vst_arr_del:
-        $ref: "#/definitions/inline_response_200_15_payload_vst_arr_del"
+        $ref: "#/definitions/inline_response_200_16_payload_vst_arr_del"
       vst_arr_add:
-        $ref: "#/definitions/inline_response_200_15_payload_vst_arr_add"
+        $ref: "#/definitions/inline_response_200_16_payload_vst_arr_add"
       vst_arr_upd:
-        $ref: "#/definitions/inline_response_200_15_payload_vst_arr_upd"
+        $ref: "#/definitions/inline_response_200_16_payload_vst_arr_upd"
     example:
       vst_arr_upd:
         vst_status: "OK"
@@ -3516,7 +3695,7 @@ definitions:
         - rec_id: 7
           vst_dt: "2019-03-03T11:00:00.000Z"
         vst_status: "OK"
-  inline_response_200_15:
+  inline_response_200_16:
     required:
     - "status"
     properties:
@@ -3524,7 +3703,7 @@ definitions:
         type: "string"
         example: "OK"
       payload:
-        $ref: "#/definitions/inline_response_200_15_payload"
+        $ref: "#/definitions/inline_response_200_16_payload"
     example:
       payload:
         vst_arr_upd:
@@ -3568,14 +3747,14 @@ definitions:
         format: "int32"
         example: 0
     description: "Получить N записей с шагом F"
-  body_20:
+  body_21:
     type: "object"
     properties:
       byDate:
         $ref: "#/definitions/getJournal_byDate"
       inCount:
         $ref: "#/definitions/getJournal_inCount"
-  inline_response_200_16_payload:
+  inline_response_200_17_payload:
     required:
     - "emp_id"
     - "vst_age"
@@ -3638,7 +3817,7 @@ definitions:
       vst_dt: "2019-03-03T11:00:00.000Z"
       emp_id: 4
       vst_gender: true
-  inline_response_200_16:
+  inline_response_200_17:
     required:
     - "status"
     properties:
@@ -3648,7 +3827,7 @@ definitions:
       payload:
         type: "array"
         items:
-          $ref: "#/definitions/inline_response_200_16_payload"
+          $ref: "#/definitions/inline_response_200_17_payload"
     example:
       payload:
       - vst_problem: "Угнетение учениками"
@@ -3780,7 +3959,7 @@ definitions:
       prnt_data:
         $ref: "#/definitions/signup_prnt_data_prnt_data"
     description: "Данные родителя"
-  body_21:
+  body_22:
     type: "object"
     required:
     - "pepl_data"
@@ -3802,7 +3981,7 @@ definitions:
         $ref: "#/definitions/signup_std_data"
       prnt_data:
         $ref: "#/definitions/signup_prnt_data"
-  inline_response_200_17_payload:
+  inline_response_200_18_payload:
     required:
     - "pepl_first_name"
     - "pepl_id"
@@ -3840,7 +4019,7 @@ definitions:
       pepl_id: 1
       pepl_last_name: "Иванович"
       role_array: ""
-  inline_response_200_17:
+  inline_response_200_18:
     required:
     - "status"
     properties:
@@ -3848,7 +4027,7 @@ definitions:
         type: "string"
         example: "OK"
       payload:
-        $ref: "#/definitions/inline_response_200_17_payload"
+        $ref: "#/definitions/inline_response_200_18_payload"
     example:
       payload:
         pepl_first_name: "Иван"
@@ -3859,7 +4038,7 @@ definitions:
         pepl_last_name: "Иванович"
         role_array: ""
       status: "OK"
-  inline_response_200_18:
+  inline_response_200_19:
     required:
     - "status"
     properties:
@@ -3877,14 +4056,14 @@ definitions:
         role_array: ""
         token: "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwZXBsX2lkIjoyLCJpYXQiOjE1NTI1ODAxMjgsImV4cCI6MTU1Mjc1MjkyOH0.crhNQROEcLRxLywh7-ROIAv48MgfRWywm-ohNSrxcy0"
       status: "OK"
-  inline_response_200_19_payload:
+  inline_response_200_20_payload:
     required:
     - "file"
     properties:
       file:
         type: "string"
         format: "base64"
-  inline_response_200_19:
+  inline_response_200_20:
     required:
     - "status"
     properties:
@@ -3892,8 +4071,8 @@ definitions:
         type: "string"
         example: "OK"
       payload:
-        $ref: "#/definitions/inline_response_200_19_payload"
-  body_22:
+        $ref: "#/definitions/inline_response_200_20_payload"
+  body_23:
     type: "object"
     required:
     - "prnt_confirm"
@@ -3917,7 +4096,7 @@ definitions:
         items:
           type: "integer"
           format: "int32"
-  inline_response_200_20_auto_check_data:
+  inline_response_200_21_auto_check_data:
     required:
     - "cr_child_fullname"
     - "cr_class"
@@ -3941,7 +4120,7 @@ definitions:
       cr_class: "OK"
       std_id: 3
       cr_child_fullname: "OK"
-  inline_response_200_20_cr_array:
+  inline_response_200_21_cr_array:
     required:
     - "cr_class"
     - "cr_first_child"
@@ -3979,7 +4158,7 @@ definitions:
         format: "int32"
         example: 4
       auto_check_data:
-        $ref: "#/definitions/inline_response_200_20_auto_check_data"
+        $ref: "#/definitions/inline_response_200_21_auto_check_data"
     example:
       cr_first_child: "Семен"
       cr_last_teacher: "Иванович"
@@ -3995,7 +4174,7 @@ definitions:
       cr_last_child: "Львович"
       cr_second_teacher: "Иванов"
       std_emp_id: 4
-  inline_response_200_20_payload:
+  inline_response_200_21_payload:
     required:
     - "cr_array"
     - "pepl_data"
@@ -4009,7 +4188,7 @@ definitions:
       cr_array:
         type: "array"
         items:
-          $ref: "#/definitions/inline_response_200_20_cr_array"
+          $ref: "#/definitions/inline_response_200_21_cr_array"
       pepl_data:
         $ref: "#/definitions/People"
       prnt_data:
@@ -4058,7 +4237,7 @@ definitions:
         prnt_home: "17Б"
         prnt_city: "Липецк"
         prnt_street: "Ангарская"
-  inline_response_200_20:
+  inline_response_200_21:
     required:
     - "status"
     properties:
@@ -4068,7 +4247,7 @@ definitions:
       payload:
         type: "array"
         items:
-          $ref: "#/definitions/inline_response_200_20_payload"
+          $ref: "#/definitions/inline_response_200_21_payload"
     example:
       payload:
       - prnt_id: 2
@@ -4158,7 +4337,7 @@ definitions:
           prnt_city: "Липецк"
           prnt_street: "Ангарская"
       status: "OK"
-  body_23:
+  body_24:
     type: "object"
     required:
     - "std_id"
@@ -4167,7 +4346,7 @@ definitions:
         type: "integer"
         format: "int32"
         example: 3
-  inline_response_200_21_payload_pepl_data:
+  inline_response_200_22_payload_pepl_data:
     required:
     - "pepl_first_name"
     - "pepl_last_name"
@@ -4204,7 +4383,7 @@ definitions:
       pepl_email: "admin@mail.ru"
       pepl_phone: "9568734554"
       pepl_birthday: "1977-01-19"
-  inline_response_200_21_payload:
+  inline_response_200_22_payload:
     required:
     - "pepl_data"
     properties:
@@ -4218,7 +4397,7 @@ definitions:
       role_array:
         $ref: "#/definitions/Role"
       pepl_data:
-        $ref: "#/definitions/inline_response_200_21_payload_pepl_data"
+        $ref: "#/definitions/inline_response_200_22_payload_pepl_data"
       emp_data:
         $ref: "#/definitions/Employee"
       pst_arr:
@@ -4256,7 +4435,7 @@ definitions:
         pepl_email: "admin@mail.ru"
         pepl_phone: "9568734554"
         pepl_birthday: "1977-01-19"
-  inline_response_200_21:
+  inline_response_200_22:
     required:
     - "status"
     properties:
@@ -4264,7 +4443,7 @@ definitions:
         type: "string"
         example: "OK"
       payload:
-        $ref: "#/definitions/inline_response_200_21_payload"
+        $ref: "#/definitions/inline_response_200_22_payload"
     example:
       payload:
         pepl_login: "Admin"
@@ -4292,7 +4471,7 @@ definitions:
           pepl_phone: "9568734554"
           pepl_birthday: "1977-01-19"
       status: "OK"
-  inline_response_200_22_payload:
+  inline_response_200_23_payload:
     required:
     - "emp_data"
     - "pepl_data"
@@ -4348,7 +4527,7 @@ definitions:
         pepl_email: "admin@mail.ru"
         pepl_phone: "9568734554"
         pepl_birthday: "1977-01-19"
-  inline_response_200_22:
+  inline_response_200_23:
     required:
     - "status"
     properties:
@@ -4358,7 +4537,7 @@ definitions:
       payload:
         type: "array"
         items:
-          $ref: "#/definitions/inline_response_200_22_payload"
+          $ref: "#/definitions/inline_response_200_23_payload"
     example:
       payload:
       - pepl_login: "Admin"
@@ -4441,7 +4620,7 @@ definitions:
       prnt_flat:
         type: ["string", "null"]
         example: "45"
-  body_24:
+  body_25:
     type: "object"
     properties:
       pepl_old_pass:
@@ -4472,7 +4651,7 @@ definitions:
         $ref: "#/definitions/updPersonalData_emp_data"
       prnt_data:
         $ref: "#/definitions/updPersonalData_prnt_data"
-  inline_response_200_23_payload_pepl_data:
+  inline_response_200_24_payload_pepl_data:
     properties:
       pepl_pass:
         type: "string"
@@ -4503,7 +4682,7 @@ definitions:
       pepl_last_name: "Иванович"
       pepl_email: "admin@mail.ru"
       pepl_phone: "9045556432"
-  inline_response_200_23_payload_emp_data:
+  inline_response_200_24_payload_emp_data:
     properties:
       emp_skype:
         type: "string"
@@ -4526,7 +4705,7 @@ definitions:
       emp_viber: "9045556432"
       emp_hangouts: "admin@gmail.com"
       emp_discord: "emplAdmin#1232"
-  inline_response_200_23_payload_prnt_data:
+  inline_response_200_24_payload_prnt_data:
     properties:
       prnt_city:
         type: "string"
@@ -4545,14 +4724,14 @@ definitions:
       prnt_home: "17Б"
       prnt_city: "Липецк"
       prnt_street: "Ангарская"
-  inline_response_200_23_payload:
+  inline_response_200_24_payload:
     properties:
       pepl_data:
-        $ref: "#/definitions/inline_response_200_23_payload_pepl_data"
+        $ref: "#/definitions/inline_response_200_24_payload_pepl_data"
       emp_data:
-        $ref: "#/definitions/inline_response_200_23_payload_emp_data"
+        $ref: "#/definitions/inline_response_200_24_payload_emp_data"
       prnt_data:
-        $ref: "#/definitions/inline_response_200_23_payload_prnt_data"
+        $ref: "#/definitions/inline_response_200_24_payload_prnt_data"
     example:
       emp_data:
         emp_vk: "empadmin"
@@ -4573,7 +4752,7 @@ definitions:
         prnt_home: "17Б"
         prnt_city: "Липецк"
         prnt_street: "Ангарская"
-  inline_response_200_23:
+  inline_response_200_24:
     required:
     - "status"
     properties:
@@ -4581,7 +4760,7 @@ definitions:
         type: "string"
         example: "OK"
       payload:
-        $ref: "#/definitions/inline_response_200_23_payload"
+        $ref: "#/definitions/inline_response_200_24_payload"
     example:
       payload:
         emp_data:
@@ -4604,7 +4783,7 @@ definitions:
           prnt_city: "Липецк"
           prnt_street: "Ангарская"
       status: "OK"
-  inline_response_200_24_payload_emp_data:
+  inline_response_200_25_payload_emp_data:
     required:
     - "main_data"
     properties:
@@ -4628,7 +4807,7 @@ definitions:
       pst_arr:
       - "Администратор"
       - "Учитель информатики"
-  inline_response_200_24_payload_prnt_data_prnt_childrens:
+  inline_response_200_25_payload_prnt_data_prnt_childrens:
     required:
     - "pepl_data"
     - "pepl_id"
@@ -4661,7 +4840,7 @@ definitions:
         std_stayed_two_year: 0
         std_class: "7Б"
         std_date_issue: "2023-06-01"
-  inline_response_200_24_payload_prnt_data:
+  inline_response_200_25_payload_prnt_data:
     required:
     - "main_data"
     - "prnt_childrens"
@@ -4671,7 +4850,7 @@ definitions:
       prnt_childrens:
         type: "array"
         items:
-          $ref: "#/definitions/inline_response_200_24_payload_prnt_data_prnt_childrens"
+          $ref: "#/definitions/inline_response_200_25_payload_prnt_data_prnt_childrens"
     example:
       main_data:
         prnt_flat: "45"
@@ -4707,7 +4886,7 @@ definitions:
           std_stayed_two_year: 0
           std_class: "7Б"
           std_date_issue: "2023-06-01"
-  inline_response_200_24_payload:
+  inline_response_200_25_payload:
     required:
     - "pepl_data"
     - "pepl_login"
@@ -4721,9 +4900,9 @@ definitions:
       pepl_data:
         $ref: "#/definitions/People"
       emp_data:
-        $ref: "#/definitions/inline_response_200_24_payload_emp_data"
+        $ref: "#/definitions/inline_response_200_25_payload_emp_data"
       prnt_data:
-        $ref: "#/definitions/inline_response_200_24_payload_prnt_data"
+        $ref: "#/definitions/inline_response_200_25_payload_prnt_data"
       std_data:
         $ref: "#/definitions/Student"
     description: "Данные пользователя"
@@ -4788,7 +4967,7 @@ definitions:
         std_stayed_two_year: 0
         std_class: "7Б"
         std_date_issue: "2023-06-01"
-  inline_response_200_24:
+  inline_response_200_25:
     required:
     - "status"
     properties:
@@ -4796,7 +4975,7 @@ definitions:
         type: "string"
         example: "OK"
       payload:
-        $ref: "#/definitions/inline_response_200_24_payload"
+        $ref: "#/definitions/inline_response_200_25_payload"
     example:
       payload:
         pepl_login: "Admin"
@@ -4860,7 +5039,7 @@ definitions:
           std_class: "7Б"
           std_date_issue: "2023-06-01"
       status: "OK"
-  inline_response_200_25_payload:
+  inline_response_200_26_payload:
     required:
     - "pepl_first_name"
     - "pepl_id"
@@ -4907,7 +5086,7 @@ definitions:
       - ""
       pepl_id: 1
       pepl_last_name: "Иванович"
-  inline_response_200_25:
+  inline_response_200_26:
     required:
     - "status"
     properties:
@@ -4917,7 +5096,7 @@ definitions:
       payload:
         type: "array"
         items:
-          $ref: "#/definitions/inline_response_200_25_payload"
+          $ref: "#/definitions/inline_response_200_26_payload"
     example:
       payload:
       - pepl_first_name: "Иван"
@@ -4943,7 +5122,7 @@ definitions:
         pepl_id: 1
         pepl_last_name: "Иванович"
       status: "OK"
-  body_25:
+  body_26:
     type: "object"
     required:
     - "pepl_id"
@@ -4952,7 +5131,7 @@ definitions:
         type: "integer"
         format: "int32"
         example: 1
-  inline_response_200_26_payload_emp_data:
+  inline_response_200_27_payload_emp_data:
     required:
     - "pst_arr"
     properties:
@@ -4993,7 +5172,7 @@ definitions:
       emp_hangouts: "admin@gmail.com"
       emp_date_enrollment: "1997-11-22"
       emp_discord: "emplAdmin#1232"
-  inline_response_200_26_payload:
+  inline_response_200_27_payload:
     required:
     - "pepl_data"
     - "role_array"
@@ -5003,7 +5182,7 @@ definitions:
       pepl_data:
         $ref: "#/definitions/People"
       emp_data:
-        $ref: "#/definitions/inline_response_200_26_payload_emp_data"
+        $ref: "#/definitions/inline_response_200_27_payload_emp_data"
       prnt_data:
         $ref: "#/definitions/Parent"
       std_data:
@@ -5038,7 +5217,7 @@ definitions:
         std_stayed_two_year: 0
         std_class: "7Б"
         std_date_issue: "2023-06-01"
-  inline_response_200_26:
+  inline_response_200_27:
     required:
     - "status"
     properties:
@@ -5046,7 +5225,7 @@ definitions:
         type: "string"
         example: "OK"
       payload:
-        $ref: "#/definitions/inline_response_200_26_payload"
+        $ref: "#/definitions/inline_response_200_27_payload"
     example:
       payload:
         emp_data:
@@ -5078,7 +5257,7 @@ definitions:
           std_class: "7Б"
           std_date_issue: "2023-06-01"
       status: "OK"
-  body_26:
+  body_27:
     type: "object"
     properties:
       emp_id:
@@ -5120,7 +5299,7 @@ definitions:
       pepl_email:
         type: "string"
         example: "stud@mail.ru"
-  inline_response_200_27:
+  inline_response_200_28:
     required:
     - "status"
     properties:
@@ -5130,7 +5309,7 @@ definitions:
       payload:
         type: "array"
         items:
-          $ref: "#/definitions/inline_response_200_24_payload_prnt_data_prnt_childrens"
+          $ref: "#/definitions/inline_response_200_25_payload_prnt_data_prnt_childrens"
     example:
       payload:
       - pepl_login: "Student"
@@ -5162,7 +5341,7 @@ definitions:
           std_class: "7Б"
           std_date_issue: "2023-06-01"
       status: "OK"
-  body_27:
+  body_28:
     type: "object"
     properties:
       role_array:
@@ -5200,7 +5379,7 @@ definitions:
       pepl_email:
         type: "string"
         example: "admin@mail.ru"
-  inline_response_200_28_payload:
+  inline_response_200_29_payload:
     required:
     - "emp_data"
     - "pepl_data"
@@ -5236,7 +5415,7 @@ definitions:
         pepl_email: "admin@mail.ru"
         pepl_phone: "9568734554"
         pepl_birthday: "1977-01-19"
-  inline_response_200_28:
+  inline_response_200_29:
     required:
     - "status"
     properties:
@@ -5246,7 +5425,7 @@ definitions:
       payload:
         type: "array"
         items:
-          $ref: "#/definitions/inline_response_200_28_payload"
+          $ref: "#/definitions/inline_response_200_29_payload"
     example:
       payload:
       - pepl_login: "Admin"
@@ -5284,7 +5463,7 @@ definitions:
           pepl_phone: "9568734554"
           pepl_birthday: "1977-01-19"
       status: "OK"
-  body_28:
+  body_29:
     type: "object"
     properties:
       std_id:
@@ -5322,7 +5501,7 @@ definitions:
       pepl_email:
         type: "string"
         example: "parent@mail.ru"
-  inline_response_200_29_payload:
+  inline_response_200_30_payload:
     required:
     - "pepl_data"
     - "pepl_id"
@@ -5356,7 +5535,7 @@ definitions:
         prnt_home: "17Б"
         prnt_city: "Липецк"
         prnt_street: "Ангарская"
-  inline_response_200_29:
+  inline_response_200_30:
     required:
     - "status"
     properties:
@@ -5366,7 +5545,7 @@ definitions:
       payload:
         type: "array"
         items:
-          $ref: "#/definitions/inline_response_200_29_payload"
+          $ref: "#/definitions/inline_response_200_30_payload"
     example:
       payload:
       - pepl_login: "Parent"
@@ -5400,7 +5579,7 @@ definitions:
           prnt_city: "Липецк"
           prnt_street: "Ангарская"
       status: "OK"
-  inline_response_200_30:
+  inline_response_200_31:
     required:
     - "status"
     properties:
@@ -5412,7 +5591,7 @@ definitions:
     example:
       role_array: ""
       status: "OK"
-  body_29:
+  body_30:
     type: "object"
     required:
     - "pepl_id"
@@ -5421,7 +5600,7 @@ definitions:
         type: "integer"
         format: "int32"
         example: 1
-  inline_response_200_31:
+  inline_response_200_32:
     required:
     - "status"
     properties:
@@ -5433,18 +5612,6 @@ definitions:
     example:
       payload: ""
       status: "OK"
-  body_30:
-    type: "object"
-    required:
-    - "pepl_id"
-    - "role_array"
-    properties:
-      pepl_id:
-        type: "integer"
-        format: "int32"
-        example: 1
-      role_array:
-        $ref: "#/definitions/Role"
   body_31:
     type: "object"
     required:
@@ -5460,13 +5627,25 @@ definitions:
   body_32:
     type: "object"
     required:
+    - "pepl_id"
+    - "role_array"
+    properties:
+      pepl_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+      role_array:
+        $ref: "#/definitions/Role"
+  body_33:
+    type: "object"
+    required:
     - "emp_id"
     properties:
       emp_id:
         type: "integer"
         format: "int32"
         example: 1
-  inline_response_200_32:
+  inline_response_200_33:
     required:
     - "status"
     properties:
@@ -5486,7 +5665,7 @@ definitions:
         pst_name: "Педагог-психолог"
         pst_description: "pst_description"
       status: "OK"
-  body_33:
+  body_34:
     type: "object"
     required:
     - "emp_id"
@@ -5500,7 +5679,7 @@ definitions:
         type: "array"
         items:
           $ref: "#/definitions/signup_emp_data_pst_arr"
-  inline_response_200_33:
+  inline_response_200_34:
     required:
     - "status"
     properties:
@@ -5518,7 +5697,7 @@ definitions:
       - ""
       - ""
       status: "OK"
-  body_34:
+  body_35:
     type: "object"
     required:
     - "emp_id"
@@ -5532,7 +5711,7 @@ definitions:
         type: "array"
         items:
           $ref: "#/definitions/signup_emp_data_pst_arr"
-  body_35:
+  body_36:
     required:
     - "pst_name"
     properties:
@@ -5541,7 +5720,7 @@ definitions:
         example: "Педагог-психолог"
       pst_description:
         type: "string"
-  body_36:
+  body_37:
     required:
     - "pst_id"
     properties:
@@ -5554,7 +5733,7 @@ definitions:
         example: "Педагог-психолог"
       pst_description:
         type: ["string", "null"]
-  inline_response_200_34:
+  inline_response_200_35:
     required:
     - "status"
     properties:

@@ -1,7 +1,7 @@
 'use strict';
 
-var utils = require('../utils/writer.js');
-var Records = require('../service/RecordsService');
+const utils = require('../utils/writer.js');
+const Records = require('../service/RecordsService');
 
 module.exports.cancelRecord = function cancelRecord(req, res, next) {
     if (req.error) {
@@ -91,6 +91,22 @@ module.exports.getEmpGraphic = function getEmpGraphic(req, res, next) {
 
     const body = req.swagger.params['body'].value;
     Records.getEmpGraphic(req, body)
+        .then(function (response) {
+            utils.writeJson(res, response);
+        })
+        .catch(function (response) {
+            utils.writeJson(res, response);
+        });
+};
+
+module.exports.getPersonalRecords = function getPersonalRecords(req, res, next) {
+    if (req.error) {
+        utils.writeJson(res, {status: req.error});
+        return;
+    }
+
+    const body = req.swagger.params['body'].value;
+    Records.getPersonalRecords(req, body)
         .then(function (response) {
             utils.writeJson(res, response);
         })

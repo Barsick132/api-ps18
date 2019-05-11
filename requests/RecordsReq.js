@@ -92,7 +92,14 @@ exports.getDateString = function getDateString(date) {
 };
 
 exports.getDateWithTime = function getDateWithString(date) {
-    let options = {year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit'};
+    let options = {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    };
     return date.toLocaleDateString('ca', options);
 };
 
@@ -1015,6 +1022,127 @@ exports.getEmpGraphic = (knex, objRequest) => {
                     result = {status: STATUS.UNKNOWN_ERROR}
                 }
                 resolve(result);
+            });
+    })
+};
+
+exports.getPersonalRecords = function (knex, objRequest, pepl_id) {
+    const STATUS = {
+        NOT_FOUND_VALID_RECORDS: 'NOT_FOUND_VALID_RECORDS',
+        UNKNOWN_ERROR: 'UNKNOWN_ERROR'
+    };
+
+    let result = {};
+
+    return new Promise((resolve, reject) => {
+        const getRecords = () => {
+            // Указаны обе даты
+            if (objRequest.wd_period_begin !== undefined &&
+                objRequest.wd_period_end !== undefined) {
+                return knex({atb: 'all_timepoints_busy'})
+                    .select()
+                    .where('atb.pepl_id', pepl_id)
+                    .andWhereBetween('atb.wd_date', [objRequest.wd_period_begin, objRequest.wd_period_end])
+                    .orderBy('wd_date', 'rec_time');
+            }
+            // Указана дата начала
+            if (objRequest.wd_period_begin !== undefined &&
+                objRequest.wd_period_end === undefined) {
+                // Время не указано
+                if (objRequest.wd_time_begin === undefined &&
+                    objRequest.wd_time_end === undefined) {
+                    return knex({atb: 'all_timepoints_busy'})
+                        .select()
+                        .where('atb.pepl_id', pepl_id)
+                        .andWhereNot('atb.wd_date', '<', objRequest.wd_period_begin)
+                        .orderBy('wd_date', 'rec_time');
+                }
+                // Указано время начала
+                if (objRequest.wd_time_begin !== undefined &&
+                    objRequest.wd_time_end === undefined) {
+                    return knex({atb: 'all_timepoints_busy'})
+                        .select()
+                        .where('atb.pepl_id', pepl_id)
+                        .where(function () {
+                            this.whereNot('atb.wd_date', '<', objRequest.wd_period_begin)
+                                .orWhere('atb.wd_date',  objRequest.wd_period_begin)
+                                .andWhereNot('atb.rec_time', '<', objRequest.wd_time_begin)
+                        })
+                        .orderBy('wd_date', 'rec_time');
+                }
+            }
+            // Указана дата окончания
+            if (objRequest.wd_period_begin === undefined &&
+                objRequest.wd_period_end !== undefined) {
+                // Время не указано
+                if (objRequest.wd_time_begin === undefined &&
+                    objRequest.wd_time_end === undefined) {
+                    return knex({atb: 'all_timepoints_busy'})
+                        .select()
+                        .where('atb.pepl_id', pepl_id)
+                        .andWhereNot('atb.wd_date', '>', objRequest.wd_period_end)
+                        .orderBy('wd_date', 'rec_time');
+                }
+                // Указано время окончания
+                if (objRequest.wd_time_begin === undefined &&
+                    objRequest.wd_time_end !== undefined) {
+                    return knex({atb: 'all_timepoints_busy'})
+                        .select()
+                        .where('atb.pepl_id', pepl_id)
+                        .where(function () {
+                            this.whereNot('atb.wd_date', '>', objRequest.wd_period_end)
+                                .orWhere('atb.wd_date',  objRequest.wd_period_end)
+                                .andWhereNot('atb.rec_time', '>', objRequest.wd_time_end)
+                        })
+                        .orderBy('wd_date', 'rec_time');
+                }
+            }
+        };
+
+        getRecords()
+            .then(res => {
+                if(res.length === 0) {
+                    throw new Error(STATUS.NOT_FOUND_VALID_RECORDS);
+                }
+
+                result = [];
+                res.forEach(item => {
+                    let indexWd = result.findIndex(wd => wd.wd_id === item.wd_id);
+                    let record = {
+                        rec_id: item.rec_id,
+                        emp_fullname: item.emp_fullname,
+                        rec_data: {
+                            pepl_id: item.pepl_id,
+                            rec_time: item.rec_time,
+                            rec_online: item.rec_online,
+                            rec_not_come: item.rec_not_come,
+                            cont_name: item.cont_name,
+                            cont_value: item.cont_value
+                        }
+                    };
+
+                    if(indexWd !== -1){
+                        result[indexWd].rec_array.push(record)
+                    }else {
+                        let wd = {
+                            wd_id: item.wd_id,
+                            wd_date: this.getDateString(item.wd_date),
+                            rec_array: [record]
+                        };
+                        result.push(wd);
+                    }
+                });
+
+                resolve(result);
+            })
+            .catch(err => {
+                if(err.message === STATUS.NOT_FOUND_VALID_RECORDS){
+                    result = {status: err.message}
+                }else {
+                    result = {status: STATUS.UNKNOWN_ERROR}
+                }
+
+                reject(result);
             });
     })
 };

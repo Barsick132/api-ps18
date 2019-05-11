@@ -8,6 +8,67 @@ const PERIOD_FIX = require('../constants').PERIOD_FIX;
 
 const FILE = './service/RecordsService.js';
 
+const checkPeriodFix = (wd_history, wd_period_fix) => {
+    let objRequest = {};
+
+    let wpf;
+    if (wd_period_fix) {
+        let period_fix_arr = Object.keys(PERIOD_FIX).map(key => PERIOD_FIX[key]);
+        if (!period_fix_arr.some(item => item === wd_period_fix)) {
+            wpf = PERIOD_FIX.MONTH;
+        } else {
+            wpf = wd_period_fix;
+        }
+    } else {
+        wpf = PERIOD_FIX.MONTH;
+    }
+
+    const currentDate = new Date();
+    let cdObj = new RecordsReq.dateClass(currentDate.getUTCFullYear(),
+        currentDate.getUTCMonth() + 1, currentDate.getUTCDate());
+    let ctObj = new RecordsReq.timeClass(currentDate.getUTCHours(),
+        currentDate.getUTCMinutes());
+
+    if (wd_history) {
+        objRequest.wd_period_end = cdObj.toString();
+        objRequest.wd_time_end = ctObj.getTimeString();
+        switch (wpf) {
+            case PERIOD_FIX.WEEK: {
+                objRequest.wd_period_begin = cdObj.subtractDays(7).toString();
+                break;
+            }
+            case PERIOD_FIX.MONTH: {
+                objRequest.wd_period_begin = cdObj.subtractMonth(1).toString();
+                break;
+            }
+            case PERIOD_FIX.THREE_MONTH: {
+                objRequest.wd_period_begin = cdObj.subtractMonth(3).toString();
+                break;
+            }
+        }
+    } else {
+        objRequest.wd_period_begin = cdObj.toString();
+        objRequest.wd_time_begin = ctObj.getTimeString();
+        switch (wpf) {
+            case PERIOD_FIX.WEEK: {
+                objRequest.wd_period_end = cdObj.addDays(7).toString();
+                break;
+            }
+            case PERIOD_FIX.MONTH: {
+                objRequest.wd_period_end = cdObj.addMonth(1).toString();
+                break;
+            }
+            case PERIOD_FIX.THREE_MONTH: {
+                objRequest.wd_period_end = cdObj.addMonth(3).toString();
+                break;
+            }
+        }
+    }
+
+    return objRequest;
+};
+
+
 /**
  * Отмена записи
  *
@@ -386,8 +447,6 @@ exports.getEmpGraphic = function (req, body) {
                     }
                 }
             }
-
-
         };
 
         if (body.emp_id === undefined || body.emp_id === req.user.pepl_id) {
@@ -476,6 +535,91 @@ exports.getEmpGraphic = function (req, body) {
     });
 };
 
+exports.getPersonalRecords = function (req, body) {
+    const METHOD = 'getPersonalRecords()';
+    console.log(FILE, METHOD);
+
+    return new Promise(function (resolve, reject) {
+        const STATUS = {
+            ACCOUNT_UNDER_REVIEW: 'ACCOUNT_UNDER_REVIEW',
+            ACCOUNT_REJECT: 'ACCOUNT_REJECT',
+            NOT_AUTH: 'NOT_AUTH',
+            PERIOD_IS_NOT_VALID: 'PERIOD_IS_NOT_VALID',
+            UNKNOWN_ERROR: 'UNKNOWN_ERROR',
+            OK: 'OK'
+        };
+
+        let result = {};
+        let payload = [];
+
+        // Проверка аутентификации пользователя
+        if (!req.isAuthenticated()) {
+            console.error('Not Authenticated');
+            reject({status: STATUS.NOT_AUTH});
+            return;
+        }
+
+        if (UsersReq.checkRole(req.user.roles, ROLE.PARENT)) {
+            switch (req.user.prnt_data.prnt_confirm) {
+                case 0: {
+                    console.error('Account Under Review');
+                    reject({status: STATUS.ACCOUNT_UNDER_REVIEW});
+                    return;
+                }
+                case 2: {
+                    console.error('Account Reject');
+                    reject({status: STATUS.ACCOUNT_REJECT});
+                    return
+                }
+            }
+        }
+
+        // Определяем что указал пользователь, дату или фиксированный период.
+        // Если период фиксированный, конвертируем его в даты с помощью checkPeriodFix
+        let objRequest = {};
+        if (body.wd_period_begin || body.wd_period_end) {
+            if (body.wd_period_begin && body.wd_period_end) {
+                // Указаны обе даты
+                let dtObjBegin = RecordsReq.getDateObj(body.wd_period_begin);
+                let dtObjEnd = RecordsReq.getDateObj(body.wd_period_end);
+                const resComparison = dtObjEnd.dateMore(dtObjBegin);
+                if (dtObjBegin && dtObjEnd && resComparison === false) {
+                    console.error('Date Begin More Date End');
+                    reject({status: STATUS.PERIOD_IS_NOT_VALID});
+                    return;
+                }
+                objRequest.wd_period_begin = body.wd_period_begin;
+                objRequest.wd_period_end = body.wd_period_end;
+            }
+            if (body.wd_period_begin && !body.wd_period_end) {
+                // Указана лишь дата начальная
+                objRequest.wd_period_begin = body.wd_period_begin;
+            }
+            if (!body.wd_period_begin && body.wd_period_end) {
+                // Указана лишь дата конечная
+                objRequest.wd_period_end = body.wd_period_end;
+            }
+        } else {
+            let wd_history = body.wd_history !== undefined ? body.wd_history : false;
+            objRequest = checkPeriodFix(wd_history, body.wd_period_fix);
+        }
+
+        // Запрашиваем записи за перод, который указан в objRequest
+        RecordsReq.getPersonalRecords(knex, objRequest, req.user.pepl_id)
+            .then(res => {
+                result = {
+                    status: STATUS.OK,
+                    payload: res
+                };
+
+                resolve(result);
+            })
+            .catch(err => {
+                console.error(err.status);
+                reject(err);
+            });
+    });
+};
 
 /**
  * Перенос записи на другое время или день

@@ -1,7 +1,7 @@
 'use strict';
 
-var utils = require('../utils/writer.js');
-var Tests = require('../service/TestsService');
+const utils = require('../utils/writer.js');
+const Tests = require('../service/TestsService');
 
 module.exports.accessTest = function accessTest (req, res, next) {
   var body = req.swagger.params['body'].value;
