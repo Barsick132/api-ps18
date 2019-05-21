@@ -29,9 +29,7 @@
     "swagger-tools": "0.10.1",
     "underscore": "^1.9.1",
     "uniqid": "^5.0.3",
-    "yaml-config": "^0.3.0"
-  },
-  "devDependencies": {
+    "yaml-config": "^0.3.0",
     "adm-zip": "^0.4.13"
   }
 }
