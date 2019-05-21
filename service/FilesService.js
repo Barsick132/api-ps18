@@ -349,7 +349,7 @@ exports.getFiles = function (req, body) {
  * returns inline_response_200_3
  **/
 exports.updFile = function (req, body) {
-    const METHOD = 'updFiles()';
+    const METHOD = 'updFile()';
     console.log(FILE, METHOD);
 
     return new Promise(function (resolve, reject) {

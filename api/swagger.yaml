@@ -203,7 +203,7 @@ paths:
       tags:
       - "files"
       summary: "Изменение файла тестов и/или рез-ов тестирований и/или ИПК (Psychologist)"
-      operationId: "updFiles"
+      operationId: "updFile"
       consumes:
       - "application/json"
       produces:

@@ -108,7 +108,7 @@ module.exports.getFiles = function getFiles(req, res, next) {
         });
 };
 
-module.exports.updFile = function updFiles(req, res, next) {
+module.exports.updFile = function updFile(req, res, next) {
     if (req.error) {
         utils.writeJson(res, {status: req.error});
         return;
