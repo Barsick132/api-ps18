@@ -190,3 +190,109 @@ exports.delFilesById = function (knex, files_id_arr) {
         .del()
         .returning(T.FILE.FILE_ID);
 };
+
+exports.getFileInfo = function (knex, file_id_arr) {
+    return knex(T.FILE.NAME)
+        .select()
+        .whereIn(T.FILE.FILE_ID, file_id_arr);
+};
+
+exports.getFiles = function (knex, body) {
+    return new Promise((resolve, reject) => {
+        const STATUS = {
+            BAD_REQUEST: 'BAD_REQUEST',
+            NOT_FOUND_VALID_FILES: 'NOT_FOUND_VALID_FILES',
+            UNKNOWN_ERROR: 'UNKONOWN_ERROR'
+        };
+
+        let result = {};
+
+        return new Promise((resolve, reject) => {
+            if (body.std_id !== undefined) {
+                return knex({std: T.STUDENTS.NAME, mm: T.MENTAL_MAP.NAME, file: T.FILE.NAME})
+                    .select('file.' + T.FILE.FILE_ID, 'file.' + T.FILE.FILE_NAME,
+                        'file.' + T.FILE.FILE_PATH, 'file.' + T.FILE.FILE_DT, 'file.' + T.FILE.FILE_SIZE,
+                        'file.' + T.FILE.FILE_MIMETYPE)
+                    .whereRaw('?? = ??', ['mm.' + T.MENTAL_MAP.STD_ID, 'std.' + T.STUDENTS.STD_ID])
+                    .whereRaw('?? = ??', ['mm.' + T.MENTAL_MAP.MM_ID, 'file.' + T.FILE.MM_ID])
+                    .where('std.' + T.STUDENTS.STD_ID, body.std_id)
+                    .orderBy('file.' + T.FILE.FILE_DT)
+                    .then(res => resolve(res))
+                    .catch(err => reject(err));
+            } else {
+                if (body.tr_id !== undefined) {
+                    return knex({tr: T.TEST_RESULTS.NAME, file: T.FILE.NAME})
+                        .select('file.' + T.FILE.FILE_ID, 'file.' + T.FILE.FILE_NAME,
+                            'file.' + T.FILE.FILE_PATH, 'file.' + T.FILE.FILE_DT, 'file.' + T.FILE.FILE_SIZE,
+                            'file.' + T.FILE.FILE_MIMETYPE)
+                        .whereRaw('?? = ??', ['tr.' + T.TEST_RESULTS.TR_ID, 'file.' + T.FILE.TR_ID])
+                        .where('tr.' + T.TEST_RESULTS.TR_ID, body.tr_id)
+                        .orderBy('file.' + T.FILE.FILE_DT)
+                        .then(res => resolve(res))
+                        .catch(err => reject(err));
+                } else {
+                    if (body.tst_id !== undefined) {
+                        return knex({tst: T.TESTS.NAME, file: T.FILE.NAME})
+                            .select('file.' + T.FILE.FILE_ID, 'file.' + T.FILE.FILE_NAME,
+                                'file.' + T.FILE.FILE_PATH, 'file.' + T.FILE.FILE_DT, 'file.' + T.FILE.FILE_SIZE,
+                                'file.' + T.FILE.FILE_MIMETYPE)
+                            .whereRaw('?? = ??', ['tst.' + T.TESTS.TST_ID, 'file.' + T.FILE.TST_ID])
+                            .where('tst.' + T.TESTS.TST_ID, body.tst_id)
+                            .orderBy('file.' + T.FILE.FILE_DT)
+                            .then(res => resolve(res))
+                            .catch(err => reject(err));
+                    } else {
+                        result = {message: STATUS.BAD_REQUEST};
+                        reject(result);
+                    }
+                }
+            }
+        })
+            .then(res => {
+                if (res.length === 0) {
+                    throw new Error(STATUS.NOT_FOUND_VALID_FILES)
+                }
+
+                resolve(res);
+            })
+            .catch(err => {
+                if (err.message === STATUS.NOT_FOUND_VALID_FILES ||
+                    err.message === STATUS.BAD_REQUEST) {
+                    result = {status: err.message};
+                } else {
+                    result = {status: STATUS.UNKNOWN_ERROR};
+                }
+                reject(result);
+            });
+    });
+};
+
+exports.updFile = function (knex, body) {
+    const STATUS = {
+        BAD_REQUEST: 'BAD_REQUEST'
+    };
+
+    return new Promise((resolve, reject) => {
+        if (body.file_name === undefined &&
+            body.file_path === undefined) {
+            reject({message: STATUS.BAD_REQUEST});
+        }
+
+        let reqObj = {};
+        if (body.file_name !== undefined) {
+            reqObj.file_name = body.file_name;
+        }
+        if (body.file_path !== undefined) {
+            reqObj.file_path = body.file_path;
+        }
+
+        return knex(T.FILE.NAME)
+            .update(reqObj)
+            .where(T.FILE.FILE_ID, body.file_id)
+            .returning([T.FILE.FILE_ID, T.FILE.FILE_NAME, T.FILE.FILE_PATH, T.FILE.FILE_SIZE,
+                T.FILE.FILE_MIMETYPE, T.FILE.FILE_DT])
+            .then(res => resolve(res))
+            .catch(err => reject(err));
+    });
+
+};

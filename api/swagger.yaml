@@ -3,7 +3,7 @@ swagger: "2.0"
 info:
   description: "Это API (swagger 2.0) системы автоматизации психолого-педагогическ\
     ого сопровождения субъектов образовательной деятельности для школы №18."
-  version: "1.0.25"
+  version: "1.0.27"
   title: "PsychoSys18"
   contact:
     email: "antony.nor@yandex.ru"
@@ -73,7 +73,7 @@ paths:
     post:
       tags:
       - "files"
-      summary: "Получение информации о файлах тестов/рез-ов тестирований/ИПК"
+      summary: "Получение информации о файлах тестов/рез-ов тестирований/ИПК (Psychologist)"
       operationId: "getFiles"
       consumes:
       - "application/json"
@@ -82,14 +82,14 @@ paths:
       parameters:
       - in: "body"
         name: "body"
-        description: "Либо ID студента, либо ID рез. тестирования, либо ID самого\
-          \ тестирования"
+        description: "1. Либо ID студента,\n2. либо ID рез. тестирования,\n3. либо\
+          \ ID самого тестирования"
         required: true
         schema:
           $ref: "#/definitions/body_1"
       responses:
         200:
-          description: "Статус запроса и файлы с информацией о них"
+          description: "Статус запроса и информация о файлах"
           schema:
             type: "object"
             required:
@@ -198,11 +198,11 @@ paths:
       - JWT: []
       x-swagger-router-controller: "Files"
     x-swagger-router-controller: "files"
-  /updFiles:
+  /updFile:
     post:
       tags:
       - "files"
-      summary: "Изменение файлов тестов и/или рез-ов тестирований и/или ИПК"
+      summary: "Изменение файла тестов и/или рез-ов тестирований и/или ИПК (Psychologist)"
       operationId: "updFiles"
       consumes:
       - "application/json"
@@ -227,7 +227,7 @@ paths:
                 type: "string"
                 example: "OK"
               payload:
-                $ref: "#/definitions/inline_response_200_1_payload"
+                $ref: "#/definitions/inline_response_200_3_payload"
         400:
           description: "Invalid data"
         default:
@@ -2332,11 +2332,20 @@ definitions:
         type: "string"
         format: "date-time"
         example: "2019-03-04T09:35:00.000Z"
+      file_size:
+        type: "integer"
+        format: "int32"
+        example: 716546
+      file_mimetype:
+        type: "string"
+        example: "application/jpeg"
     example:
       file_path: "/folder1"
+      file_mimetype: "application/jpeg"
       file_name: "Тест по профорейнтации"
       file_id: 3
       file_dt: "2019-03-04T09:35:00.000Z"
+      file_size: 716546
   inline_response_200_1:
     required:
     - "status"
@@ -2351,13 +2360,17 @@ definitions:
     example:
       payload:
       - file_path: "/folder1"
+        file_mimetype: "application/jpeg"
         file_name: "Тест по профорейнтации"
         file_id: 3
         file_dt: "2019-03-04T09:35:00.000Z"
+        file_size: 716546
       - file_path: "/folder1"
+        file_mimetype: "application/jpeg"
         file_name: "Тест по профорейнтации"
         file_id: 3
         file_dt: "2019-03-04T09:35:00.000Z"
+        file_size: 716546
       status: "OK"
   inline_response_200_2_payload_file_arr:
     required:
@@ -2472,6 +2485,40 @@ definitions:
       file_path:
         type: "string"
         example: "/folder1"
+  inline_response_200_3_payload:
+    required:
+    - "file_dt"
+    - "file_id"
+    - "file_name"
+    properties:
+      file_id:
+        type: "integer"
+        format: "int32"
+        example: 3
+      file_name:
+        type: "string"
+        example: "Тест по профорейнтации"
+      file_path:
+        type: "string"
+        example: "/folder1"
+      file_size:
+        type: "integer"
+        format: "int32"
+        example: 564515
+      file_mimetype:
+        type: "string"
+        example: "image/jpeg"
+      file_dt:
+        type: "string"
+        format: "date-time"
+        example: "2019-03-04T09:35:00.000Z"
+    example:
+      file_path: "/folder1"
+      file_mimetype: "image/jpeg"
+      file_name: "Тест по профорейнтации"
+      file_id: 3
+      file_dt: "2019-03-04T09:35:00.000Z"
+      file_size: 564515
   inline_response_200_3:
     required:
     - "status"
@@ -2480,13 +2527,15 @@ definitions:
         type: "string"
         example: "OK"
       payload:
-        $ref: "#/definitions/inline_response_200_1_payload"
+        $ref: "#/definitions/inline_response_200_3_payload"
     example:
       payload:
         file_path: "/folder1"
+        file_mimetype: "image/jpeg"
         file_name: "Тест по профорейнтации"
         file_id: 3
         file_dt: "2019-03-04T09:35:00.000Z"
+        file_size: 564515
       status: "OK"
   inline_response_200_4_payload:
     required:

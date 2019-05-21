@@ -6,8 +6,9 @@ const FilesReq = require('../requests/FilesReq');
 const ROLE = require('../constants').ROLE;
 const fs = require('fs');
 const async = require('async');
+const AdmZip = require('adm-zip');
 
-const FILE = './service/RecordsService.js';
+const FILE = './service/FilesService.js';
 
 /**
  * Добавление файлов тестов/рез-ов тестирований/ИПК
@@ -170,7 +171,7 @@ exports.delFiles = function (body) {
             resolve();
         }
     });
-}
+};
 
 
 /**
@@ -179,17 +180,117 @@ exports.delFiles = function (body) {
  * body List Массив ID файлов
  * returns inline_response_200
  **/
-exports.downloadFiles = function (body) {
-    return new Promise(function (resolve, reject) {
-        var examples = {};
-        if (Object.keys(examples).length > 0) {
-            resolve(examples[Object.keys(examples)[0]]);
-        } else {
-            resolve();
-        }
-    });
-}
+exports.downloadFiles = function (req, body) {
+    const METHOD = 'downloadFiles()';
+    console.log(FILE, METHOD);
 
+    return new Promise(function (resolve, reject) {
+        const STATUS = {
+            NOT_FOUND_FILES: 'NOT_FOUND_FILES',
+            ERROR_READING_FILES: 'ERROR_READING_FILES',
+            NOT_ACCESS: 'NOT_ACCESS',
+            NOT_AUTH: 'NOT_AUTH',
+            OK: 'OK'
+        };
+
+        let result = {};
+        let payload = {};
+
+        // Проверка аутентификации пользователя
+        if (!req.isAuthenticated()) {
+            console.error('Not Authenticated');
+            reject({status: STATUS.NOT_AUTH});
+            return;
+        }
+
+        if (!UsersReq.checkRole(req.user.roles, ROLE.PSYCHOLOGIST)) {
+            console.error('Not ' + ROLE.PSYCHOLOGIST);
+            reject({status: STATUS.NOT_ACCESS});
+            return;
+        }
+
+        FilesReq.getFileInfo(knex, body.map(item => item.file_id))
+            .then(res => {
+                if (res.length === 0) {
+                    result = {status: STATUS.NOT_FOUND_FILES};
+                    reject(result);
+                }
+
+                if (res.length > 1) {
+                    // Если файлов несколько
+                    const zip = new AdmZip();
+                    async.each(res, function (file, callback) {
+                        let dir;
+                        if (file.mm_id !== null && file.mm_id !== undefined) {
+                            dir = './public/mm/' + file.mm_id + '/';
+                        }
+                        if (file.tst_id !== null && file.tst_id !== undefined) {
+                            dir = './public/tst/' + file.tst_id + '/';
+                        }
+                        if (file.tr_id !== null && file.tr_id !== undefined) {
+                            dir = './public/tr/' + file.tr_id + '/';
+                        }
+
+
+                        let localPath = dir + file.file_id;
+
+                        try {
+                            zip.addLocalFile(localPath, localPath + "." + file.file_mimetype.split('/')[1]);
+                            callback();
+                        } catch (err) {
+                            console.error(err);
+                            callback(err);
+                        }
+
+
+                        /*
+                        fs.readFile(dir + file.file_id, function (err, data) {
+                            if (err) {
+                                console.error(err);
+                            } else {
+                                console.log(file.file_path + '/' + file.file_name + ' was read.');
+                                file.data = data;
+                            }
+
+                            callback();
+                        });
+                        */
+
+                    }, function (err) {
+
+                        if (err) {
+                            // One of the iterations produced an error.
+                            // All processing will now stop.
+                            result = {status: STATUS.ERROR_READING_FILES};
+                            reject(result);
+                        } else {
+                            zip.toBuffer(function (res) {
+                                resolve(res);
+                            }, function (err) {
+                                result = {status: 'ERR_CREATED_BUFFER_ARCHIVE'};
+                                reject(result);
+                            });
+                            /*
+                            res.forEach(item => {
+                                item.data = JSON.stringify(item.data);
+                            });
+                            result = {
+                                status: STATUS.OK,
+                                payload: res
+                            };
+                             */
+                        }
+                    });
+                } else {
+                    // Если 1 файл
+                }
+            })
+            .catch(err => {
+                console.error(err.status);
+                reject(err);
+            })
+    });
+};
 
 /**
  * Получение информации о файлах тестов/рез-ов тестирований/ИПК
@@ -197,30 +298,48 @@ exports.downloadFiles = function (body) {
  * body Body_1 Либо ID студента, либо ID рез. тестирования, либо ID самого тестирования
  * returns inline_response_200_1
  **/
-exports.getFiles = function (body) {
+exports.getFiles = function (req, body) {
+    const METHOD = 'getFiles()';
+    console.log(FILE, METHOD);
+
     return new Promise(function (resolve, reject) {
-        var examples = {};
-        examples['application/json'] = {
-            "payload": [{
-                "file_path": "/folder1",
-                "file_name": "Тест по профорейнтации",
-                "file_id": 3,
-                "file_dt": "2019-03-04T09:35:00.000Z"
-            }, {
-                "file_path": "/folder1",
-                "file_name": "Тест по профорейнтации",
-                "file_id": 3,
-                "file_dt": "2019-03-04T09:35:00.000Z"
-            }],
-            "status": "OK"
+        const STATUS = {
+            NOT_ACCESS: 'NOT_ACCESS',
+            NOT_AUTH: 'NOT_AUTH',
+            OK: 'OK'
         };
-        if (Object.keys(examples).length > 0) {
-            resolve(examples[Object.keys(examples)[0]]);
-        } else {
-            resolve();
+
+        let result = {};
+        let payload = {};
+
+        // Проверка аутентификации пользователя
+        if (!req.isAuthenticated()) {
+            console.error('Not Authenticated');
+            reject({status: STATUS.NOT_AUTH});
+            return;
         }
+
+        if (!UsersReq.checkRole(req.user.roles, ROLE.PSYCHOLOGIST)) {
+            console.error('Not ' + ROLE.PSYCHOLOGIST);
+            reject({status: STATUS.NOT_ACCESS});
+            return;
+        }
+
+        FilesReq.getFiles(knex, body)
+            .then(res => {
+                result = {
+                    status: STATUS.OK,
+                    payload: res
+                };
+
+                resolve(result);
+            })
+            .catch(err => {
+                console.error(err.status);
+                reject(err);
+            })
     });
-}
+};
 
 
 /**
@@ -229,23 +348,57 @@ exports.getFiles = function (body) {
  * body Body_3 ID файла, его имя и путь
  * returns inline_response_200_3
  **/
-exports.updFiles = function (body) {
+exports.updFile = function (req, body) {
+    const METHOD = 'updFiles()';
+    console.log(FILE, METHOD);
+
     return new Promise(function (resolve, reject) {
-        var examples = {};
-        examples['application/json'] = {
-            "payload": {
-                "file_path": "/folder1",
-                "file_name": "Тест по профорейнтации",
-                "file_id": 3,
-                "file_dt": "2019-03-04T09:35:00.000Z"
-            },
-            "status": "OK"
+        const STATUS = {
+            ERR_UPD_FILE: 'ERR_UPD_FILE',
+            UNKNOWN_ERROR: 'UNKNOWN_ERROR',
+            BAD_REQUEST: 'BAD_REQUEST',
+            NOT_ACCESS: 'NOT_ACCESS',
+            NOT_AUTH: 'NOT_AUTH',
+            OK: 'OK'
         };
-        if (Object.keys(examples).length > 0) {
-            resolve(examples[Object.keys(examples)[0]]);
-        } else {
-            resolve();
+
+        let result = {};
+
+        // Проверка аутентификации пользователя
+        if (!req.isAuthenticated()) {
+            console.error('Not Authenticated');
+            reject({status: STATUS.NOT_AUTH});
+            return;
         }
+
+        if (!UsersReq.checkRole(req.user.roles, ROLE.PSYCHOLOGIST)) {
+            console.error('Not ' + ROLE.PSYCHOLOGIST);
+            reject({status: STATUS.NOT_ACCESS});
+            return;
+        }
+
+        FilesReq.updFile(knex, body)
+            .then(res => {
+                if (res.length === 0) {
+                    throw new Error(STATUS.BAD_REQUEST);
+                }
+
+                result = {
+                    status: STATUS.OK,
+                    payload: res
+                };
+
+                resolve(result);
+            })
+            .catch(err => {
+                if (err.message === STATUS.BAD_REQUEST ||
+                    err.message === STATUS.ERR_UPD_FILE) {
+                    result = {status: err.message}
+                } else {
+                    result = {status: STATUS.UNKNOWN_ERROR}
+                }
+                reject(result);
+            })
     });
-}
+};
 

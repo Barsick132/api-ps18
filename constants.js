@@ -99,7 +99,9 @@ module.exports.TABLES = {
         TST_ID: 'tst_id',
         FILE_NAME: 'file_name',
         FILE_PATH: 'file_path',
-        FILE_DT: 'file_dt'
+        FILE_DT: 'file_dt',
+        FILE_SIZE: 'file_size',
+        FILE_MIMETYPE: 'file_mimetype'
     },
     RECORDS: {
         NAME: 'records',

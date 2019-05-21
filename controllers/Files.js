@@ -3,6 +3,8 @@
 const utils = require('../utils/writer.js');
 const Files = require('../service/FilesService');
 const FILE_SIZE = require('../constants').FILE_SIZE;
+const fs = require('fs');
+const stream = require('stream');
 
 module.exports.addFiles = function addFiles(req, res, next) {
     if (req.error) {
@@ -29,16 +31,16 @@ module.exports.addFiles = function addFiles(req, res, next) {
         }
     });
 
-    for(let i=0; i<body.files.length; i++){
+    for (let i = 0; i < body.files.length; i++) {
         if (req.files[body.files[i].id][0].size <= FILE_SIZE) {
             body.files[i].file = req.files[body.files[i].id][0];
-        }else {
+        } else {
             body.files.splice(i, 1);
             i--;
         }
     }
 
-    if (body.files.length===0) {
+    if (body.files.length === 0) {
         utils.writeJson(res, {status: 'NOT_FOUND_VALID_FILES'});
         return;
     }
@@ -64,10 +66,26 @@ module.exports.delFiles = function delFiles(req, res, next) {
 };
 
 module.exports.downloadFiles = function downloadFiles(req, res, next) {
-    var body = req.swagger.params['body'].value;
-    Files.downloadFiles(body)
+    if (req.error) {
+        utils.writeJson(res, {status: req.error});
+        return;
+    }
+
+    const body = req.swagger.params['body'].value;
+    Files.downloadFiles(req, body)
         .then(function (response) {
-            utils.writeJson(res, response);
+            // res.end(fs.readFileSync(dir + 77, {filename: file.file_name + '.jpeg'}));
+            //var fileContents = Buffer.from(fileData, "base64");
+
+            const readStream = new stream.PassThrough();
+            readStream.end(response);
+
+            res.writeHead(200, {
+                'Content-Disposition': 'attachment; filename=zip-archive.zip',
+                'Content-Type': 'application/octet-stream'
+            });
+
+            readStream.pipe(res);
         })
         .catch(function (response) {
             utils.writeJson(res, response);
@@ -75,8 +93,13 @@ module.exports.downloadFiles = function downloadFiles(req, res, next) {
 };
 
 module.exports.getFiles = function getFiles(req, res, next) {
-    var body = req.swagger.params['body'].value;
-    Files.getFiles(body)
+    if (req.error) {
+        utils.writeJson(res, {status: req.error});
+        return;
+    }
+
+    const body = req.swagger.params['body'].value;
+    Files.getFiles(req, body)
         .then(function (response) {
             utils.writeJson(res, response);
         })
@@ -85,9 +108,14 @@ module.exports.getFiles = function getFiles(req, res, next) {
         });
 };
 
-module.exports.updFiles = function updFiles(req, res, next) {
-    var body = req.swagger.params['body'].value;
-    Files.updFiles(body)
+module.exports.updFile = function updFiles(req, res, next) {
+    if (req.error) {
+        utils.writeJson(res, {status: req.error});
+        return;
+    }
+
+    const body = req.swagger.params['body'].value;
+    Files.updFile(req, body)
         .then(function (response) {
             utils.writeJson(res, response);
         })
