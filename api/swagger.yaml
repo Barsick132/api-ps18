@@ -201,27 +201,27 @@ paths:
   /updFile:
     post:
       tags:
-      - "files"
+        - "files"
       summary: "Изменение файла тестов и/или рез-ов тестирований и/или ИПК (Psychologist)"
       operationId: "updFile"
       consumes:
-      - "application/json"
+        - "application/json"
       produces:
-      - "application/json"
+        - "application/json"
       parameters:
-      - in: "body"
-        name: "body"
-        description: "ID файла, его имя и путь"
-        required: true
-        schema:
-          $ref: "#/definitions/body_2"
+        - in: "body"
+          name: "body"
+          description: "ID файла, его имя и путь"
+          required: true
+          schema:
+            $ref: "#/definitions/body_2"
       responses:
         200:
           description: "Статус запроса и обновленная информация о файле"
           schema:
             type: "object"
             required:
-            - "status"
+              - "status"
             properties:
               status:
                 type: "string"
@@ -233,7 +233,7 @@ paths:
         default:
           description: "Unknown Error"
       security:
-      - JWT: []
+        - JWT: []
       x-swagger-router-controller: "Files"
     x-swagger-router-controller: "files"
   /delFiles:
