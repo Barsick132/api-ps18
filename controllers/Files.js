@@ -55,8 +55,13 @@ module.exports.addFiles = function addFiles(req, res, next) {
 };
 
 module.exports.delFiles = function delFiles(req, res, next) {
-    var body = req.swagger.params['body'].value;
-    Files.delFiles(body)
+    if (req.error) {
+        utils.writeJson(res, {status: req.error});
+        return;
+    }
+
+    const body = req.swagger.params['body'].value;
+    Files.delFiles(req, body)
         .then(function (response) {
             utils.writeJson(res, response);
         })

@@ -188,7 +188,7 @@ exports.delFilesById = function (knex, files_id_arr) {
     return knex(T.FILE.NAME)
         .whereIn(T.FILE.FILE_ID, files_id_arr)
         .del()
-        .returning(T.FILE.FILE_ID);
+        .returning('*');
 };
 
 exports.getFileInfo = function (knex, file_id_arr) {

@@ -152,24 +152,103 @@ exports.addFiles = function (req, body) {
  * body List Массив ID файлов
  * returns inline_response_200_4
  **/
-exports.delFiles = function (body) {
+exports.delFiles = function (req, body) {
+    const METHOD = 'delFiles()';
+    console.log(FILE, METHOD);
+
     return new Promise(function (resolve, reject) {
-        var examples = {};
-        examples['application/json'] = {
-            "payload": [{
-                "file_del_status": true,
-                "file_id": 3
-            }, {
-                "file_del_status": true,
-                "file_id": 3
-            }],
-            "status": "OK"
+        const STATUS = {
+            ERROR_DELETED_FILES: 'ERROR_DELETED_FILES',
+            NOT_FOUND_DELETED_FILES: 'NOT_FOUND_DELETED_FILES',
+            UNKNOWN_ERROR: 'UNKNOWN_ERROR',
+            NOT_ACCESS: 'NOT_ACCESS',
+            NOT_AUTH: 'NOT_AUTH',
+            OK: 'OK'
         };
-        if (Object.keys(examples).length > 0) {
-            resolve(examples[Object.keys(examples)[0]]);
-        } else {
-            resolve();
+
+        let result = {};
+        let payload = {};
+
+        // Проверка аутентификации пользователя
+        if (!req.isAuthenticated()) {
+            console.error('Not Authenticated');
+            reject({status: STATUS.NOT_AUTH});
+            return;
         }
+
+        if (!UsersReq.checkRole(req.user.roles, ROLE.PSYCHOLOGIST)) {
+            console.error('Not ' + ROLE.PSYCHOLOGIST);
+            reject({status: STATUS.NOT_ACCESS});
+            return;
+        }
+
+        FilesReq.delFilesById(knex, body.map(file => file.file_id))
+            .then(res => {
+                if (res.length === 0) {
+                    throw new Error(STATUS.NOT_FOUND_DELETED_FILES);
+                }
+
+                console.log('Deleted ' + res.length + ' files from DB');
+                res.forEach(file => {
+                    let dir;
+                    if (file.mm_id !== null && file.mm_id !== undefined) {
+                        dir = './public/mm/' + file.mm_id + '/';
+                    }
+                    if (file.tst_id !== null && file.tst_id !== undefined) {
+                        dir = './public/tst/' + file.tst_id + '/';
+                    }
+                    if (file.tr_id !== null && file.tr_id !== undefined) {
+                        dir = './public/tr/' + file.tr_id + '/';
+                    }
+
+                    async.each(res, function (file, callback) {
+
+                        fs.unlink(dir + file.file_id,
+                            function (err) {
+                                if (err) {
+                                    console.error(err);
+                                } else {
+                                    console.log(file.file_path + '/' + file.file_name + ' was deleted.');
+                                    callback();
+                                }
+                            });
+
+                    }, function (err) {
+
+                        if (err) {
+                            // One of the iterations produced an error.
+                            // All processing will now stop.
+                            result = {status: STATUS.ERROR_DELETED_FILES};
+                            reject(result);
+                        } else {
+                            console.log('All files have been processed successfully');
+                            payload = [];
+                            res.forEach(file_db => {
+                                payload.push({
+                                    file_id: file_db.file_id
+                                })
+                            });
+
+                            result = {
+                                status: STATUS.OK,
+                                payload: payload
+                            };
+
+                            resolve(result);
+                        }
+                    });
+                })
+            })
+            .catch(err => {
+                console.error(err);
+                if (err.message === STATUS.NOT_FOUND_DELETED_FILES ||
+                    err.message === STATUS.ERROR_DELETED_FILES) {
+                    result = {status: err.message};
+                } else {
+                    result = {status: STATUS.UNKNOWN_ERROR};
+                }
+                reject(result);
+            })
     });
 };
 

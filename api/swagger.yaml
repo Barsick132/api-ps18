@@ -3,7 +3,7 @@ swagger: "2.0"
 info:
   description: "Это API (swagger 2.0) системы автоматизации психолого-педагогическ\
     ого сопровождения субъектов образовательной деятельности для школы №18."
-  version: "1.0.27"
+  version: "1.0.28"
   title: "PsychoSys18"
   contact:
     email: "antony.nor@yandex.ru"
@@ -201,27 +201,27 @@ paths:
   /updFile:
     post:
       tags:
-        - "files"
+      - "files"
       summary: "Изменение файла тестов и/или рез-ов тестирований и/или ИПК (Psychologist)"
       operationId: "updFile"
       consumes:
-        - "application/json"
+      - "application/json"
       produces:
-        - "application/json"
+      - "application/json"
       parameters:
-        - in: "body"
-          name: "body"
-          description: "ID файла, его имя и путь"
-          required: true
-          schema:
-            $ref: "#/definitions/body_2"
+      - in: "body"
+        name: "body"
+        description: "ID файла, его имя и путь"
+        required: true
+        schema:
+          $ref: "#/definitions/body_2"
       responses:
         200:
           description: "Статус запроса и обновленная информация о файле"
           schema:
             type: "object"
             required:
-              - "status"
+            - "status"
             properties:
               status:
                 type: "string"
@@ -233,14 +233,14 @@ paths:
         default:
           description: "Unknown Error"
       security:
-        - JWT: []
+      - JWT: []
       x-swagger-router-controller: "Files"
     x-swagger-router-controller: "files"
   /delFiles:
     post:
       tags:
       - "files"
-      summary: "Удаление файлов тестов и/или рез-ов тестирований и/или ИПК"
+      summary: "Удаление файлов тестов и/или рез-ов тестирований и/или ИПК (Psychologist)"
       operationId: "delFiles"
       consumes:
       - "application/json"
@@ -269,7 +269,7 @@ paths:
               payload:
                 type: "array"
                 items:
-                  $ref: "#/definitions/inline_response_200_4_payload"
+                  $ref: "#/definitions/body"
         400:
           description: "Invalid data"
         default:
@@ -2262,6 +2262,8 @@ definitions:
         type: "integer"
         format: "int32"
         example: 3
+    example:
+      file_id: 3
   inline_response_200_payload:
     required:
     - "file"
@@ -2537,21 +2539,6 @@ definitions:
         file_dt: "2019-03-04T09:35:00.000Z"
         file_size: 564515
       status: "OK"
-  inline_response_200_4_payload:
-    required:
-    - "file_del_status"
-    - "file_id"
-    properties:
-      file_id:
-        type: "integer"
-        format: "int32"
-        example: 3
-      file_del_status:
-        type: "boolean"
-        example: true
-    example:
-      file_del_status: true
-      file_id: 3
   inline_response_200_4:
     required:
     - "status"
@@ -2562,13 +2549,11 @@ definitions:
       payload:
         type: "array"
         items:
-          $ref: "#/definitions/inline_response_200_4_payload"
+          $ref: "#/definitions/body"
     example:
       payload:
-      - file_del_status: true
-        file_id: 3
-      - file_del_status: true
-        file_id: 3
+      - file_id: 3
+      - file_id: 3
       status: "OK"
   addTest_file_arr:
     required:
@@ -4655,6 +4640,7 @@ definitions:
       emp_vk:
         type: ["string", "null"]
         example: "empadmin"
+        x-nullable: tru
   updPersonalData_prnt_data:
     properties:
       prnt_city:
