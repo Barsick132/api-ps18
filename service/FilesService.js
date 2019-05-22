@@ -92,11 +92,11 @@ exports.addFiles = function (req, body) {
                             file.file.buffer, function (err) {
                                 if (err) {
                                     console.log(err);
+                                    callback(err);
                                 } else {
                                     console.log(file.file_path + '/' + file.file_name + ' was updated.');
+                                    callback();
                                 }
-
-                                callback();
                             });
 
                     }, function (err) {
@@ -207,6 +207,7 @@ exports.delFiles = function (req, body) {
                             function (err) {
                                 if (err) {
                                     console.error(err);
+                                    callback(err);
                                 } else {
                                     console.log(file.file_path + '/' + file.file_name + ' was deleted.');
                                     callback();
