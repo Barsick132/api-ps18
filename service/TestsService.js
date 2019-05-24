@@ -16,19 +16,48 @@ const FILE = './service/TestsService.js';
  * body Body_7 ID теста, ID студента и статус открытия доступа
  * returns inline_response_200_6
  **/
-exports.accessTest = function (body) {
+exports.accessTests = function (req, body) {
+    const METHOD = 'accessTests()';
+    console.log(FILE, METHOD);
+
     return new Promise(function (resolve, reject) {
-        var examples = {};
-        examples['application/json'] = {
-            "status": "OK"
+        const STATUS = {
+            NOT_ACCESS: 'NOT_ACCESS',
+            NOT_AUTH: 'NOT_AUTH',
+            OK: 'OK'
         };
-        if (Object.keys(examples).length > 0) {
-            resolve(examples[Object.keys(examples)[0]]);
-        } else {
-            resolve();
+
+        let result = {};
+        let payload = {};
+
+        // Проверка аутентификации пользователя
+        if (!req.isAuthenticated()) {
+            console.error('Not Authenticated');
+            reject({status: STATUS.NOT_AUTH});
+            return;
         }
+
+        if (!UsersReq.checkRole(req.user.roles, ROLE.PSYCHOLOGIST)) {
+            console.error('Not ' + ROLE.PSYCHOLOGIST);
+            reject({status: STATUS.NOT_ACCESS});
+            return;
+        }
+
+        TestsReq.accessTests(knex, body)
+            .then(res => {
+                result = {
+                    status: STATUS.OK,
+                    payload: res
+                };
+
+                resolve(result);
+            })
+            .catch(err => {
+                console.error(err.status);
+                reject(err);
+            });
     });
-}
+};
 
 
 /**
@@ -181,19 +210,54 @@ exports.addTestResult = function (body) {
  * body Body_6 ID теста и его новое имя
  * returns inline_response_200_6
  **/
-exports.changeTestName = function (body) {
+exports.changeTestName = function (req, body) {
+    const METHOD = 'changeTestName()';
+    console.log(FILE, METHOD);
+
     return new Promise(function (resolve, reject) {
-        var examples = {};
-        examples['application/json'] = {
-            "status": "OK"
+        const STATUS = {
+            UNKNOWN_ERROR: 'UNKNOWN_ERROR',
+            NOT_FOUND_UPDATED_TESTS: 'NOT_FOUND_UPDATED_TESTS',
+            NOT_ACCESS: 'NOT_ACCESS',
+            NOT_AUTH: 'NOT_AUTH',
+            OK: 'OK'
         };
-        if (Object.keys(examples).length > 0) {
-            resolve(examples[Object.keys(examples)[0]]);
-        } else {
-            resolve();
+
+        let result = {};
+        let payload = {};
+
+        // Проверка аутентификации пользователя
+        if (!req.isAuthenticated()) {
+            console.error('Not Authenticated');
+            reject({status: STATUS.NOT_AUTH});
+            return;
         }
+
+        if (!UsersReq.checkRole(req.user.roles, ROLE.PSYCHOLOGIST)) {
+            console.error('Not ' + ROLE.PSYCHOLOGIST);
+            reject({status: STATUS.NOT_ACCESS});
+            return;
+        }
+
+        TestsReq.changeTestName(knex, body)
+            .then(res => {
+                if (res.length === 0) {
+                    throw new Error(STATUS.NOT_FOUND_UPDATED_TESTS);
+                }
+
+                result = {status: STATUS.OK};
+                resolve(result);
+            })
+            .catch(err => {
+                if (err.message === STATUS.NOT_FOUND_UPDATED_TESTS) {
+                    result = {status: STATUS.NOT_FOUND_UPDATED_TESTS};
+                } else {
+                    result = {status: STATUS.UNKNOWN_ERROR};
+                }
+                reject(result);
+            });
     });
-}
+};
 
 
 /**
@@ -243,28 +307,56 @@ exports.delTestResult = function (body) {
  *
  * returns inline_response_200_7
  **/
-exports.getTest = function () {
+exports.getTests = function (req) {
+    const METHOD = 'getTests()';
+    console.log(FILE, METHOD);
+
     return new Promise(function (resolve, reject) {
-        var examples = {};
-        examples['application/json'] = {
-            "payload": [{
-                "tst_name": "Тест по профорейнтации",
-                "tst_online": false,
-                "tst_id": 1
-            }, {
-                "tst_name": "Тест по профорейнтации",
-                "tst_online": false,
-                "tst_id": 1
-            }],
-            "status": "OK"
+        const STATUS = {
+            NOT_ACCESS: 'NOT_ACCESS',
+            NOT_AUTH: 'NOT_AUTH',
+            OK: 'OK'
         };
-        if (Object.keys(examples).length > 0) {
-            resolve(examples[Object.keys(examples)[0]]);
-        } else {
-            resolve();
+
+        let result = {};
+
+        // Проверка аутентификации пользователя
+        if (!req.isAuthenticated()) {
+            console.error('Not Authenticated');
+            reject({status: STATUS.NOT_AUTH});
+            return;
         }
+
+        let role = req.user.roles.find(role => role === ROLE.PSYCHOLOGIST);
+        if (role === undefined) {
+            role = req.user.roles.find(role => role === ROLE.STUDENT);
+        }
+        if (role === undefined) {
+            console.error('Not ' + ROLE.PSYCHOLOGIST + ' and Not ' + ROLE.STUDENT);
+            reject({status: STATUS.NOT_ACCESS});
+            return;
+        }
+
+        let body = {
+            pepl_id: req.user.pepl_id,
+            role: role
+        };
+
+        TestsReq.getTests(knex, body)
+            .then(res => {
+                result = {
+                    status: STATUS.OK,
+                    payload: res
+                };
+
+                resolve(result);
+            })
+            .catch(err => {
+                console.error(err.status);
+                reject(err);
+            })
     });
-}
+};
 
 
 /**

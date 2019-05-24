@@ -4,9 +4,14 @@ const utils = require('../utils/writer.js');
 const Tests = require('../service/TestsService');
 const FILE_SIZE = require('../constants').FILE_SIZE;
 
-module.exports.accessTest = function accessTest(req, res, next) {
-    var body = req.swagger.params['body'].value;
-    Tests.accessTest(body)
+module.exports.accessTests = function accessTests(req, res, next) {
+    if (req.error) {
+        utils.writeJson(res, {status: req.error});
+        return;
+    }
+
+    const body = req.swagger.params['body'].value;
+    Tests.accessTests(req, body)
         .then(function (response) {
             utils.writeJson(res, response);
         })
@@ -75,8 +80,13 @@ module.exports.addTestResult = function addTestResult(req, res, next) {
 };
 
 module.exports.changeTestName = function changeTestName(req, res, next) {
-    var body = req.swagger.params['body'].value;
-    Tests.changeTestName(body)
+    if (req.error) {
+        utils.writeJson(res, {status: req.error});
+        return;
+    }
+
+    const body = req.swagger.params['body'].value;
+    Tests.changeTestName(req, body)
         .then(function (response) {
             utils.writeJson(res, response);
         })
@@ -107,8 +117,13 @@ module.exports.delTestResult = function delTestResult(req, res, next) {
         });
 };
 
-module.exports.getTest = function getTest(req, res, next) {
-    Tests.getTest()
+module.exports.getTests = function getTests(req, res, next) {
+    if (req.error) {
+        utils.writeJson(res, {status: req.error});
+        return;
+    }
+
+    Tests.getTests(req)
         .then(function (response) {
             utils.writeJson(res, response);
         })
