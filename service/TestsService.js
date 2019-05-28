@@ -7,6 +7,7 @@ const FilesReq = require('../requests/FilesReq');
 const ROLE = require('../constants').ROLE;
 const fs = require('fs');
 const async = require('async');
+const rimraf = require("rimraf");
 
 const FILE = './service/TestsService.js';
 
@@ -266,19 +267,90 @@ exports.changeTestName = function (req, body) {
  * body Body_5 ID теста
  * returns inline_response_200_6
  **/
-exports.delTest = function (body) {
+exports.delTests = function (req, body) {
+    const METHOD = 'delTests()';
+    console.log(FILE, METHOD);
+
     return new Promise(function (resolve, reject) {
-        var examples = {};
-        examples['application/json'] = {
-            "status": "OK"
+        const STATUS = {
+            ERROR_DELETED_FILES: 'ERROR_DELETED_FILES',
+            NOT_FOUND_DELETED_TESTS: 'NOT_FOUND_DELETED_TESTS',
+            UNKNOWN_ERROR: 'UNKNOWN_ERROR',
+            NOT_ACCESS: 'NOT_ACCESS',
+            NOT_AUTH: 'NOT_AUTH',
+            OK: 'OK'
         };
-        if (Object.keys(examples).length > 0) {
-            resolve(examples[Object.keys(examples)[0]]);
-        } else {
-            resolve();
+
+        let result = {};
+        let payload = {};
+
+        // Проверка аутентификации пользователя
+        if (!req.isAuthenticated()) {
+            console.error('Not Authenticated');
+            reject({status: STATUS.NOT_AUTH});
+            return;
         }
+
+        if (!UsersReq.checkRole(req.user.roles, ROLE.PSYCHOLOGIST)) {
+            console.error('Not ' + ROLE.PSYCHOLOGIST);
+            reject({status: STATUS.NOT_ACCESS});
+            return;
+        }
+
+        TestsReq.delTests(knex, body.tst_id_arr)
+            .then(res => {
+                console.log('Deleted ' + res.tst_id_arr.length + ' Tests');
+
+                let file_arr = [];
+                res.file_arr.forEach(arr => {
+                    arr.forEach(item => file_arr.push(item));
+                });
+
+                async.each(res.file_arr, function (file, callback) {
+                    let dir = './public/tst/' + file[0].tst_id + '/';
+                    rimraf(dir, function (err) {
+                        if (err) {
+                            console.error(err);
+                        } else {
+                            console.log('Directory ' + dir + ' was deleted.');
+                        }
+                        callback();
+                    });
+                    /*fs.unlink(dir + file.file_id,
+                        function (err) {
+                            if (err) {
+                                console.error(err);
+                            } else {
+                                console.log(file.file_id + ' was deleted.');
+                            }
+                            callback();
+                        });*/
+
+                }, function (err) {
+
+                    if (err) {
+                        // One of the iterations produced an error.
+                        // All processing will now stop.
+                        console.error(STATUS.ERROR_DELETED_FILES);
+                    } else {
+                        console.log('All files have been processed successfully');
+                    }
+                    payload = [];
+
+                    result = {
+                        status: STATUS.OK,
+                        payload: res.tst_id_arr
+                    };
+
+                    resolve(result);
+                });
+            })
+            .catch(err => {
+                console.log(err.status);
+                reject(err);
+            })
     });
-}
+};
 
 
 /**
@@ -365,22 +437,107 @@ exports.getTests = function (req) {
  * body Body_9 ID теста и/или ID студента
  * returns inline_response_200_9
  **/
-exports.getTestResult = function (body) {
+exports.getTestResult = function (req, body) {
+    const METHOD = 'getTestResult()';
+    console.log(FILE, METHOD);
+
     return new Promise(function (resolve, reject) {
-        var examples = {};
-        examples['application/json'] = {
-            "payload": [{
-                "tr_id": 1
-            }, {
-                "tr_id": 1
-            }],
-            "status": "OK"
+        const STATUS = {
+            UNKNOWN_ERROR: 'UNKNOWN_ERROR',
+            NOT_ACCESS: 'NOT_ACCESS',
+            NOT_AUTH: 'NOT_AUTH',
+            OK: 'OK'
         };
-        if (Object.keys(examples).length > 0) {
-            resolve(examples[Object.keys(examples)[0]]);
-        } else {
-            resolve();
+
+        let result = {};
+        let payload = {};
+
+        // Проверка аутентификации пользователя
+        if (!req.isAuthenticated()) {
+            console.error('Not Authenticated');
+            reject({status: STATUS.NOT_AUTH});
+            return;
         }
+
+        if (!UsersReq.checkRole(req.user.roles, ROLE.PSYCHOLOGIST)) {
+            console.error('Not ' + ROLE.PSYCHOLOGIST);
+            reject({status: STATUS.NOT_ACCESS});
+            return;
+        }
+
+        TestsReq.getTestResult(knex, body)
+            .then(res => {
+                let new_res = [];
+                if(res[0].std_id !== undefined){
+                    res.forEach(item => {
+                        let index = new_res.findIndex(i => i.std_id === item.std_id);
+                        if(index !== -1){
+                            new_res[index].file_arr.push({
+                                tr_id: item.tr_id,
+                                file_id: item.file_id,
+                                file_name: item.file_name,
+                                file_path: item.file_path,
+                                file_size: item.file_size,
+                                file_mimetype: item.file_mimetype,
+                                file_dt: item.file_dt
+                            })
+                        }else {
+                            new_res.push({
+                                std_id: item.std_id,
+                                file_arr: [{
+                                    tr_id: item.tr_id,
+                                    file_id: item.file_id,
+                                    file_name: item.file_name,
+                                    file_path: item.file_path,
+                                    file_size: item.file_size,
+                                    file_mimetype: item.file_mimetype,
+                                    file_dt: item.file_dt
+                                }]
+                            })
+                        }
+                    })
+                }
+                if(res[0].tst_id !== undefined){
+                    res.forEach(item => {
+                        let index = new_res.findIndex(i => i.tst_id === item.tst_id);
+                        if(index !== -1){
+                            new_res[index].file_arr.push({
+                                tr_id: item.tr_id,
+                                file_id: item.file_id,
+                                file_name: item.file_name,
+                                file_path: item.file_path,
+                                file_size: item.file_size,
+                                file_mimetype: item.file_mimetype,
+                                file_dt: item.file_dt
+                            })
+                        }else {
+                            new_res.push({
+                                tst_id: item.tst_id,
+                                file_arr: [{
+                                    tr_id: item.tr_id,
+                                    file_id: item.file_id,
+                                    file_name: item.file_name,
+                                    file_path: item.file_path,
+                                    file_size: item.file_size,
+                                    file_mimetype: item.file_mimetype,
+                                    file_dt: item.file_dt
+                                }]
+                            })
+                        }
+                    })
+                }
+
+                result = {
+                    status: STATUS.OK,
+                    payload: new_res
+                };
+
+                resolve(result);
+            })
+            .catch(err => {
+                console.error(err.status);
+                reject(err);
+            });
     });
-}
+};
 

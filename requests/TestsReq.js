@@ -177,10 +177,10 @@ exports.accessTests = function (knex, body) {
                     } else {
                         result = {status: STATUS.UNKNOWN_ERROR};
                     }
-                    if(err.code === "23505"){
+                    if (err.code === "23505") {
                         result = {status: STATUS.AVAILABLE_TESTS_ALREADY_EXISTS};
                     }
-                    if(err.code === "23503"){
+                    if (err.code === "23503") {
                         result = {status: STATUS.NOT_FOUND_TST_ID_FROM_ARR};
                     }
                     reject(result);
@@ -188,4 +188,143 @@ exports.accessTests = function (knex, body) {
                 })
         })
     })
+};
+
+exports.delTests = function (knex, tst_id_arr) {
+    const STATUS = {
+        TESTS_RESULTS_ARE_TIED_TO_THE_TEST: 'TESTS_RESULTS_ARE_TIED_TO_THE_TEST',
+        NOT_FOUND_DELETED_FILES: 'NOT_FOUND_DELETED_FILES',
+        NOT_FOUND_DELETED_TESTS: 'NOT_FOUND_DELETED_TESTS',
+        UNKNOWN_ERROR: 'UNKNOWN_ERROR'
+    };
+
+    let result = {};
+    let tst_id_arr_new = [];
+
+    return new Promise((resolve, reject) => {
+        knex.transaction(trx => {
+            return Promise.map(tst_id_arr, tst_id => {
+                return knex(T.FILE.NAME)
+                    .transacting(trx)
+                    .del()
+                    .where(T.FILE.TST_ID, tst_id)
+                    .whereExists(function () {
+                        this.select()
+                            .from(T.TESTS.NAME)
+                            .where(T.TESTS.TST_ID, tst_id)
+                            .andWhere(T.TESTS.TST_ONLINE, false);
+                    })
+                    .returning([T.FILE.FILE_ID, T.FILE.TST_ID]);
+            })
+                .then(res => {
+                    res = res.filter(arr => arr.length !== 0);
+
+                    if (res.length === 0) {
+                        throw new Error(STATUS.NOT_FOUND_DELETED_FILES);
+                    }
+
+                    result = {file_arr: res};
+
+                    res.forEach(file => {
+                        if (!tst_id_arr_new.some(item => item === file[0].tst_id)) {
+                            tst_id_arr_new.push(file[0].tst_id);
+                        }
+                    });
+
+                    return knex(T.AVAILABLE_TESTS.NAME)
+                        .transacting(trx)
+                        .del()
+                        .whereIn(T.AVAILABLE_TESTS.TST_ID, tst_id_arr_new);
+                })
+                .then(res => {
+                    return knex(T.TESTS.NAME)
+                        .transacting(trx)
+                        .del()
+                        .whereIn(T.TESTS.TST_ID, tst_id_arr_new)
+                        .returning(T.TESTS.TST_ID);
+                })
+                .then(res => {
+                    if (res.length === 0) {
+                        throw new Error(STATUS.NOT_FOUND_DELETED_TESTS);
+                    }
+
+                    result.tst_id_arr = res;
+                    resolve(result);
+
+                    trx.commit();
+                })
+                .catch(err => {
+                    if (err.message === STATUS.NOT_FOUND_DELETED_TESTS ||
+                        err.message === STATUS.NOT_FOUND_DELETED_FILES) {
+                        result = {status: err.message};
+                    } else {
+                        result = {status: STATUS.UNKNOWN_ERROR};
+                    }
+                    if (err.code === "23503") {
+                        result = {status: STATUS.TESTS_RESULTS_ARE_TIED_TO_THE_TEST}
+                    }
+                    reject(result);
+                    trx.rollback(err);
+                });
+        });
+    });
+
+
+};
+
+exports.getTestResult = function (knex, body) {
+    const STATUS = {
+        BAD_REQUEST: 'BAD_REQUEST',
+        UNKNOWN_ERROR: 'UNKNOWN_ERROR',
+        NOT_FOUND_RESULT_FILES: 'NOT_FOUND_RESULT_FILES'
+    };
+
+    let result = {};
+
+    return new Promise((resolve, reject) => {
+        return new Promise((resolve, reject) => {
+            if (body.tst_id !== undefined) {
+                return knex({file: T.FILE.NAME, tr: T.TEST_RESULTS.NAME})
+                    .select('tr.' + T.TEST_RESULTS.TR_ID, 'tr.' + T.TEST_RESULTS.STD_ID,
+                        'file.' + T.FILE.FILE_ID, 'file.' + T.FILE.FILE_NAME, 'file.' + T.FILE.FILE_PATH,
+                        'file.' + T.FILE.FILE_SIZE, 'file.' + T.FILE.FILE_MIMETYPE, 'file.' + T.FILE.FILE_DT)
+                    .whereRaw('?? = ??', ['tr.' + T.TEST_RESULTS.TR_ID, 'file.' + T.FILE.TR_ID])
+                    .where('tr.' + T.TEST_RESULTS.TST_ID, body.tst_id)
+                    .orderBy(T.FILE.FILE_ID, T.FILE.TR_ID)
+                    .then(res => resolve(res))
+                    .catch(err => reject(err));
+            } else {
+                if (body.std_id !== undefined) {
+                    return knex({file: T.FILE.NAME, tr: T.TEST_RESULTS.NAME})
+                        .select('tr.' + T.TEST_RESULTS.TR_ID, 'tr.' + T.TEST_RESULTS.TST_ID,
+                            'file.' + T.FILE.FILE_ID, 'file.' + T.FILE.FILE_NAME, 'file.' + T.FILE.FILE_PATH,
+                            'file.' + T.FILE.FILE_SIZE, 'file.' + T.FILE.FILE_MIMETYPE, 'file.' + T.FILE.FILE_DT)
+                        .where('tr.' + T.TEST_RESULTS.STD_ID, body.std_id)
+                        .whereRaw('?? = ??', ['tr.' + T.TEST_RESULTS.TR_ID, 'file.' + T.FILE.TR_ID])
+                        .orderBy(T.FILE.FILE_ID, T.FILE.TR_ID)
+                        .then(res => resolve(res))
+                        .catch(err => reject(err));
+                } else {
+                    reject({message: STATUS.BAD_REQUEST});
+                }
+            }
+        })
+            .then(res => {
+                if (res.length === 0) {
+                    throw new Error(STATUS.NOT_FOUND_RESULT_FILES)
+                }
+
+                console.log('Found ' + res.length + ' result files');
+                resolve(res);
+            })
+            .catch(err => {
+                if (err.message === STATUS.BAD_REQUEST ||
+                    err.message === STATUS.NOT_FOUND_RESULT_FILES) {
+                    result = {status: err.message};
+                } else {
+                    result = {status: STATUS.UNKNOWN_ERROR}
+                }
+                reject(result);
+            });
+    });
 };

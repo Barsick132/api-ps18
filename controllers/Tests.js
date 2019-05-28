@@ -95,9 +95,14 @@ module.exports.changeTestName = function changeTestName(req, res, next) {
         });
 };
 
-module.exports.delTest = function delTest(req, res, next) {
-    var body = req.swagger.params['body'].value;
-    Tests.delTest(body)
+module.exports.delTests = function delTests(req, res, next) {
+    if (req.error) {
+        utils.writeJson(res, {status: req.error});
+        return;
+    }
+
+    const body = req.swagger.params['body'].value;
+    Tests.delTests(req, body)
         .then(function (response) {
             utils.writeJson(res, response);
         })
@@ -133,8 +138,13 @@ module.exports.getTests = function getTests(req, res, next) {
 };
 
 module.exports.getTestResult = function getTestResult(req, res, next) {
-    var body = req.swagger.params['body'].value;
-    Tests.getTestResult(body)
+    if (req.error) {
+        utils.writeJson(res, {status: req.error});
+        return;
+    }
+
+    const body = req.swagger.params['body'].value;
+    Tests.getTestResult(req, body)
         .then(function (response) {
             utils.writeJson(res, response);
         })

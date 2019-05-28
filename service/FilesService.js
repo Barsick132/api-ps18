@@ -207,11 +207,10 @@ exports.delFiles = function (req, body) {
                             function (err) {
                                 if (err) {
                                     console.error(err);
-                                    callback(err);
                                 } else {
                                     console.log(file.file_path + '/' + file.file_name + ' was deleted.');
-                                    callback();
                                 }
+                                callback();
                             });
 
                     }, function (err) {
@@ -219,24 +218,23 @@ exports.delFiles = function (req, body) {
                         if (err) {
                             // One of the iterations produced an error.
                             // All processing will now stop.
-                            result = {status: STATUS.ERROR_DELETED_FILES};
-                            reject(result);
+                            console.error(STATUS.ERROR_DELETED_FILES);
                         } else {
                             console.log('All files have been processed successfully');
-                            payload = [];
-                            res.forEach(file_db => {
-                                payload.push({
-                                    file_id: file_db.file_id
-                                })
-                            });
-
-                            result = {
-                                status: STATUS.OK,
-                                payload: payload
-                            };
-
-                            resolve(result);
                         }
+                        payload = [];
+                        res.forEach(file_db => {
+                            payload.push({
+                                file_id: file_db.file_id
+                            })
+                        });
+
+                        result = {
+                            status: STATUS.OK,
+                            payload: payload
+                        };
+
+                        resolve(result);
                     });
                 })
             })
