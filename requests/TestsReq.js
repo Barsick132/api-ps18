@@ -328,3 +328,139 @@ exports.getTestResult = function (knex, body) {
             });
     });
 };
+
+exports.addTestResult = function (knex, body) {
+    return new Promise((resolve, reject) => {
+        const STATUS = {
+            FILE_AND_TEST_NAMES_MUST_BE_UNIQUE: 'FILE_AND_TEST_NAMES_MUST_BE_UNIQUE',
+            NOT_FOUND_ADDED_FILES: 'NOT_FOUND_ADDED_FILES',
+            NOT_ADDED_ERROR: 'NOT_ADDED_ERROR',
+            UNKNOWN_ERROR: 'UNKNOWN_ERROR'
+        };
+
+        let result = {};
+
+        knex.transaction(trx => {
+            return knex(T.TEST_RESULTS.NAME)
+                .transacting(trx)
+                .insert({
+                    tst_id: body.tst_id,
+                    std_id: body.std_id
+                })
+                .returning([T.TEST_RESULTS.TR_ID])
+                .then(res => {
+                    if (res.length === 0) {
+                        throw new Error(STATUS.NOT_ADDED_ERROR);
+                    }
+
+                    console.log('Test Result Created');
+                    return Promise.map(body.files, file => {
+                        return knex(T.FILE.NAME)
+                            .transacting(trx)
+                            .insert({
+                                tr_id: res[0].tr_id,
+                                file_name: file.file_name,
+                                file_path: '/',
+                                file_size: file.file.size,
+                                file_mimetype: file.file.mimetype
+                            })
+                            .returning('*');
+                    })
+                })
+                .then(res => {
+                    res = res.filter(arr => arr.length !== 0);
+                    res = res.map(arr => arr[0]);
+
+                    if (res.length === 0) {
+                        throw new Error(STATUS.NOT_FOUND_ADDED_FILES);
+                    }
+
+                    resolve(res);
+
+                    trx.commit();
+                })
+                .catch(err => {
+                    if (err.message === STATUS.NOT_ADDED_ERROR ||
+                        err.message === STATUS.NOT_FOUND_ADDED_FILES) {
+                        result = {status: err.message}
+                    } else {
+                        result = {status: STATUS.UNKNOWN_ERROR}
+                    }
+                    if (err.constraint === 'uniq_name') {
+                        result = {status: STATUS.FILE_AND_TEST_NAMES_MUST_BE_UNIQUE}
+                    }
+                    reject(result);
+                    trx.rollback(err);
+                });
+        })
+    });
+};
+
+exports.delTestsResult = function (knex, tr_id_arr) {
+    const STATUS = {
+        NOT_FOUND_DELETED_FILES: 'NOT_FOUND_DELETED_FILES',
+        NOT_FOUND_DELETED_TESTS_RESULT: 'NOT_FOUND_DELETED_TESTS_RESULT',
+        UNKNOWN_ERROR: 'UNKNOWN_ERROR'
+    };
+
+    let result = {};
+    let tr_id_arr_new = [];
+
+    return new Promise((resolve, reject) => {
+        knex.transaction(trx => {
+            return Promise.map(tr_id_arr, tr_id => {
+                return knex(T.FILE.NAME)
+                    .transacting(trx)
+                    .del()
+                    .where(T.FILE.TR_ID, tr_id)
+                    .whereExists(function () {
+                        this.select()
+                            .from(T.TEST_RESULTS.NAME)
+                            .where(T.TEST_RESULTS.TR_ID, tr_id);
+                    })
+                    .returning([T.FILE.FILE_ID, T.FILE.TR_ID]);
+            })
+                .then(res => {
+                    res = res.filter(arr => arr.length !== 0);
+
+                    if (res.length === 0) {
+                        throw new Error(STATUS.NOT_FOUND_DELETED_FILES);
+                    }
+
+                    result = {file_arr: res};
+
+                    res.forEach(file => {
+                        if (!tr_id_arr_new.some(item => item === file[0].tr_id)) {
+                            tr_id_arr_new.push(file[0].tr_id);
+                        }
+                    });
+
+                    return knex(T.TEST_RESULTS.NAME)
+                        .transacting(trx)
+                        .del()
+                        .whereIn(T.TEST_RESULTS.TR_ID, tr_id_arr_new)
+                        .returning(T.TEST_RESULTS.TR_ID);
+                })
+                .then(res => {
+                    if (res.length === 0) {
+                        throw new Error(STATUS.NOT_FOUND_DELETED_TESTS_RESULT);
+                    }
+
+                    result.tr_id_arr = res;
+                    resolve(result);
+
+                    trx.commit();
+                })
+                .catch(err => {
+                    if (err.message === STATUS.NOT_FOUND_DELETED_TESTS_RESULT ||
+                        err.message === STATUS.NOT_FOUND_DELETED_FILES) {
+                        result = {status: err.message};
+                    } else {
+                        result = {status: STATUS.UNKNOWN_ERROR};
+                    }
+                    reject(result);
+                    trx.rollback(err);
+                });
+        });
+    });
+};

@@ -187,22 +187,119 @@ exports.addTest = function (req, body) {
  * body Body_8 ID теста, ID студента и файлы с результатами
  * returns inline_response_200_8
  **/
-exports.addTestResult = function (body) {
+exports.addTestResult = function (req, body) {
+    const METHOD = 'addTestResult()';
+    console.log(FILE, METHOD);
+
     return new Promise(function (resolve, reject) {
-        var examples = {};
-        examples['application/json'] = {
-            "payload": {
-                "tr_id": 1
-            },
-            "status": "OK"
+        const STATUS = {
+            ERROR_SAVING_FILES: 'ERROR_SAVING_FILES',
+            NOT_ACCESS: 'NOT_ACCESS',
+            NOT_AUTH: 'NOT_AUTH',
+            OK: 'OK'
         };
-        if (Object.keys(examples).length > 0) {
-            resolve(examples[Object.keys(examples)[0]]);
-        } else {
-            resolve();
+
+        let result = {};
+        let payload = {};
+
+        // Проверка аутентификации пользователя
+        if (!req.isAuthenticated()) {
+            console.error('Not Authenticated');
+            reject({status: STATUS.NOT_AUTH});
+            return;
         }
+
+        if (!UsersReq.checkRole(req.user.roles, ROLE.PSYCHOLOGIST)) {
+            console.error('Not ' + ROLE.PSYCHOLOGIST);
+            reject({status: STATUS.NOT_ACCESS});
+            return;
+        }
+
+        TestsReq.addTestResult(knex, body)
+            .then(res => {
+                res.forEach(file_db => {
+                    let file = body.files.find(file_info => file_info.file_name === file_db.file_name);
+                    if (file !== undefined) {
+                        file_db.file = file.file;
+                    }
+                });
+
+                let dir = './public/tr/' + res[0].tr_id + '/';
+                payload.tr_id = res[0].tr_id;
+                payload.tst_id = body.tst_id;
+                payload.std_id = body.std_id;
+
+                fs.mkdir(dir, {recursive: true}, (err) => {
+                    if (err) {
+                        result = {status: STATUS.ERROR_SAVING_FILES};
+                        reject(result);
+
+                        FilesReq.delFilesById(knex, res.map(file => file.file_id))
+                            .then(res => {
+                                console.log('Deleted ' + res.length + ' files');
+                            })
+                            .catch(err => {
+                                console.error('Error deleted files');
+                            });
+                    }
+                    async.each(res, function (file, callback) {
+
+                        fs.writeFile(dir + file.file_id,
+                            file.file.buffer, function (err) {
+                                if (err) {
+                                    console.log(err);
+                                    callback(err);
+                                } else {
+                                    console.log(file.file_path + '/' + file.file_name + ' was updated.');
+                                    callback();
+                                }
+                            });
+
+                    }, function (err) {
+
+                        if (err) {
+                            // One of the iterations produced an error.
+                            // All processing will now stop.
+                            result = {status: STATUS.ERROR_SAVING_FILES};
+                            reject(result);
+
+                            FilesReq.delFilesById(knex, res.map(file => file.file_id))
+                                .then(res => {
+                                    console.log('Deleted ' + res.length + ' files');
+                                })
+                                .catch(err => {
+                                    console.error('Error deleted files');
+                                })
+                        } else {
+                            console.log('All files have been processed successfully');
+                            payload.file_arr = [];
+                            res.forEach(file_db => {
+                                payload.file_arr.push({
+                                    file_id: file_db.file_id,
+                                    file_name: file_db.file_name,
+                                    file_path: file_db.file_path,
+                                    file_dt: file_db.file_dt,
+                                    file_size: file_db.file_size,
+                                    file_mimetype: file_db.file_mimetype
+                                })
+                            });
+
+                            result = {
+                                status: STATUS.OK,
+                                payload: payload
+                            };
+
+                            resolve(result);
+                        }
+                    });
+                });
+            })
+            .catch(err => {
+                console.error(err.status);
+                reject(err);
+            })
     });
-}
+};
 
 
 /**
@@ -359,19 +456,90 @@ exports.delTests = function (req, body) {
  * body Body_10 ID результата тестирования
  * returns inline_response_200_6
  **/
-exports.delTestResult = function (body) {
+exports.delTestsResult = function (req, body) {
+    const METHOD = 'delTestsResult()';
+    console.log(FILE, METHOD);
+
     return new Promise(function (resolve, reject) {
-        var examples = {};
-        examples['application/json'] = {
-            "status": "OK"
+        const STATUS = {
+            ERROR_DELETED_FILES: 'ERROR_DELETED_FILES',
+            NOT_FOUND_DELETED_TESTS: 'NOT_FOUND_DELETED_TESTS',
+            UNKNOWN_ERROR: 'UNKNOWN_ERROR',
+            NOT_ACCESS: 'NOT_ACCESS',
+            NOT_AUTH: 'NOT_AUTH',
+            OK: 'OK'
         };
-        if (Object.keys(examples).length > 0) {
-            resolve(examples[Object.keys(examples)[0]]);
-        } else {
-            resolve();
+
+        let result = {};
+        let payload = {};
+
+        // Проверка аутентификации пользователя
+        if (!req.isAuthenticated()) {
+            console.error('Not Authenticated');
+            reject({status: STATUS.NOT_AUTH});
+            return;
         }
+
+        if (!UsersReq.checkRole(req.user.roles, ROLE.PSYCHOLOGIST)) {
+            console.error('Not ' + ROLE.PSYCHOLOGIST);
+            reject({status: STATUS.NOT_ACCESS});
+            return;
+        }
+
+        TestsReq.delTestsResult(knex, body.tr_id_arr)
+            .then(res => {
+                console.log('Deleted ' + res.tr_id_arr.length + ' Tests Result');
+
+                let file_arr = [];
+                res.file_arr.forEach(arr => {
+                    arr.forEach(item => file_arr.push(item));
+                });
+
+                async.each(res.file_arr, function (file, callback) {
+                    let dir = './public/tr/' + file[0].tr_id + '/';
+                    rimraf(dir, function (err) {
+                        if (err) {
+                            console.error(err);
+                        } else {
+                            console.log('Directory ' + dir + ' was deleted.');
+                        }
+                        callback();
+                    });
+                    /*fs.unlink(dir + file.file_id,
+                        function (err) {
+                            if (err) {
+                                console.error(err);
+                            } else {
+                                console.log(file.file_id + ' was deleted.');
+                            }
+                            callback();
+                        });*/
+
+                }, function (err) {
+
+                    if (err) {
+                        // One of the iterations produced an error.
+                        // All processing will now stop.
+                        console.error(STATUS.ERROR_DELETED_FILES);
+                    } else {
+                        console.log('All files have been processed successfully');
+                    }
+                    payload = [];
+
+                    result = {
+                        status: STATUS.OK,
+                        payload: res.tr_id_arr
+                    };
+
+                    resolve(result);
+                });
+            })
+            .catch(err => {
+                console.log(err.status);
+                reject(err);
+            })
     });
-}
+};
 
 
 /**
@@ -468,10 +636,10 @@ exports.getTestResult = function (req, body) {
         TestsReq.getTestResult(knex, body)
             .then(res => {
                 let new_res = [];
-                if(res[0].std_id !== undefined){
+                if (res[0].std_id !== undefined) {
                     res.forEach(item => {
                         let index = new_res.findIndex(i => i.std_id === item.std_id);
-                        if(index !== -1){
+                        if (index !== -1) {
                             new_res[index].file_arr.push({
                                 tr_id: item.tr_id,
                                 file_id: item.file_id,
@@ -481,7 +649,7 @@ exports.getTestResult = function (req, body) {
                                 file_mimetype: item.file_mimetype,
                                 file_dt: item.file_dt
                             })
-                        }else {
+                        } else {
                             new_res.push({
                                 std_id: item.std_id,
                                 file_arr: [{
@@ -497,10 +665,10 @@ exports.getTestResult = function (req, body) {
                         }
                     })
                 }
-                if(res[0].tst_id !== undefined){
+                if (res[0].tst_id !== undefined) {
                     res.forEach(item => {
                         let index = new_res.findIndex(i => i.tst_id === item.tst_id);
-                        if(index !== -1){
+                        if (index !== -1) {
                             new_res[index].file_arr.push({
                                 tr_id: item.tr_id,
                                 file_id: item.file_id,
@@ -510,7 +678,7 @@ exports.getTestResult = function (req, body) {
                                 file_mimetype: item.file_mimetype,
                                 file_dt: item.file_dt
                             })
-                        }else {
+                        } else {
                             new_res.push({
                                 tst_id: item.tst_id,
                                 file_arr: [{

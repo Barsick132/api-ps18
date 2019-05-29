@@ -3,7 +3,7 @@ swagger: "2.0"
 info:
   description: "Это API (swagger 2.0) системы автоматизации психолого-педагогическ\
     ого сопровождения субъектов образовательной деятельности для школы №18."
-  version: "1.0.31"
+  version: "1.0.32"
   title: "PsychoSys18"
   contact:
     email: "antony.nor@yandex.ru"
@@ -515,22 +515,65 @@ paths:
     post:
       tags:
       - "tests"
-      summary: "Добавление результатов тестирований"
+      summary: "Добавление результатов тестирований (Psychologist)"
       operationId: "addTestResult"
       consumes:
       - "multipart/form-data"
       produces:
       - "application/json"
       parameters:
-      - in: "body"
-        name: "body"
-        description: "ID теста, ID студента и файлы с результатами"
+      - name: "file1"
+        in: "formData"
         required: true
-        schema:
-          $ref: "#/definitions/body_6"
+        type: "file"
+      - name: "file2"
+        in: "formData"
+        required: false
+        type: "file"
+      - name: "file3"
+        in: "formData"
+        required: false
+        type: "file"
+      - name: "file4"
+        in: "formData"
+        required: false
+        type: "file"
+      - name: "file5"
+        in: "formData"
+        required: false
+        type: "file"
+      - name: "file6"
+        in: "formData"
+        required: false
+        type: "file"
+      - name: "file7"
+        in: "formData"
+        required: false
+        type: "file"
+      - name: "file8"
+        in: "formData"
+        required: false
+        type: "file"
+      - name: "file9"
+        in: "formData"
+        required: false
+        type: "file"
+      - name: "file10"
+        in: "formData"
+        required: false
+        type: "file"
+      - name: "tst_id"
+        in: "formData"
+        required: true
+        type: "integer"
+      - name: "std_id"
+        in: "formData"
+        required: true
+        type: "integer"
       responses:
         200:
-          description: "Статус запроса и ID добавленного результата"
+          description: "Статус запроса и ID добавленного результата и данные прикр\
+            епленных файлов"
           schema:
             type: "object"
             required:
@@ -565,7 +608,7 @@ paths:
         description: "ID теста и/или ID студента"
         required: true
         schema:
-          $ref: "#/definitions/body_7"
+          $ref: "#/definitions/body_6"
       responses:
         200:
           description: "Статус запроса и ID найденных результатов тестирований"
@@ -589,12 +632,12 @@ paths:
       - JWT: []
       x-swagger-router-controller: "Tests"
     x-swagger-router-controller: "tests"
-  /delTestResult:
+  /delTestsResult:
     post:
       tags:
       - "tests"
-      summary: "Удаление результатов тестирования вместе с фалами"
-      operationId: "delTestResult"
+      summary: "Удаление результатов тестирования вместе с фалами (Psychologist)"
+      operationId: "delTestsResult"
       consumes:
       - "application/json"
       produces:
@@ -605,7 +648,7 @@ paths:
         description: "ID результата тестирования"
         required: true
         schema:
-          $ref: "#/definitions/body_8"
+          $ref: "#/definitions/body_7"
       responses:
         200:
           description: "Статус запроса"
@@ -617,6 +660,14 @@ paths:
               status:
                 type: "string"
                 example: "OK"
+              payload:
+                type: "array"
+                example:
+                - 1
+                - 2
+                items:
+                  type: "integer"
+                  format: "int32"
         400:
           description: "Invalid data"
         default:
@@ -644,7 +695,7 @@ paths:
           4. *Заданный* период (**не указ.**, если запрашивает **клиент**)."
         required: true
         schema:
-          $ref: "#/definitions/body_9"
+          $ref: "#/definitions/body_8"
       responses:
         200:
           description: "График работы за период, включая записи"
@@ -686,7 +737,7 @@ paths:
           ссив **обновляемых** рабочих дней."
         required: true
         schema:
-          $ref: "#/definitions/body_10"
+          $ref: "#/definitions/body_9"
       responses:
         200:
           description: "Статус запроса и рузультаты выполнения отдельных операций"
@@ -726,7 +777,7 @@ paths:
           е указ.**, если запрашивает указан фиксированный период)."
         required: true
         schema:
-          $ref: "#/definitions/body_11"
+          $ref: "#/definitions/body_10"
       responses:
         200:
           description: "Записи клиента за указанный период"
@@ -769,7 +820,7 @@ paths:
           отрудника для связи)"
         required: true
         schema:
-          $ref: "#/definitions/body_12"
+          $ref: "#/definitions/body_11"
       responses:
         200:
           description: "Статус запроса и общая информация"
@@ -807,7 +858,7 @@ paths:
         description: "ID записи"
         required: true
         schema:
-          $ref: "#/definitions/body_13"
+          $ref: "#/definitions/body_12"
       responses:
         200:
           description: "Статус выполнения запроса"
@@ -843,7 +894,7 @@ paths:
         description: "ID записи"
         required: true
         schema:
-          $ref: "#/definitions/body_14"
+          $ref: "#/definitions/body_13"
       responses:
         200:
           description: "Статус выполнения запроса"
@@ -879,7 +930,7 @@ paths:
         description: "ID записи и ID записи на которую переносим"
         required: true
         schema:
-          $ref: "#/definitions/body_15"
+          $ref: "#/definitions/body_14"
       responses:
         200:
           description: "Статус запроса и информация о записи"
@@ -917,7 +968,7 @@ paths:
         description: "ID записи и/или ID онлайн статуса и/или контактные данные"
         required: true
         schema:
-          $ref: "#/definitions/body_16"
+          $ref: "#/definitions/body_15"
       responses:
         200:
           description: "Статус запроса и общая информация"
@@ -955,7 +1006,7 @@ paths:
         description: "ID записи"
         required: true
         schema:
-          $ref: "#/definitions/body_17"
+          $ref: "#/definitions/body_16"
       responses:
         200:
           description: "Статус запроса и общая информация"
@@ -993,7 +1044,7 @@ paths:
         description: "ID рабочего дня"
         required: true
         schema:
-          $ref: "#/definitions/body_18"
+          $ref: "#/definitions/body_17"
       responses:
         200:
           description: "Статус запроса и данные о записях"
@@ -1033,7 +1084,7 @@ paths:
           торые нужно отредактировать"
         required: true
         schema:
-          $ref: "#/definitions/body_19"
+          $ref: "#/definitions/body_18"
       responses:
         200:
           description: "Статус запроса и результаты выполнения отдельных операций"
@@ -1071,7 +1122,7 @@ paths:
         description: "Либо получаем записи за период, либо фильтруем по количеству"
         required: true
         schema:
-          $ref: "#/definitions/body_20"
+          $ref: "#/definitions/body_19"
       responses:
         200:
           description: "Статус запроса и список записей"
@@ -1112,7 +1163,7 @@ paths:
           ые сотрудника или ученика или родителя"
         required: true
         schema:
-          $ref: "#/definitions/body_21"
+          $ref: "#/definitions/body_20"
       responses:
         200:
           description: "Данные созданного пользователя."
@@ -1259,7 +1310,7 @@ paths:
         description: "ID родителя и статус подтверждения"
         required: true
         schema:
-          $ref: "#/definitions/body_22"
+          $ref: "#/definitions/body_21"
       responses:
         200:
           description: "Статус выполнения запроса."
@@ -1328,7 +1379,7 @@ paths:
         description: "ID ученика"
         required: true
         schema:
-          $ref: "#/definitions/body_23"
+          $ref: "#/definitions/body_22"
       responses:
         200:
           description: "Статус запроса и данные преподавателя"
@@ -1398,7 +1449,7 @@ paths:
         description: "Обновляемые данные"
         required: true
         schema:
-          $ref: "#/definitions/body_24"
+          $ref: "#/definitions/body_23"
       responses:
         200:
           description: "Статус запроса"
@@ -1498,7 +1549,7 @@ paths:
         description: "ID пользователя"
         required: true
         schema:
-          $ref: "#/definitions/body_25"
+          $ref: "#/definitions/body_24"
       responses:
         200:
           description: "Данные пользователя."
@@ -1536,7 +1587,7 @@ paths:
         description: "Параметры поиска ученика"
         required: true
         schema:
-          $ref: "#/definitions/body_26"
+          $ref: "#/definitions/body_25"
       responses:
         200:
           description: "Список учеников, удовлетворяющих критериям поиска"
@@ -1576,7 +1627,7 @@ paths:
         description: "Параметры поиска сотрудника"
         required: true
         schema:
-          $ref: "#/definitions/body_27"
+          $ref: "#/definitions/body_26"
       responses:
         200:
           description: "Список сотрудников, удовлетворяющих критериям поиска"
@@ -1616,7 +1667,7 @@ paths:
         description: "Параметры поиска родителя"
         required: true
         schema:
-          $ref: "#/definitions/body_28"
+          $ref: "#/definitions/body_27"
       responses:
         200:
           description: "Список родителей, удовлетворяющих критериям поиска"
@@ -1686,7 +1737,7 @@ paths:
         description: "ID пользователя"
         required: true
         schema:
-          $ref: "#/definitions/body_29"
+          $ref: "#/definitions/body_28"
       responses:
         200:
           description: "Список ролей пользователя"
@@ -1724,7 +1775,7 @@ paths:
         description: "ID пользователя и список ID ролей"
         required: true
         schema:
-          $ref: "#/definitions/body_30"
+          $ref: "#/definitions/body_29"
       responses:
         200:
           description: "Статус выполнения запроса"
@@ -1760,7 +1811,7 @@ paths:
         description: "ID пользователя и список ID ролей"
         required: true
         schema:
-          $ref: "#/definitions/body_31"
+          $ref: "#/definitions/body_30"
       responses:
         200:
           description: "Статус выполнения операции."
@@ -1796,7 +1847,7 @@ paths:
         description: "ID сотрудника"
         required: true
         schema:
-          $ref: "#/definitions/body_32"
+          $ref: "#/definitions/body_31"
       responses:
         200:
           description: "Статус и список должностей сотрудника"
@@ -1836,7 +1887,7 @@ paths:
         description: "ID сотрудника и список ID должностей"
         required: true
         schema:
-          $ref: "#/definitions/body_33"
+          $ref: "#/definitions/body_32"
       responses:
         200:
           description: "Статус выполнения запроса и id добавленных должностей."
@@ -1878,7 +1929,7 @@ paths:
         description: "ID сотрудника и список ID должностей"
         required: true
         schema:
-          $ref: "#/definitions/body_34"
+          $ref: "#/definitions/body_33"
       responses:
         200:
           description: "Статус выполнения операции и id удаленных должностей."
@@ -1954,7 +2005,7 @@ paths:
         schema:
           type: "array"
           items:
-            $ref: "#/definitions/body_35"
+            $ref: "#/definitions/body_34"
       responses:
         200:
           description: "Статус выполнения запроса"
@@ -1992,7 +2043,7 @@ paths:
         schema:
           type: "array"
           items:
-            $ref: "#/definitions/body_36"
+            $ref: "#/definitions/body_35"
       responses:
         200:
           description: "Статус выполнения запроса и массив ID обновленных должност\
@@ -2808,28 +2859,16 @@ definitions:
       - 2
       - 3
       status: "OK"
-  addTestResult_file_arr:
+  inline_response_200_10_payload:
     required:
-    - "file"
-    - "file_name"
-    - "file_path"
-    properties:
-      file_name:
-        type: "string"
-        example: "Тест по профорейнтации"
-      file_path:
-        type: "string"
-        example: "/folder1"
-      file:
-        type: "string"
-        format: "base64"
-  body_6:
-    type: "object"
-    required:
-    - "file_arr"
     - "std_id"
+    - "tr_id"
     - "tst_id"
     properties:
+      tr_id:
+        type: "integer"
+        format: "int32"
+        example: 1
       tst_id:
         type: "integer"
         format: "int32"
@@ -2837,20 +2876,27 @@ definitions:
       std_id:
         type: "integer"
         format: "int32"
-        example: 3
+        example: 1
       file_arr:
         type: "array"
         items:
-          $ref: "#/definitions/addTestResult_file_arr"
-  inline_response_200_10_payload:
-    required:
-    - "tr_id"
-    properties:
-      tr_id:
-        type: "integer"
-        format: "int32"
-        example: 1
+          $ref: "#/definitions/inline_response_200_2_payload_file_arr"
     example:
+      file_arr:
+      - file_path: "/folder1/folder2"
+        file_mimetype: "application/pdf"
+        file_name: "Тест по профорейнтации"
+        file_id: 3
+        file_dt: "2019-05-10T09:35:00.000Z"
+        file_size: 18546124
+      - file_path: "/folder1/folder2"
+        file_mimetype: "application/pdf"
+        file_name: "Тест по профорейнтации"
+        file_id: 3
+        file_dt: "2019-05-10T09:35:00.000Z"
+        file_size: 18546124
+      tst_id: 1
+      std_id: 1
       tr_id: 1
   inline_response_200_10:
     required:
@@ -2863,9 +2909,24 @@ definitions:
         $ref: "#/definitions/inline_response_200_10_payload"
     example:
       payload:
+        file_arr:
+        - file_path: "/folder1/folder2"
+          file_mimetype: "application/pdf"
+          file_name: "Тест по профорейнтации"
+          file_id: 3
+          file_dt: "2019-05-10T09:35:00.000Z"
+          file_size: 18546124
+        - file_path: "/folder1/folder2"
+          file_mimetype: "application/pdf"
+          file_name: "Тест по профорейнтации"
+          file_id: 3
+          file_dt: "2019-05-10T09:35:00.000Z"
+          file_size: 18546124
+        tst_id: 1
+        std_id: 1
         tr_id: 1
       status: "OK"
-  body_7:
+  body_6:
     type: "object"
     properties:
       tst_id:
@@ -2999,16 +3060,20 @@ definitions:
         std_id: 1
         tst_id: 1
       status: "OK"
-  body_8:
+  body_7:
     type: "object"
     required:
-    - "tr_id"
+    - "tr_id_arr"
     properties:
-      tr_id:
-        type: "integer"
-        format: "int32"
-        example: 1
-  body_9:
+      tr_id_arr:
+        type: "array"
+        example:
+        - 1
+        - 2
+        items:
+          type: "integer"
+          format: "int32"
+  body_8:
     type: "object"
     properties:
       emp_id:
@@ -3203,7 +3268,7 @@ definitions:
         type: "integer"
         format: "int32"
         example: 30
-  body_10:
+  body_9:
     type: "object"
     properties:
       wd_arr_del:
@@ -3323,7 +3388,7 @@ definitions:
           - ""
           status: "OK"
       status: "OK"
-  body_11:
+  body_10:
     type: "object"
     properties:
       wd_history:
@@ -3460,7 +3525,7 @@ definitions:
             cont_name: "skype"
           emp_fullname: "Иванов Иван Иванович"
       status: "OK"
-  body_12:
+  body_11:
     type: "object"
     required:
     - "rec_id"
@@ -3558,6 +3623,15 @@ definitions:
         emp_id: 1
         cont_name: "skype"
       status: "OK"
+  body_12:
+    type: "object"
+    required:
+    - "rec_id"
+    properties:
+      rec_id:
+        type: "integer"
+        format: "int32"
+        example: 9
   body_13:
     type: "object"
     required:
@@ -3568,15 +3642,6 @@ definitions:
         format: "int32"
         example: 9
   body_14:
-    type: "object"
-    required:
-    - "rec_id"
-    properties:
-      rec_id:
-        type: "integer"
-        format: "int32"
-        example: 9
-  body_15:
     type: "object"
     required:
     - "new_rec_id"
@@ -3658,7 +3723,7 @@ definitions:
         emp_id: 1
         cont_name: "skype"
       status: "OK"
-  body_16:
+  body_15:
     type: "object"
     required:
     - "rec_id"
@@ -3678,7 +3743,7 @@ definitions:
       cont_value:
         type: "string"
         example: "9652354488"
-  body_17:
+  body_16:
     type: "object"
     required:
     - "rec_id"
@@ -3687,7 +3752,7 @@ definitions:
         type: "integer"
         format: "int32"
         example: 9
-  body_18:
+  body_17:
     type: "object"
     required:
     - "wd_id"
@@ -3843,7 +3908,7 @@ definitions:
         $ref: "#/definitions/setJournal_rec_data_1"
       vst_data:
         $ref: "#/definitions/setJournal_vst_data_1"
-  body_19:
+  body_18:
     type: "object"
     properties:
       vst_arr_del:
@@ -4005,7 +4070,7 @@ definitions:
         format: "int32"
         example: 0
     description: "Получить N записей с шагом F"
-  body_20:
+  body_19:
     type: "object"
     properties:
       byDate:
@@ -4217,7 +4282,7 @@ definitions:
       prnt_data:
         $ref: "#/definitions/signup_prnt_data_prnt_data"
     description: "Данные родителя"
-  body_21:
+  body_20:
     type: "object"
     required:
     - "pepl_data"
@@ -4330,7 +4395,7 @@ definitions:
         example: "OK"
       payload:
         $ref: "#/definitions/inline_response_200_22_payload"
-  body_22:
+  body_21:
     type: "object"
     required:
     - "prnt_confirm"
@@ -4595,7 +4660,7 @@ definitions:
           prnt_city: "Липецк"
           prnt_street: "Ангарская"
       status: "OK"
-  body_23:
+  body_22:
     type: "object"
     required:
     - "std_id"
@@ -4878,7 +4943,7 @@ definitions:
       prnt_flat:
         type: ["string", "null"]
         example: "45"
-  body_24:
+  body_23:
     type: "object"
     properties:
       pepl_old_pass:
@@ -5380,7 +5445,7 @@ definitions:
         pepl_id: 1
         pepl_last_name: "Иванович"
       status: "OK"
-  body_25:
+  body_24:
     type: "object"
     required:
     - "pepl_id"
@@ -5515,7 +5580,7 @@ definitions:
           std_class: "7Б"
           std_date_issue: "2023-06-01"
       status: "OK"
-  body_26:
+  body_25:
     type: "object"
     properties:
       emp_id:
@@ -5599,7 +5664,7 @@ definitions:
           std_class: "7Б"
           std_date_issue: "2023-06-01"
       status: "OK"
-  body_27:
+  body_26:
     type: "object"
     properties:
       role_array:
@@ -5721,7 +5786,7 @@ definitions:
           pepl_phone: "9568734554"
           pepl_birthday: "1977-01-19"
       status: "OK"
-  body_28:
+  body_27:
     type: "object"
     properties:
       std_id:
@@ -5849,7 +5914,7 @@ definitions:
     example:
       role_array: ""
       status: "OK"
-  body_29:
+  body_28:
     type: "object"
     required:
     - "pepl_id"
@@ -5870,6 +5935,18 @@ definitions:
     example:
       payload: ""
       status: "OK"
+  body_29:
+    type: "object"
+    required:
+    - "pepl_id"
+    - "role_array"
+    properties:
+      pepl_id:
+        type: "integer"
+        format: "int32"
+        example: 1
+      role_array:
+        $ref: "#/definitions/Role"
   body_30:
     type: "object"
     required:
@@ -5883,18 +5960,6 @@ definitions:
       role_array:
         $ref: "#/definitions/Role"
   body_31:
-    type: "object"
-    required:
-    - "pepl_id"
-    - "role_array"
-    properties:
-      pepl_id:
-        type: "integer"
-        format: "int32"
-        example: 1
-      role_array:
-        $ref: "#/definitions/Role"
-  body_32:
     type: "object"
     required:
     - "emp_id"
@@ -5923,7 +5988,7 @@ definitions:
         pst_name: "Педагог-психолог"
         pst_description: "pst_description"
       status: "OK"
-  body_33:
+  body_32:
     type: "object"
     required:
     - "emp_id"
@@ -5955,7 +6020,7 @@ definitions:
       - ""
       - ""
       status: "OK"
-  body_34:
+  body_33:
     type: "object"
     required:
     - "emp_id"
@@ -5969,7 +6034,7 @@ definitions:
         type: "array"
         items:
           $ref: "#/definitions/signup_emp_data_pst_arr"
-  body_35:
+  body_34:
     required:
     - "pst_name"
     properties:
@@ -5978,7 +6043,7 @@ definitions:
         example: "Педагог-психолог"
       pst_description:
         type: "string"
-  body_36:
+  body_35:
     required:
     - "pst_id"
     properties:
