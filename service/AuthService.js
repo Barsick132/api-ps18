@@ -481,6 +481,7 @@ exports.registerEmpAndStd = function (req, file) {
 
     return new Promise(function (resolve, reject) {
         const STATUS = {
+            ERROR_SAVING_FILES: 'ERROR_SAVING_FILES',
             ERROR_PARSING_XLSX: 'ERROR_PARSING_XLSX',
             ERROR_SAVE_FILE: 'ERROR_SAVE_FILE',
             NOT_ACCESS: 'NOT_ACCESS',
@@ -504,97 +505,105 @@ exports.registerEmpAndStd = function (req, file) {
             return;
         }
 
-        fs.writeFileSync('./public/importEmpAndStd.xlsx', file.buffer);
+        fs.mkdir('./public/', {recursive: true}, (err) => {
+            if (err) {
+                result = {status: STATUS.ERROR_SAVING_FILES};
+                reject(result);
+                return;
+            }
 
-        let EmpArr = [];
-        let StdArr = [];
+            fs.writeFileSync('./public/importEmpAndStd.xlsx', file.buffer);
 
-        readXlsxFile('./public/importEmpAndStd.xlsx', {schema: schema1, sheet: 1})
-            .then(({rows, errors}) => {
-                if (!errors.length === 0) {
-                    console.error(errors);
-                    reject({
-                        status: STATUS.ERROR_PARSING_XLSX,
-                        payload: errors
-                    });
-                    return;
-                }
-                console.log('Employees Complete Parsed!');
-                EmpArr = rows;
-                return readXlsxFile('./public/importEmpAndStd.xlsx', {schema: schema2, sheet: 2});
-            })
-            .then(({rows, errors}) => {
-                if (!errors.length === 0) {
-                    console.error(errors);
-                    reject({
-                        status: STATUS.ERROR_PARSING_XLSX,
-                        payload: errors
-                    });
-                    return;
-                }
-                console.log('Students Complete Parsed!');
-                StdArr = rows;
+            let EmpArr = [];
+            let StdArr = [];
 
-                AuthReq.registerEmpAndStd(knex, EmpArr, StdArr)
-                    .then(res => {
-                        let wb = new xl.Workbook();
+            readXlsxFile('./public/importEmpAndStd.xlsx', {schema: schema1, sheet: 1})
+                .then(({rows, errors}) => {
+                    if (!errors.length === 0) {
+                        console.error(errors);
+                        reject({
+                            status: STATUS.ERROR_PARSING_XLSX,
+                            payload: errors
+                        });
+                        return;
+                    }
+                    console.log('Employees Complete Parsed!');
+                    EmpArr = rows;
+                    return readXlsxFile('./public/importEmpAndStd.xlsx', {schema: schema2, sheet: 2});
+                })
+                .then(({rows, errors}) => {
+                    if (!errors.length === 0) {
+                        console.error(errors);
+                        reject({
+                            status: STATUS.ERROR_PARSING_XLSX,
+                            payload: errors
+                        });
+                        return;
+                    }
+                    console.log('Students Complete Parsed!');
+                    StdArr = rows;
 
-                        let ws = wb.addWorksheet('Сотрудники');
-                        let ws1 = wb.addWorksheet('Ученики');
+                    AuthReq.registerEmpAndStd(knex, EmpArr, StdArr)
+                        .then(res => {
+                            let wb = new xl.Workbook();
 
-                        ws.cell(1, 1).string('Логин');
-                        ws.cell(1, 2).string('Пароль');
-                        ws.cell(1, 3).string('ФИО');
-                        ws.cell(1, 4).string('Должности');
+                            let ws = wb.addWorksheet('Сотрудники');
+                            let ws1 = wb.addWorksheet('Ученики');
 
-                        res.emps.forEach((emp, i, arr) => {
-                            let posts = emp.posts[0].pst_name;
-                            if (emp.posts.length > 1) {
-                                for (let k = 1; k < emp.posts.length; k++) {
-                                    posts += ', ' + emp.posts[k].pst_name;
+                            ws.cell(1, 1).string('Логин');
+                            ws.cell(1, 2).string('Пароль');
+                            ws.cell(1, 3).string('ФИО');
+                            ws.cell(1, 4).string('Должности');
+
+                            res.emps.forEach((emp, i, arr) => {
+                                let posts = emp.posts[0].pst_name;
+                                if (emp.posts.length > 1) {
+                                    for (let k = 1; k < emp.posts.length; k++) {
+                                        posts += ', ' + emp.posts[k].pst_name;
+                                    }
                                 }
-                            }
 
-                            ws.cell(i + 2, 1).string(emp.accessData.pepl_login);
-                            ws.cell(i + 2, 2).string(emp.accessData.pepl_pass);
-                            ws.cell(i + 2, 3).string(emp.people.pepl_second_name + ' ' +
-                                emp.people.pepl_first_name + ' ' +
-                                emp.people.pepl_last_name);
-                            ws.cell(i + 2, 4).string(posts);
-                        });
+                                ws.cell(i + 2, 1).string(emp.accessData.pepl_login);
+                                ws.cell(i + 2, 2).string(emp.accessData.pepl_pass);
+                                ws.cell(i + 2, 3).string(emp.people.pepl_second_name + ' ' +
+                                    emp.people.pepl_first_name + ' ' +
+                                    emp.people.pepl_last_name);
+                                ws.cell(i + 2, 4).string(posts);
+                            });
 
-                        ws1.cell(1, 1).string('Логин');
-                        ws1.cell(1, 2).string('Пароль');
-                        ws1.cell(1, 3).string('ФИО');
-                        ws1.cell(1, 4).string('Класс');
+                            ws1.cell(1, 1).string('Логин');
+                            ws1.cell(1, 2).string('Пароль');
+                            ws1.cell(1, 3).string('ФИО');
+                            ws1.cell(1, 4).string('Класс');
 
-                        res.stds.forEach((std, i, arr) => {
-                            ws1.cell(i + 2, 1).string(std.accessData.pepl_login);
-                            ws1.cell(i + 2, 2).string(std.accessData.pepl_pass);
-                            ws1.cell(i + 2, 3).string(std.people.pepl_second_name + ' ' +
-                                std.people.pepl_first_name + ' ' +
-                                std.people.pepl_last_name);
-                            ws1.cell(i + 2, 4).string(UsersReq.getParallel(
-                                std.student.std_date_receipt,
-                                std.student.std_stayed_two_year,
-                                std.student.std_date_issue) +
-                                std.student.std_class_letter);
-                        });
-                        resolve(wb);
-                    })
-                    .catch(err => {
-                        console.error(err.status);
-                        reject(err)
-                    })
+                            res.stds.forEach((std, i, arr) => {
+                                ws1.cell(i + 2, 1).string(std.accessData.pepl_login);
+                                ws1.cell(i + 2, 2).string(std.accessData.pepl_pass);
+                                ws1.cell(i + 2, 3).string(std.people.pepl_second_name + ' ' +
+                                    std.people.pepl_first_name + ' ' +
+                                    std.people.pepl_last_name);
+                                ws1.cell(i + 2, 4).string(UsersReq.getParallel(
+                                    std.student.std_date_receipt,
+                                    std.student.std_stayed_two_year,
+                                    std.student.std_date_issue) +
+                                    std.student.std_class_letter);
+                            });
+                            resolve(wb);
+                        })
+                        .catch(err => {
+                            console.error(err.status);
+                            reject(err)
+                        })
 
-            })
-            .catch(err => {
-                console.error(err);
-                reject({
-                    status: STATUS.UNKNOWN_ERROR,
-                    payload: err
-                });
-            })
+                })
+                .catch(err => {
+                    console.error(err);
+                    reject({
+                        status: STATUS.UNKNOWN_ERROR,
+                        payload: err
+                    });
+                })
+        });
     });
 };
 
