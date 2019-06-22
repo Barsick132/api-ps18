@@ -28,6 +28,8 @@ exports.addTest = function (knex, body) {
 
                     console.log('Test Created');
                     return Promise.map(body.files, file => {
+                        let expansion = file.file.originalname.split('.');
+                        expansion = expansion[expansion.length-1];
                         return knex(T.FILE.NAME)
                             .transacting(trx)
                             .insert({
@@ -35,7 +37,7 @@ exports.addTest = function (knex, body) {
                                 file_name: file.file_name,
                                 file_path: '/',
                                 file_size: file.file.size,
-                                file_mimetype: file.file.mimetype
+                                file_expansion: expansion
                             })
                             /*.whereNotExists(function () {
                                 this.select()
@@ -272,7 +274,7 @@ exports.delTests = function (knex, tst_id_arr) {
 
 };
 
-exports.getTestResult = function (knex, body) {
+exports.getTestsResult = function (knex, body) {
     const STATUS = {
         BAD_REQUEST: 'BAD_REQUEST',
         UNKNOWN_ERROR: 'UNKNOWN_ERROR',
@@ -287,7 +289,7 @@ exports.getTestResult = function (knex, body) {
                 return knex({file: T.FILE.NAME, tr: T.TEST_RESULTS.NAME})
                     .select('tr.' + T.TEST_RESULTS.TR_ID, 'tr.' + T.TEST_RESULTS.STD_ID,
                         'file.' + T.FILE.FILE_ID, 'file.' + T.FILE.FILE_NAME, 'file.' + T.FILE.FILE_PATH,
-                        'file.' + T.FILE.FILE_SIZE, 'file.' + T.FILE.FILE_MIMETYPE, 'file.' + T.FILE.FILE_DT)
+                        'file.' + T.FILE.FILE_SIZE, 'file.' + T.FILE.FILE_EXPANSION, 'file.' + T.FILE.FILE_DT)
                     .whereRaw('?? = ??', ['tr.' + T.TEST_RESULTS.TR_ID, 'file.' + T.FILE.TR_ID])
                     .where('tr.' + T.TEST_RESULTS.TST_ID, body.tst_id)
                     .orderBy(T.FILE.FILE_ID, T.FILE.TR_ID)
@@ -298,7 +300,7 @@ exports.getTestResult = function (knex, body) {
                     return knex({file: T.FILE.NAME, tr: T.TEST_RESULTS.NAME})
                         .select('tr.' + T.TEST_RESULTS.TR_ID, 'tr.' + T.TEST_RESULTS.TST_ID,
                             'file.' + T.FILE.FILE_ID, 'file.' + T.FILE.FILE_NAME, 'file.' + T.FILE.FILE_PATH,
-                            'file.' + T.FILE.FILE_SIZE, 'file.' + T.FILE.FILE_MIMETYPE, 'file.' + T.FILE.FILE_DT)
+                            'file.' + T.FILE.FILE_SIZE, 'file.' + T.FILE.FILE_EXPANSION, 'file.' + T.FILE.FILE_DT)
                         .where('tr.' + T.TEST_RESULTS.STD_ID, body.std_id)
                         .whereRaw('?? = ??', ['tr.' + T.TEST_RESULTS.TR_ID, 'file.' + T.FILE.TR_ID])
                         .orderBy(T.FILE.FILE_ID, T.FILE.TR_ID)
@@ -355,6 +357,8 @@ exports.addTestResult = function (knex, body) {
 
                     console.log('Test Result Created');
                     return Promise.map(body.files, file => {
+                        let expansion = file.file.originalname.split('.');
+                        expansion = expansion[expansion.length-1];
                         return knex(T.FILE.NAME)
                             .transacting(trx)
                             .insert({
@@ -362,7 +366,7 @@ exports.addTestResult = function (knex, body) {
                                 file_name: file.file_name,
                                 file_path: '/',
                                 file_size: file.file.size,
-                                file_mimetype: file.file.mimetype
+                                file_expansion: expansion
                             })
                             .returning('*');
                     })

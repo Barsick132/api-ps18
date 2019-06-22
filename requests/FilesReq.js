@@ -108,13 +108,15 @@ exports.addFiles = (knex, body) => {
                                 throw new Error(STATUS.NOT_FOUND_MENTAL_MAP);
                             }
                             return Promise.map(body.files, (file) => {
+                                let expansion = file.file.originalname.split('.');
+                                expansion = expansion[expansion.length-1];
                                 return knex(T.FILE.NAME)
                                     .transacting(trx)
                                     .insert({
                                         mm_id: res[0].mm_id,
                                         file_name: file.file_name,
                                         file_path: file.file_path,
-                                        file_mimetype: file.file.mimetype,
+                                        file_expansion: expansion,
                                         file_size: file.file.size
                                     })
                                     .returning('*');
@@ -122,13 +124,15 @@ exports.addFiles = (knex, body) => {
                         }
                         case 'tst_id': {
                             return Promise.map(body.files, (file) => {
+                                let expansion = file.file.originalname.split('.');
+                                expansion = expansion[expansion.length-1];
                                 return knex(T.FILE.NAME)
                                     .transacting(trx)
                                     .insert({
                                         tst_id: body.tst_id,
                                         file_name: file.file_name,
                                         file_path: file.file_path,
-                                        file_mimetype: file.file.mimetype,
+                                        file_expansion: expansion,
                                         file_size: file.file.size
                                     })
                                     .returning('*');
@@ -136,13 +140,15 @@ exports.addFiles = (knex, body) => {
                         }
                         case 'tr_id': {
                             return Promise.map(body.files, (file) => {
+                                let expansion = file.file.originalname.split('.');
+                                expansion = expansion[expansion.length-1];
                                 return knex(T.FILE.NAME)
                                     .transacting(trx)
                                     .insert({
                                         tr_id: body.tr_id,
                                         file_name: file.file_name,
                                         file_path: file.file_path,
-                                        file_mimetype: file.file.mimetype,
+                                        file_expansion: expansion,
                                         file_size: file.file.size
                                     })
                                     .returning('*');
@@ -212,7 +218,7 @@ exports.getFiles = function (knex, body) {
                 return knex({std: T.STUDENTS.NAME, mm: T.MENTAL_MAP.NAME, file: T.FILE.NAME})
                     .select('file.' + T.FILE.FILE_ID, 'file.' + T.FILE.FILE_NAME,
                         'file.' + T.FILE.FILE_PATH, 'file.' + T.FILE.FILE_DT, 'file.' + T.FILE.FILE_SIZE,
-                        'file.' + T.FILE.FILE_MIMETYPE)
+                        'file.' + T.FILE.FILE_EXPANSION)
                     .whereRaw('?? = ??', ['mm.' + T.MENTAL_MAP.STD_ID, 'std.' + T.STUDENTS.STD_ID])
                     .whereRaw('?? = ??', ['mm.' + T.MENTAL_MAP.MM_ID, 'file.' + T.FILE.MM_ID])
                     .where('std.' + T.STUDENTS.STD_ID, body.std_id)
@@ -224,7 +230,7 @@ exports.getFiles = function (knex, body) {
                     return knex({tr: T.TEST_RESULTS.NAME, file: T.FILE.NAME})
                         .select('file.' + T.FILE.FILE_ID, 'file.' + T.FILE.FILE_NAME,
                             'file.' + T.FILE.FILE_PATH, 'file.' + T.FILE.FILE_DT, 'file.' + T.FILE.FILE_SIZE,
-                            'file.' + T.FILE.FILE_MIMETYPE)
+                            'file.' + T.FILE.FILE_EXPANSION)
                         .whereRaw('?? = ??', ['tr.' + T.TEST_RESULTS.TR_ID, 'file.' + T.FILE.TR_ID])
                         .where('tr.' + T.TEST_RESULTS.TR_ID, body.tr_id)
                         .orderBy('file.' + T.FILE.FILE_DT)
@@ -235,7 +241,7 @@ exports.getFiles = function (knex, body) {
                         return knex({tst: T.TESTS.NAME, file: T.FILE.NAME})
                             .select('file.' + T.FILE.FILE_ID, 'file.' + T.FILE.FILE_NAME,
                                 'file.' + T.FILE.FILE_PATH, 'file.' + T.FILE.FILE_DT, 'file.' + T.FILE.FILE_SIZE,
-                                'file.' + T.FILE.FILE_MIMETYPE)
+                                'file.' + T.FILE.FILE_EXPANSION)
                             .whereRaw('?? = ??', ['tst.' + T.TESTS.TST_ID, 'file.' + T.FILE.TST_ID])
                             .where('tst.' + T.TESTS.TST_ID, body.tst_id)
                             .orderBy('file.' + T.FILE.FILE_DT)
@@ -290,7 +296,7 @@ exports.updFile = function (knex, body) {
             .update(reqObj)
             .where(T.FILE.FILE_ID, body.file_id)
             .returning([T.FILE.FILE_ID, T.FILE.FILE_NAME, T.FILE.FILE_PATH, T.FILE.FILE_SIZE,
-                T.FILE.FILE_MIMETYPE, T.FILE.FILE_DT])
+                T.FILE.FILE_EXPANSION, T.FILE.FILE_DT])
             .then(res => resolve(res))
             .catch(err => reject(err));
     });

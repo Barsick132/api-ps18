@@ -123,13 +123,13 @@ exports.addTest = function (req, body) {
                     }
                     async.each(res, function (file, callback) {
 
-                        fs.writeFile(dir + file.file_id,
+                        fs.writeFile(dir + file.file_id + "." + file.file_expansion,
                             file.file.buffer, function (err) {
                                 if (err) {
                                     console.log(err);
                                     callback(err);
                                 } else {
-                                    console.log(file.file_path + '/' + file.file_name + ' was updated.');
+                                    console.log(file.file_path + '/' + file.file_name + "." + file.file_expansion + ' was updated.');
                                     callback();
                                 }
                             });
@@ -159,7 +159,7 @@ exports.addTest = function (req, body) {
                                     file_path: file_db.file_path,
                                     file_dt: file_db.file_dt,
                                     file_size: file_db.file_size,
-                                    file_mimetype: file_db.file_mimetype
+                                    file_expansion: file_db.file_expansion
                                 })
                             });
 
@@ -244,13 +244,13 @@ exports.addTestResult = function (req, body) {
                     }
                     async.each(res, function (file, callback) {
 
-                        fs.writeFile(dir + file.file_id,
+                        fs.writeFile(dir + file.file_id + "." + file.file_expansion,
                             file.file.buffer, function (err) {
                                 if (err) {
                                     console.log(err);
                                     callback(err);
                                 } else {
-                                    console.log(file.file_path + '/' + file.file_name + ' was updated.');
+                                    console.log(file.file_path + '/' + file.file_name + "." + file.file_expansion + ' was updated.');
                                     callback();
                                 }
                             });
@@ -280,7 +280,7 @@ exports.addTestResult = function (req, body) {
                                     file_path: file_db.file_path,
                                     file_dt: file_db.file_dt,
                                     file_size: file_db.file_size,
-                                    file_mimetype: file_db.file_mimetype
+                                    file_expansion: file_db.file_expansion
                                 })
                             });
 
@@ -605,8 +605,8 @@ exports.getTests = function (req) {
  * body Body_9 ID теста и/или ID студента
  * returns inline_response_200_9
  **/
-exports.getTestResult = function (req, body) {
-    const METHOD = 'getTestResult()';
+exports.getTestsResult = function (req, body) {
+    const METHOD = 'getTestsResult()';
     console.log(FILE, METHOD);
 
     return new Promise(function (resolve, reject) {
@@ -633,7 +633,7 @@ exports.getTestResult = function (req, body) {
             return;
         }
 
-        TestsReq.getTestResult(knex, body)
+        TestsReq.getTestsResult(knex, body)
             .then(res => {
                 let new_res = [];
                 if (res[0].std_id !== undefined) {
@@ -646,7 +646,7 @@ exports.getTestResult = function (req, body) {
                                 file_name: item.file_name,
                                 file_path: item.file_path,
                                 file_size: item.file_size,
-                                file_mimetype: item.file_mimetype,
+                                file_expansion: item.file_expansion,
                                 file_dt: item.file_dt
                             })
                         } else {
@@ -658,7 +658,7 @@ exports.getTestResult = function (req, body) {
                                     file_name: item.file_name,
                                     file_path: item.file_path,
                                     file_size: item.file_size,
-                                    file_mimetype: item.file_mimetype,
+                                    file_expansion: item.file_expansion,
                                     file_dt: item.file_dt
                                 }]
                             })
@@ -675,7 +675,7 @@ exports.getTestResult = function (req, body) {
                                 file_name: item.file_name,
                                 file_path: item.file_path,
                                 file_size: item.file_size,
-                                file_mimetype: item.file_mimetype,
+                                file_expansion: item.file_expansion,
                                 file_dt: item.file_dt
                             })
                         } else {
@@ -687,7 +687,7 @@ exports.getTestResult = function (req, body) {
                                     file_name: item.file_name,
                                     file_path: item.file_path,
                                     file_size: item.file_size,
-                                    file_mimetype: item.file_mimetype,
+                                    file_expansion: item.file_expansion,
                                     file_dt: item.file_dt
                                 }]
                             })

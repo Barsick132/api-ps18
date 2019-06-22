@@ -101,7 +101,7 @@ module.exports.TABLES = {
         FILE_PATH: 'file_path',
         FILE_DT: 'file_dt',
         FILE_SIZE: 'file_size',
-        FILE_MIMETYPE: 'file_mimetype'
+        FILE_EXPANSION: 'file_expansion'
     },
     RECORDS: {
         NAME: 'records',

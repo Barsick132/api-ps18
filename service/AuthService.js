@@ -11,9 +11,40 @@ const PostsReq = require('../requests/PostsReq');
 const AuthReq = require('../requests/AuthReq');
 const UsersReq = require('../requests/UsersReq');
 const RecordsReq = require('../requests/RecordsReq');
+const readXlsxFile = require('read-excel-file/node');
+const fs = require('fs');
+var xl = require('excel4node');
 
 const FILE = './service/AuthService.js';
 
+const parseClass = (className) => {
+    const regex = new RegExp('^(\\d{1,2})([А-ЯЁ])$');
+    let match = className.match(regex);
+    if (match[1] && match[1] >= 1 && match[1] <= 11 && match[2]) {
+        const parsedClass = {
+            parallel: match[1],
+            letter: match[2]
+        };
+
+        const date = new Date();
+        let result = {
+            std_date_receipt: new Date(date.getFullYear() - parsedClass.parallel, 8, 1),
+            std_stayed_two_year: 0,
+            std_class_letter: parsedClass.letter,
+        };
+
+        if (date.getMonth() >= 8) {
+            result.std_date_receipt.setFullYear(result.std_date_receipt.getFullYear() + 1);
+        }
+
+        result.std_date_issue = new Date(result.std_date_receipt.getFullYear() + 11, 5, 1);
+
+        return result;
+
+    } else {
+        return null;
+    }
+};
 
 /**
  * Подтверждение регистрации родителей
@@ -265,34 +296,307 @@ exports.login = function (req) {
  * body String Файл в base64
  * returns inline_response_200_18
  **/
-exports.registerEmployees = function (body) {
-    return new Promise(function (resolve, reject) {
-        var examples = {};
-        if (Object.keys(examples).length > 0) {
-            resolve(examples[Object.keys(examples)[0]]);
-        } else {
-            resolve();
+exports.registerEmpAndStd = function (req, file) {
+    const METHOD = 'registerEmpAndStd';
+    console.log(FILE, METHOD);
+
+    const parseGender = function (value) {
+        if (value === 'М') {
+            return true;
         }
+        if (value === 'Ж') {
+            return false;
+        }
+        return undefined;
+    };
+
+    const schema1 = {
+        'emp_login': {
+            prop: 'pepl_login',
+            type: String,
+            required: true
+        },
+        'emp_second_name': {
+            prop: 'pepl_second_name',
+            type: String,
+            required: true
+        },
+        'emp_first_name': {
+            prop: 'pepl_first_name',
+            type: String,
+            required: true
+        },
+        'emp_last_name': {
+            prop: 'pepl_last_name',
+            type: String,
+            required: true
+        },
+        'emp_gender': {
+            prop: 'pepl_gender',
+            required: true,
+            parse(value) {
+                const gender = parseGender(value);
+                if (gender === undefined) {
+                    throw new Error('invalid')
+                }
+                return gender;
+            }
+        },
+        'emp_birthday': {
+            prop: 'pepl_birthday',
+            required: true,
+            type: Date
+        },
+        'emp_phone': {
+            prop: 'pepl_phone',
+            type: String,
+            required: false
+        },
+        'emp_email': {
+            prop: 'pepl_email',
+            type: String,
+            required: false
+        },
+        'emp_skype': {
+            prop: 'emp_skype',
+            type: String,
+            required: false
+        },
+        'emp_discord': {
+            prop: 'emp_discord',
+            type: String,
+            required: false
+        },
+        'emp_hangouts': {
+            prop: 'emp_hangouts',
+            type: String,
+            required: false
+        },
+        'emp_viber': {
+            prop: 'emp_viber',
+            type: String,
+            required: false
+        },
+        'emp_vk': {
+            prop: 'emp_vk',
+            type: String,
+            required: false
+        },
+        'emp_date_enrollment': {
+            prop: 'emp_date_enrollment',
+            type: Date,
+            required: false
+        },
+        'emp_posts': {
+            prop: 'emp_posts',
+            required: true,
+            parse(value) {
+                return value.split(', ');
+            }
+        },
+        'emp_psychologist': {
+            prop: 'emp_psychologist',
+            type: Boolean,
+            required: false
+        },
+        'emp_teacher': {
+            prop: 'emp_teacher',
+            type: Boolean,
+            required: false
+        }
+    };
+
+    const schema2 = {
+        'std_login': {
+            prop: 'pepl_login',
+            type: String,
+            required: true
+            // Excel stores dates as integers.
+            // E.g. '24/03/2018' === 43183.
+            // Such dates are parsed to UTC+0 timezone with time 12:00 .
+        },
+        'std_second_name': {
+            prop: 'pepl_second_name',
+            type: String,
+            required: true
+        },
+        'std_first_name': {
+            prop: 'pepl_first_name',
+            type: String,
+            required: true
+        },
+        'std_last_name': {
+            prop: 'pepl_last_name',
+            type: String,
+            required: true
+        },
+        'std_gender': {
+            prop: 'pepl_gender',
+            required: true,
+            parse(value) {
+                const gender = parseGender(value);
+                if (gender === undefined) {
+                    throw new Error('invalid')
+                }
+                return gender;
+            }
+        },
+        'std_birthday': {
+            prop: 'pepl_birthday',
+            required: true,
+            type: Date
+        },
+        'std_phone': {
+            prop: 'pepl_phone',
+            type: String,
+            required: false
+        },
+        'std_email': {
+            prop: 'pepl_email',
+            type: String,
+            required: false
+        },
+        'emp_login': {
+            prop: 'emp_login',
+            type: String,
+            required: false
+        },
+        'std_class': {
+            prop: 'std_class',
+            required: true,
+            parse(value) {
+                const classData = parseClass(value);
+                if (classData === null) {
+                    throw new Error('invalid')
+                }
+                return classData;
+            }
+        },
+        'std_stayed_two_year': {
+            prop: 'std_stayed_two_year',
+            type: Number,
+            required: false
+        }
+    };
+
+    return new Promise(function (resolve, reject) {
+        const STATUS = {
+            ERROR_PARSING_XLSX: 'ERROR_PARSING_XLSX',
+            ERROR_SAVE_FILE: 'ERROR_SAVE_FILE',
+            NOT_ACCESS: 'NOT_ACCESS',
+            NOT_AUTH: 'NOT_AUTH',
+            UNKNOWN_ERROR: 'UNKNOWN_ERROR',
+            OK: 'OK'
+        };
+
+        let result = {};
+        let payload = {};
+
+        if (!req.isAuthenticated()) {
+            console.error('Not Authenticated');
+            reject({status: STATUS.NOT_AUTH});
+            return;
+        }
+
+        if (!UsersReq.checkRole(req.user.roles, ROLE.ADMIN)) {
+            console.error('Not Admin');
+            reject({status: STATUS.NOT_ACCESS});
+            return;
+        }
+
+        fs.writeFileSync('./public/importEmpAndStd.xlsx', file.buffer);
+
+        let EmpArr = [];
+        let StdArr = [];
+
+        readXlsxFile('./public/importEmpAndStd.xlsx', {schema: schema1, sheet: 1})
+            .then(({rows, errors}) => {
+                if (!errors.length === 0) {
+                    console.error(errors);
+                    reject({
+                        status: STATUS.ERROR_PARSING_XLSX,
+                        payload: errors
+                    });
+                    return;
+                }
+                console.log('Employees Complete Parsed!');
+                EmpArr = rows;
+                return readXlsxFile('./public/importEmpAndStd.xlsx', {schema: schema2, sheet: 2});
+            })
+            .then(({rows, errors}) => {
+                if (!errors.length === 0) {
+                    console.error(errors);
+                    reject({
+                        status: STATUS.ERROR_PARSING_XLSX,
+                        payload: errors
+                    });
+                    return;
+                }
+                console.log('Students Complete Parsed!');
+                StdArr = rows;
+
+                AuthReq.registerEmpAndStd(knex, EmpArr, StdArr)
+                    .then(res => {
+                        let wb = new xl.Workbook();
+
+                        let ws = wb.addWorksheet('Сотрудники');
+                        let ws1 = wb.addWorksheet('Ученики');
+
+                        ws.cell(1, 1).string('Логин');
+                        ws.cell(1, 2).string('Пароль');
+                        ws.cell(1, 3).string('ФИО');
+                        ws.cell(1, 4).string('Должности');
+
+                        res.emps.forEach((emp, i, arr) => {
+                            let posts = emp.posts[0].pst_name;
+                            if (emp.posts.length > 1) {
+                                for (let k = 1; k < emp.posts.length; k++) {
+                                    posts += ', ' + emp.posts[k].pst_name;
+                                }
+                            }
+
+                            ws.cell(i + 2, 1).string(emp.accessData.pepl_login);
+                            ws.cell(i + 2, 2).string(emp.accessData.pepl_pass);
+                            ws.cell(i + 2, 3).string(emp.people.pepl_second_name + ' ' +
+                                emp.people.pepl_first_name + ' ' +
+                                emp.people.pepl_last_name);
+                            ws.cell(i + 2, 4).string(posts);
+                        });
+
+                        ws1.cell(1, 1).string('Логин');
+                        ws1.cell(1, 2).string('Пароль');
+                        ws1.cell(1, 3).string('ФИО');
+                        ws1.cell(1, 4).string('Класс');
+
+                        res.stds.forEach((std, i, arr) => {
+                            ws1.cell(i + 2, 1).string(std.accessData.pepl_login);
+                            ws1.cell(i + 2, 2).string(std.accessData.pepl_pass);
+                            ws1.cell(i + 2, 3).string(std.people.pepl_second_name + ' ' +
+                                std.people.pepl_first_name + ' ' +
+                                std.people.pepl_last_name);
+                            ws1.cell(i + 2, 4).string(UsersReq.getParallel(
+                                std.student.std_date_receipt,
+                                std.student.std_stayed_two_year,
+                                std.student.std_date_issue) +
+                                std.student.std_class_letter);
+                        });
+                        resolve(wb);
+                    })
+                    .catch(err => {
+                        console.error(err.status);
+                        reject(err)
+                    })
+
+            })
+            .catch(err => {
+                console.error(err);
+                reject({
+                    status: STATUS.UNKNOWN_ERROR,
+                    payload: err
+                });
+            })
     });
 };
-
-
-/**
- * Регистрация учеников из xlsx
- *
- * body String Файл в base64
- * returns inline_response_200_18
- **/
-exports.registerStudents = function (body) {
-    return new Promise(function (resolve, reject) {
-        var examples = {};
-        if (Object.keys(examples).length > 0) {
-            resolve(examples[Object.keys(examples)[0]]);
-        } else {
-            resolve();
-        }
-    });
-}
 
 
 /**
@@ -447,36 +751,6 @@ exports.signup = function (req, body) {
 
                                         switch (globalData.ROLE) {
                                             case ROLE.STUDENT: {
-                                                const parseClass = (className) => {
-                                                    const regex = new RegExp('^(\\d{1,2})([А-ЯЁ])$');
-                                                    let match = className.match(regex);
-                                                    if (match[1] && match[1] >= 1 && match[1] <= 11 && match[2]) {
-                                                        const parsedClass = {
-                                                            parallel: match[1],
-                                                            letter: match[2]
-                                                        };
-
-                                                        const date = new Date();
-                                                        let result = {
-                                                            std_date_receipt: new Date(date.getFullYear() - parsedClass.parallel, 8, 1),
-                                                            std_stayed_two_year: 0,
-                                                            std_class_letter: parsedClass.letter,
-                                                        };
-
-                                                        if (date.getMonth() >= 8) {
-                                                            result.std_date_receipt.setFullYear(result.std_date_receipt.getFullYear() + 1);
-                                                        }
-
-                                                        result.std_date_issue = new Date(result.std_date_receipt.getFullYear() + 11, 5, 1);
-
-                                                        return result;
-
-                                                    } else {
-                                                        return null;
-                                                    }
-                                                };
-
-
                                                 const parsedClassData = parseClass(body.std_data.std_class);
                                                 if (parsedClassData === null)
                                                     throw new Error(STATUS.CLASS_NOT_PARSED);

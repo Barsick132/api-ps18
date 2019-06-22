@@ -7,6 +7,7 @@ const ROLE = require('../constants').ROLE;
 const fs = require('fs');
 const async = require('async');
 const AdmZip = require('adm-zip');
+const mime = require('mime-types');
 
 const FILE = './service/FilesService.js';
 
@@ -88,13 +89,13 @@ exports.addFiles = function (req, body) {
                     }
                     async.each(res.files, function (file, callback) {
 
-                        fs.writeFile(dir + file.file_id,
+                        fs.writeFile(dir + file.file_id + '.' + file.file_expansion,
                             file.file.buffer, function (err) {
                                 if (err) {
                                     console.log(err);
                                     callback(err);
                                 } else {
-                                    console.log(file.file_path + '/' + file.file_name + ' was updated.');
+                                    console.log(file.file_path + '/' + file.file_name + '.' + file.file_expansion + ' was updated.');
                                     callback();
                                 }
                             });
@@ -203,12 +204,12 @@ exports.delFiles = function (req, body) {
 
                     async.each(res, function (file, callback) {
 
-                        fs.unlink(dir + file.file_id,
+                        fs.unlink(dir + file.file_id + '.' + file.file_expansion,
                             function (err) {
                                 if (err) {
                                     console.error(err);
                                 } else {
-                                    console.log(file.file_path + '/' + file.file_name + ' was deleted.');
+                                    console.log(file.file_path + '/' + file.file_name + '.' + file.file_expansion + ' was deleted.');
                                 }
                                 callback();
                             });
@@ -287,52 +288,41 @@ exports.downloadFiles = function (req, body) {
             return;
         }
 
-        FilesReq.getFileInfo(knex, body.map(item => item.file_id))
+        FilesReq.getFileInfo(knex, body)
             .then(res => {
                 if (res.length === 0) {
                     result = {status: STATUS.NOT_FOUND_FILES};
                     reject(result);
                 }
 
+                const getDir = function (file) {
+                    if (file.mm_id !== null && file.mm_id !== undefined) {
+                        return './public/mm/' + file.mm_id + '/';
+                    }
+                    if (file.tst_id !== null && file.tst_id !== undefined) {
+                        return './public/tst/' + file.tst_id + '/';
+                    }
+                    if (file.tr_id !== null && file.tr_id !== undefined) {
+                        return './public/tr/' + file.tr_id + '/';
+                    }
+                };
+
                 if (res.length > 1) {
                     // Если файлов несколько
                     const zip = new AdmZip();
                     async.each(res, function (file, callback) {
-                        let dir;
-                        if (file.mm_id !== null && file.mm_id !== undefined) {
-                            dir = './public/mm/' + file.mm_id + '/';
-                        }
-                        if (file.tst_id !== null && file.tst_id !== undefined) {
-                            dir = './public/tst/' + file.tst_id + '/';
-                        }
-                        if (file.tr_id !== null && file.tr_id !== undefined) {
-                            dir = './public/tr/' + file.tr_id + '/';
-                        }
+                        let dir = getDir(file);
 
 
-                        let localPath = dir + file.file_id;
+                        let localPath = dir + file.file_id + "." + file.file_expansion;
 
                         try {
-                            zip.addLocalFile(localPath, localPath + "." + file.file_mimetype.split('/')[1]);
+                            zip.addLocalFile(localPath, null, file.file_name + '.' + file.file_expansion);
                             callback();
                         } catch (err) {
                             console.error(err);
                             callback(err);
                         }
-
-
-                        /*
-                        fs.readFile(dir + file.file_id, function (err, data) {
-                            if (err) {
-                                console.error(err);
-                            } else {
-                                console.log(file.file_path + '/' + file.file_name + ' was read.');
-                                file.data = data;
-                            }
-
-                            callback();
-                        });
-                        */
 
                     }, function (err) {
 
@@ -343,7 +333,13 @@ exports.downloadFiles = function (req, body) {
                             reject(result);
                         } else {
                             zip.toBuffer(function (res) {
-                                resolve(res);
+                                resolve({
+                                    buffer: res,
+                                    headers: {
+                                        'Content-Type': 'application/zip',
+                                        'Content-Disposition': 'attachment;filename=zip-archive.zip'
+                                    }
+                                });
                             }, function (err) {
                                 result = {status: 'ERR_CREATED_BUFFER_ARCHIVE'};
                                 reject(result);
@@ -361,6 +357,24 @@ exports.downloadFiles = function (req, body) {
                     });
                 } else {
                     // Если 1 файл
+                    let file = res[0];
+                    let dir = getDir(file);
+                    fs.readFile(dir + file.file_id + "." + file.file_expansion, function (err, data) {
+                        if (err) {
+                            console.error(err);
+                            result = {status: STATUS.ERROR_READING_FILES};
+                            reject(result);
+                        } else {
+                            console.log(file.file_path + '/' + file.file_name + '.' + file.file_expansion + ' was read.');
+                            resolve({
+                                buffer: data,
+                                headers: {
+                                    'Content-Type': mime.lookup(file.file_expansion),
+                                    'Content-Disposition': 'attachment;filename=' + file.file_name + "." + file.file_expansion
+                                }
+                            });
+                        }
+                    });
                 }
             })
             .catch(err => {

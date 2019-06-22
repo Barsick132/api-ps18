@@ -22,15 +22,20 @@
     "js-yaml": "^3.3.0",
     "jsonwebtoken": "latest",
     "knex": "^0.16.3",
+    "mime-types": "latest",
     "passport": "^0.4.0",
     "passport-http": "^0.3.0",
     "passport-jwt": "^4.0.0",
     "pg": "^7.8.2",
     "process": "^0.11.10",
+    "read-excel-file": "^4.0.1",
     "rimraf": "^2.6.3",
     "swagger-tools": "0.10.1",
     "underscore": "^1.9.1",
     "uniqid": "^5.0.3",
     "yaml-config": "^0.3.0"
+  },
+  "devDependencies": {
+    "excel4node": "^1.7.2"
   }
 }

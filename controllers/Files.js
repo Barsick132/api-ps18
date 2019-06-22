@@ -76,21 +76,16 @@ module.exports.downloadFiles = function downloadFiles(req, res, next) {
         return;
     }
 
-    const body = req.swagger.params['body'].value;
+    const body = req.swagger.params['file_id_arr'].value;
     Files.downloadFiles(req, body)
         .then(function (response) {
-            // res.end(fs.readFileSync(dir + 77, {filename: file.file_name + '.jpeg'}));
-            //var fileContents = Buffer.from(fileData, "base64");
+            //const readStream = new stream.PassThrough();
+            //readStream.end(response.buffer);
 
-            const readStream = new stream.PassThrough();
-            readStream.end(response);
-
-            res.writeHead(200, {
-                'Content-Disposition': 'attachment; filename=zip-archive.zip',
-                'Content-Type': 'application/octet-stream'
-            });
-
-            readStream.pipe(res);
+            res.writeHead(200, response.headers);
+            res.write(response.buffer);
+            res.end();
+            //readStream.pipe(res);
         })
         .catch(function (response) {
             utils.writeJson(res, response);
