@@ -13,7 +13,7 @@ const UsersReq = require('../requests/UsersReq');
 const RecordsReq = require('../requests/RecordsReq');
 const readXlsxFile = require('read-excel-file/node');
 const fs = require('fs');
-var xl = require('excel4node');
+const xl = require('excel4node');
 
 const FILE = './service/AuthService.js';
 
