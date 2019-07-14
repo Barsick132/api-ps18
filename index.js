@@ -3,7 +3,7 @@
 const fs = require('fs'),
     path = require('path'),
     http = require('http');
-const bodyParser = require('body-parser');
+//const bodyParser = require('body-parser');
 
 const appConnect = require('connect')();
 const swaggerTools = require('swagger-tools');
@@ -58,7 +58,7 @@ appConnect.use(function (req, res, next) {
 
     if (req.method === 'OPTIONS') {
         console.log('!OPTIONS');
-        var headers = {};
+        let headers = {};
         headers["Access-Control-Allow-Origin"] = "*";
         headers["Access-Control-Allow-Methods"] = "POST, GET, PUT, DELETE, OPTIONS";
         headers["Access-Control-Allow-Credentials"] = false;

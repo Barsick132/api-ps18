@@ -282,13 +282,13 @@ exports.downloadFiles = function (req, body) {
             return;
         }
 
-        if (!UsersReq.checkRole(req.user.roles, ROLE.PSYCHOLOGIST)) {
-            console.error('Not ' + ROLE.PSYCHOLOGIST);
+        if (!UsersReq.checkRoles(req.user.roles, [ROLE.PSYCHOLOGIST, ROLE.STUDENT])) {
+            console.error('Not ' + ROLE.PSYCHOLOGIST + ' and Not ' + ROLE.STUDENT);
             reject({status: STATUS.NOT_ACCESS});
             return;
         }
 
-        FilesReq.getFileInfo(knex, body)
+        FilesReq.getFileInfo(knex, body, req.user)
             .then(res => {
                 if (res.length === 0) {
                     result = {status: STATUS.NOT_FOUND_FILES};

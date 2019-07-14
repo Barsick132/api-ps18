@@ -112,7 +112,8 @@ module.exports.TABLES = {
         REC_ONLINE: 'rec_online',
         REC_NOT_COME: 'rec_not_come',
         CONT_NAME: 'cont_name',
-        CONT_VALUE: 'cont_value'
+        CONT_VALUE: 'cont_value',
+        REC_DT: 'rec_dt'
     },
     VISITS: {
         NAME: 'visits',

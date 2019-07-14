@@ -3,7 +3,7 @@ swagger: "2.0"
 info:
   description: "Это API (swagger 2.0) системы автоматизации психолого-педагогическ\
     ого сопровождения субъектов образовательной деятельности для школы №18."
-  version: "1.0.33"
+  version: "1.0.34"
   title: "PsychoSys18"
   contact:
     email: "antony.nor@yandex.ru"
@@ -5480,6 +5480,10 @@ definitions:
   body_25:
     type: "object"
     properties:
+      std_id:
+        type: "integer"
+        format: "int32"
+        example: 1
       emp_id:
         type: "integer"
         format: "int32"

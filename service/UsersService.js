@@ -1087,7 +1087,7 @@ exports.getStudents = function (req, body) {
             return;
         }
 
-        const access_props = [T.STUDENTS.EMP_ID, "std_parallel", "std_graduated", T.STUDENTS.STD_CLASS_LETTER,
+        const access_props = [T.STUDENTS.STD_ID, T.STUDENTS.EMP_ID, "std_parallel", "std_graduated", T.STUDENTS.STD_CLASS_LETTER,
             T.PEOPLE.PEPL_LOGIN, T.PEOPLE.PEPL_SECOND_NAME, T.PEOPLE.PEPL_FIRST_NAME,
             T.PEOPLE.PEPL_LAST_NAME, T.PEOPLE.PEPL_GENDER, T.PEOPLE.PEPL_BIRTHDAY,
             T.PEOPLE.PEPL_PHONE, T.PEOPLE.PEPL_EMAIL];

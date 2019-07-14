@@ -1,4 +1,5 @@
 const T = require('../constants').TABLES;
+const ROLE = require('../constants').ROLE;
 const Promise = require('bluebird');
 
 exports.addFiles = (knex, body) => {
@@ -109,7 +110,7 @@ exports.addFiles = (knex, body) => {
                             }
                             return Promise.map(body.files, (file) => {
                                 let expansion = file.file.originalname.split('.');
-                                expansion = expansion[expansion.length-1];
+                                expansion = expansion[expansion.length - 1];
                                 return knex(T.FILE.NAME)
                                     .transacting(trx)
                                     .insert({
@@ -125,7 +126,7 @@ exports.addFiles = (knex, body) => {
                         case 'tst_id': {
                             return Promise.map(body.files, (file) => {
                                 let expansion = file.file.originalname.split('.');
-                                expansion = expansion[expansion.length-1];
+                                expansion = expansion[expansion.length - 1];
                                 return knex(T.FILE.NAME)
                                     .transacting(trx)
                                     .insert({
@@ -141,7 +142,7 @@ exports.addFiles = (knex, body) => {
                         case 'tr_id': {
                             return Promise.map(body.files, (file) => {
                                 let expansion = file.file.originalname.split('.');
-                                expansion = expansion[expansion.length-1];
+                                expansion = expansion[expansion.length - 1];
                                 return knex(T.FILE.NAME)
                                     .transacting(trx)
                                     .insert({
@@ -197,10 +198,18 @@ exports.delFilesById = function (knex, files_id_arr) {
         .returning('*');
 };
 
-exports.getFileInfo = function (knex, file_id_arr) {
-    return knex(T.FILE.NAME)
-        .select()
-        .whereIn(T.FILE.FILE_ID, file_id_arr);
+exports.getFileInfo = function (knex, file_id_arr, user) {
+    if (user.roles.find(role => role === ROLE.PSYCHOLOGIST)) {
+        return knex(T.FILE.NAME)
+            .select()
+            .whereIn(T.FILE.FILE_ID, file_id_arr);
+    }
+    if (user.roles.find(role => role === ROLE.STUDENT)) {
+        return knex({afts: 'access_file_tst_std'})
+            .select()
+            .where('afts.std_id', user.pepl_id)
+            .whereIn('afts.file_id', file_id_arr);
+    }
 };
 
 exports.getFiles = function (knex, body) {

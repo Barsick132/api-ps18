@@ -1065,7 +1065,7 @@ exports.getPersonalRecords = function (knex, objRequest, pepl_id) {
                         .where('atb.pepl_id', pepl_id)
                         .where(function () {
                             this.whereNot('atb.wd_date', '<', objRequest.wd_period_begin)
-                                .orWhere('atb.wd_date',  objRequest.wd_period_begin)
+                                .orWhere('atb.wd_date', objRequest.wd_period_begin)
                                 .andWhereNot('atb.rec_time', '<', objRequest.wd_time_begin)
                         })
                         .orderBy('wd_date', 'rec_time');
@@ -1091,7 +1091,7 @@ exports.getPersonalRecords = function (knex, objRequest, pepl_id) {
                         .where('atb.pepl_id', pepl_id)
                         .where(function () {
                             this.whereNot('atb.wd_date', '>', objRequest.wd_period_end)
-                                .orWhere('atb.wd_date',  objRequest.wd_period_end)
+                                .orWhere('atb.wd_date', objRequest.wd_period_end)
                                 .andWhereNot('atb.rec_time', '>', objRequest.wd_time_end)
                         })
                         .orderBy('wd_date', 'rec_time');
@@ -1101,7 +1101,7 @@ exports.getPersonalRecords = function (knex, objRequest, pepl_id) {
 
         getRecords()
             .then(res => {
-                if(res.length === 0) {
+                if (res.length === 0) {
                     throw new Error(STATUS.NOT_FOUND_VALID_RECORDS);
                 }
 
@@ -1121,9 +1121,9 @@ exports.getPersonalRecords = function (knex, objRequest, pepl_id) {
                         }
                     };
 
-                    if(indexWd !== -1){
+                    if (indexWd !== -1) {
                         result[indexWd].rec_array.push(record)
-                    }else {
+                    } else {
                         let wd = {
                             wd_id: item.wd_id,
                             wd_date: this.getDateString(item.wd_date),
@@ -1136,9 +1136,9 @@ exports.getPersonalRecords = function (knex, objRequest, pepl_id) {
                 resolve(result);
             })
             .catch(err => {
-                if(err.message === STATUS.NOT_FOUND_VALID_RECORDS){
+                if (err.message === STATUS.NOT_FOUND_VALID_RECORDS) {
                     result = {status: err.message}
-                }else {
+                } else {
                     result = {status: STATUS.UNKNOWN_ERROR}
                 }
 
@@ -1161,25 +1161,36 @@ exports.setToRecord = (knex, body, pepl_id) => {
             NOT_FOUND_VK_AT_EMP: 'NOT_FOUND_VK_AT_EMP',
             CAN_NOT_SIGN_UP_TO_YOURSELF: 'CAN_NOT_SIGN_UP_TO_YOURSELF',
             NOT_FOUND_EMP_TO_BE_REC: 'NOT_FOUND_EMP_TO_BE_REC',
+            LIMIT_TO_ONE_ENTRY_PER_DAY: 'LIMIT_TO_ONE_ENTRY_PER_DAY',
             UNKNOWN_ERROR: 'UNKNOWN_ERROR'
         };
 
         let result = {};
         let emp_wd = {};
 
-        return knex({p: T.PEOPLE.NAME, e: T.EMPLOYEES.NAME, rec: T.RECORDS.NAME, wd: T.WORKING_DAYS.NAME})
-            .distinct('p.*', 'e.*', 'wd.*')
-            .select('p.*', 'e.*', 'wd.*')
-            .where('rec.' + T.RECORDS.REC_ID, body.rec_id)
-            .whereNull('rec.' + T.RECORDS.PEPL_ID)
-            .where(function () {
-                this.whereRaw('?? > current_date', ['wd.' + T.WORKING_DAYS.WD_DATE])
-                    .orWhereRaw('?? = current_date', ['wd.' + T.WORKING_DAYS.WD_DATE])
-                    .andWhereRaw('?? > current_time', ['rec.' + T.RECORDS.REC_TIME])
+        return knex({rec: T.RECORDS.NAME})
+            .select()
+            .whereRaw('extract(epoch from (current_timestamp - ??))<?', ['rec.' + T.RECORDS.REC_DT, 86400])
+            .where('rec.' + T.RECORDS.PEPL_ID, pepl_id)
+            .then(res => {
+                if (res.length !== 0) {
+                    throw new Error(STATUS.LIMIT_TO_ONE_ENTRY_PER_DAY);
+                }
+
+                return knex({p: T.PEOPLE.NAME, e: T.EMPLOYEES.NAME, rec: T.RECORDS.NAME, wd: T.WORKING_DAYS.NAME})
+                    .distinct('p.*', 'e.*', 'wd.*')
+                    .select('p.*', 'e.*', 'wd.*')
+                    .where('rec.' + T.RECORDS.REC_ID, body.rec_id)
+                    .whereNull('rec.' + T.RECORDS.PEPL_ID)
+                    .where(function () {
+                        this.whereRaw('?? > current_date', ['wd.' + T.WORKING_DAYS.WD_DATE])
+                            .orWhereRaw('?? = current_date', ['wd.' + T.WORKING_DAYS.WD_DATE])
+                            .andWhereRaw('?? > current_time', ['rec.' + T.RECORDS.REC_TIME])
+                    })
+                    .whereRaw('?? = ??', ['rec.' + T.RECORDS.WD_ID, 'wd.' + T.WORKING_DAYS.WD_ID])
+                    .whereRaw('?? = ??', ['wd.' + T.WORKING_DAYS.EMP_ID, 'e.' + T.EMPLOYEES.EMP_ID])
+                    .whereRaw('?? = ??', ['p.' + T.PEOPLE.PEPL_ID, 'e.' + T.EMPLOYEES.EMP_ID]);
             })
-            .whereRaw('?? = ??', ['rec.' + T.RECORDS.WD_ID, 'wd.' + T.WORKING_DAYS.WD_ID])
-            .whereRaw('?? = ??', ['wd.' + T.WORKING_DAYS.EMP_ID, 'e.' + T.EMPLOYEES.EMP_ID])
-            .whereRaw('?? = ??', ['p.' + T.PEOPLE.PEPL_ID, 'e.' + T.EMPLOYEES.EMP_ID])
             .then(res => {
                 if (res.length !== 1) {
                     throw new Error(STATUS.NOT_FOUND_EMP_TO_BE_REC);
@@ -1355,7 +1366,8 @@ exports.setToRecord = (knex, body, pepl_id) => {
                     err.message === STATUS.NOT_FOUND_HANGOUTS_AT_EMP ||
                     err.message === STATUS.NOT_FOUND_VIBER_AT_EMP ||
                     err.message === STATUS.NOT_FOUND_VK_AT_EMP ||
-                    err.message === STATUS.NOT_FOUND_CONT_NAME) {
+                    err.message === STATUS.NOT_FOUND_CONT_NAME ||
+                    err.message === STATUS.LIMIT_TO_ONE_ENTRY_PER_DAY) {
                     result = {status: err.message};
                 } else {
                     result = {status: STATUS.UNKNOWN_ERROR};

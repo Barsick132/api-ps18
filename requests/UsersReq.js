@@ -173,18 +173,27 @@ exports.getStudents = (knex, data, std_parallel, std_graduated) => {
     if (std_parallel && std_graduated !== undefined)
         return knex({p: T.PEOPLE.NAME, s: T.STUDENTS.NAME})
             .select()
-            .where(knex.raw('?? = case when ? then ' +
-                'case when ?? < current_date then ' +
-                'case when extract(month from ??) < 9 then ' +
-                'extract(year from ??) - extract(year from ??) - ?? else ' +
-                'extract (year from ??) - extract(year from ??) - ?? + 1 end end ' +
-                'else case when extract(month from current_date) < 9 then ' +
-                'extract(year from current_date) - extract(year from ??) - ?? else ' +
-                'extract (year from current_date) - extract(year from ??) - ?? + 1 end end',
+            .where(knex.raw('?? = ' +
+                'case when ? then ' +
+                    'case when ?? < current_date then ' +
+                        'case when extract(month from ??) < 9 then ' +
+                            'extract(year from ??) - extract(year from ??) - ?? else ' +
+                            'extract (year from ??) - extract(year from ??) - ?? + 1 ' +
+                        'end ' +
+                    'end ' +
+                'else ' +
+                    'case when ?? >= current_date then ' +
+                        'case when extract(month from current_date) < 9 then ' +
+                            'extract(year from current_date) - extract(year from ??) - ?? else ' +
+                            'extract (year from current_date) - extract(year from ??) - ?? + 1 ' +
+                        'end ' +
+                    'end ' +
+                'end',
                 [std_parallel, std_graduated, 's.' + T.STUDENTS.STD_DATE_ISSUE, 's.' + T.STUDENTS.STD_DATE_ISSUE,
                     's.' + T.STUDENTS.STD_DATE_ISSUE, 's.' + T.STUDENTS.STD_DATE_RECEIPT,
                     's.' + T.STUDENTS.STD_STAYED_TWO_YEAR, 's.' + T.STUDENTS.STD_DATE_ISSUE,
                     's.' + T.STUDENTS.STD_DATE_RECEIPT, 's.' + T.STUDENTS.STD_STAYED_TWO_YEAR,
+                    's.' + T.STUDENTS.STD_DATE_ISSUE,
                     's.' + T.STUDENTS.STD_DATE_RECEIPT, 's.' + T.STUDENTS.STD_STAYED_TWO_YEAR,
                     's.' + T.STUDENTS.STD_DATE_RECEIPT, 's.' + T.STUDENTS.STD_STAYED_TWO_YEAR]))
             .whereRaw('?? = ??', ['p.' + T.PEOPLE.PEPL_ID, 's.' + T.STUDENTS.STD_ID])
