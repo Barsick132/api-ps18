@@ -2086,7 +2086,7 @@ exports.setJournal = function (knex, vst_arr_del, vst_arr_upd, vst_arr_add, pepl
                         .returning(T.VISITS.VST_ID)
                         .then(res => resolve(res));
                 } else {
-                    reject(undefined);
+                    resolve(undefined);
                 }
             })
                 .then(res => {
@@ -2103,6 +2103,7 @@ exports.setJournal = function (knex, vst_arr_del, vst_arr_upd, vst_arr_add, pepl
                     }
 
                     if (vst_arr_upd !== undefined && vst_arr_upd.length > 0) {
+                        let req_upd_params2 = ['vst_dt', 'vst_age', 'vst_gender', 'vst_name', 'vst_consultant'];
                         return Promise.map(vst_arr_upd, (upd_obj) => {
                             if (upd_obj.rec_data !== undefined && upd_obj.rec_data.rec_id) {
                                 // Тут можно к объекту запроса добавить еще повод, проблему и результат
@@ -2116,6 +2117,13 @@ exports.setJournal = function (knex, vst_arr_del, vst_arr_upd, vst_arr_add, pepl
                                         req_upd_obj[param] = upd_obj[param];
                                     }
                                 });
+                                if (upd_obj.vst_data !== undefined) {
+                                    Object.keys(upd_obj.vst_data).forEach(param => {
+                                        if (req_upd_params2.some(p => p === param)) {
+                                            req_upd_obj[param] = upd_obj.vst_data[param];
+                                        }
+                                    });
+                                }
 
 
                                 let subQuery = function (column) {
@@ -2132,11 +2140,11 @@ exports.setJournal = function (knex, vst_arr_del, vst_arr_upd, vst_arr_add, pepl
                                             vst_reason: req_upd_obj.vst_reason,
                                             vst_problem: req_upd_obj.vst_problem,
                                             vst_result: req_upd_obj.vst_result,
-                                            vst_dt: subQuery('vst_dt'),
-                                            vst_age: subQuery('vst_age'),
-                                            vst_gender: subQuery('vst_gender'),
-                                            vst_name: subQuery('vst_name'),
-                                            vst_consultant: subQuery('vst_consultant')
+                                            vst_dt: req_upd_obj.vst_dt !== undefined ? req_upd_obj.vst_dt : subQuery('vst_dt'),
+                                            vst_age: req_upd_obj.vst_age !== undefined ? req_upd_obj.vst_age : subQuery('vst_age'),
+                                            vst_gender: req_upd_obj.vst_gender !== undefined ? req_upd_obj.vst_gender : subQuery('vst_gender'),
+                                            vst_name: req_upd_obj.vst_name !== undefined ? req_upd_obj.vst_name : subQuery('vst_name'),
+                                            vst_consultant: req_upd_obj.vst_consultant !== undefined ? req_upd_obj.vst_consultant : subQuery('vst_consultant'),
                                         }
                                     )
                                     .transacting(trx)
@@ -2154,7 +2162,6 @@ exports.setJournal = function (knex, vst_arr_del, vst_arr_upd, vst_arr_add, pepl
                                 // Если привязка к записи не меняется, то собираем объект из тех параметров, что имеются
                                 // Объект должен содержать хотя бы одно изменение
                                 let req_upd_params = ['vst_reason', 'vst_problem', 'vst_result'];
-                                let req_upd_params2 = ['vst_dt', 'vst_age', 'vst_gender', 'vst_name', 'vst_consultant'];
                                 let req_upd_obj = {};
                                 Object.keys(upd_obj).forEach(param => {
                                     if (req_upd_params.some(p => p === param)) {
@@ -2203,6 +2210,7 @@ exports.setJournal = function (knex, vst_arr_del, vst_arr_upd, vst_arr_add, pepl
                     }
 
                     if (vst_arr_add !== undefined && vst_arr_add.length > 0) {
+                        let req_add_params2 = ['vst_dt', 'vst_age', 'vst_gender', 'vst_name', 'vst_consultant'];
                         return Promise.map(vst_arr_add, (add_obj) => {
                             if (add_obj.rec_data !== undefined && add_obj.rec_data.rec_id) {
                                 // Тут можно к объекту запроса добавить еще повод, проблему и результат
@@ -2216,6 +2224,13 @@ exports.setJournal = function (knex, vst_arr_del, vst_arr_upd, vst_arr_add, pepl
                                         req_add_obj[param] = add_obj[param];
                                     }
                                 });
+                                if (add_obj.vst_data !== undefined) {
+                                    Object.keys(add_obj.vst_data).forEach(param => {
+                                        if (req_add_params2.some(p => p === param)) {
+                                            req_add_obj[param] = add_obj.vst_data[param];
+                                        }
+                                    });
+                                }
 
 
                                 let subQuery = function (column) {
@@ -2232,11 +2247,11 @@ exports.setJournal = function (knex, vst_arr_del, vst_arr_upd, vst_arr_add, pepl
                                             vst_reason: req_add_obj.vst_reason,
                                             vst_problem: req_add_obj.vst_problem,
                                             vst_result: req_add_obj.vst_result,
-                                            vst_dt: subQuery('vst_dt'),
-                                            vst_age: subQuery('vst_age'),
-                                            vst_gender: subQuery('vst_gender'),
-                                            vst_name: subQuery('vst_name'),
-                                            vst_consultant: subQuery('vst_consultant'),
+                                            vst_dt: req_add_obj.vst_dt !== undefined ? req_add_obj.vst_dt : subQuery('vst_dt'),
+                                            vst_age: req_add_obj.vst_age !== undefined ? req_add_obj.vst_age : subQuery('vst_age'),
+                                            vst_gender: req_add_obj.vst_gender !== undefined ? req_add_obj.vst_gender : subQuery('vst_gender'),
+                                            vst_name: req_add_obj.vst_name !== undefined ? req_add_obj.vst_name : subQuery('vst_name'),
+                                            vst_consultant: req_add_obj.vst_consultant !== undefined ? req_add_obj.vst_consultant : subQuery('vst_consultant'),
                                             emp_id: pepl_id
                                         }
                                     )
@@ -2253,7 +2268,6 @@ exports.setJournal = function (knex, vst_arr_del, vst_arr_upd, vst_arr_add, pepl
                                 // Если привязка к записи не меняется, то собираем объект из тех параметров, что имеются
                                 // Объект должен содержать хотя бы одно изменение
                                 let req_add_params = ['vst_reason', 'vst_problem', 'vst_result'];
-                                let req_add_params2 = ['vst_dt', 'vst_age', 'vst_gender', 'vst_name', 'vst_consultant'];
                                 let req_add_obj = {};
                                 Object.keys(add_obj).forEach(param => {
                                     if (req_add_params.some(p => p === param)) {

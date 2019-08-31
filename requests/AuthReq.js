@@ -50,7 +50,7 @@ exports.getConfsParentsById = (knex, prnt_id_arr) => {
                         std_stayed_two_year: 's.' + T.STUDENTS.STD_STAYED_TWO_YEAR,
                         std_class_letter: 's.' + T.STUDENTS.STD_CLASS_LETTER
                     })
-                        .from({p: T.PEOPLE.NAME, s: T.STUDENTS.NAME, r: T.ROLE.NAME, sp: T.STD_PRNT.NAME})
+                        .from({p: T.PEOPLE.NAME, s: T.STUDENTS.NAME, r: T.ROLE.NAME})
                         .whereRaw('?? = ?? and ?? = ?', ['r.' + T.ROLE.PEPL_ID, 'p.' + T.PEOPLE.PEPL_ID, 'r.' + T.ROLE.ROLE_NAME, ROLE.STUDENT])
                         .andWhereRaw('?? = ??', ['s.' + T.STUDENTS.STD_ID, 'p.' + T.PEOPLE.PEPL_ID])
                         .as('studs')

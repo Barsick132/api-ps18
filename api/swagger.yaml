@@ -3162,13 +3162,11 @@ definitions:
         type: "string"
         example: "18:30:00"
       wd_break_begin:
-        type: "string"
+        type: ["string","null"]
         example: "13:00:00"
-        x-nullable: true
       wd_break_end:
-        type: "string"
+        type: ["string","null"]
         example: "14:00:00"
-        x-nullable: true
       wd_duration:
         type: "integer"
         format: "int32"
@@ -4804,25 +4802,20 @@ definitions:
   updPersonalData_emp_data:
     properties:
       emp_skype:
-        type: "string"
+        type: ["string","null"]
         example: "emplAdmin"
-        x-nullable: true
       emp_discord:
-        type: "string"
+        type: ["string","null"]
         example: "emplAdmin#1232"
-        x-nullable: true
       emp_hangouts:
-        type: "string"
+        type: ["string","null"]
         example: "admin@gmail.com"
-        x-nullable: true
       emp_viber:
-        type: "string"
+        type: ["string","null"]
         example: "9045556432"
-        x-nullable: true
       emp_vk:
-        type: "string"
+        type: ["string","null"]
         example: "empadmin"
-        x-nullable: true
   updPersonalData_prnt_data:
     properties:
       prnt_city:
@@ -4835,9 +4828,8 @@ definitions:
         type: "string"
         example: "17Б"
       prnt_flat:
-        type: "string"
+        type: ["string","null"]
         example: "45"
-        x-nullable: true
   body_23:
     type: "object"
     properties:
@@ -4860,13 +4852,11 @@ definitions:
         type: "boolean"
         example: true
       pepl_phone:
-        type: "string"
+        type: ["string","null"]
         example: "9045556432"
-        x-nullable: true
       pepl_email:
-        type: "string"
+        type: ["string","null"]
         example: "admin@mail.ru"
-        x-nullable: true
       emp_data:
         $ref: "#/definitions/updPersonalData_emp_data"
       prnt_data:
@@ -5956,5 +5946,4 @@ definitions:
         type: "string"
         example: "Педагог-психолог"
       pst_description:
-        type: "string"
-        x-nullable: true
+        type: ["string","null"]
