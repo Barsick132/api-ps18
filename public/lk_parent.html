@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="ru">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <style type="text/css">
+        label {
+            text-align: right;
+        }
+    </style>
+    <title>Родитель</title>
+</head>
+
+<body>
+    <div id="app">
+            <!-- Modal -->
+    <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLongTitle">Сообщение системы</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    Запись произведена!
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand" href="#">СПС</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <div class="navbar-nav w-100">
+                    <a class="nav-item nav-link" href="#" v-on:click="menuSelect='session'">
+                        Запись на прием
+                    </a>
+                    <a class="nav-item nav-link" href="#" v-on:click="menuSelect='tests'" v-if="false">
+                        Тесты
+                    </a>
+
+                    <div class="nav-item dropdown ml-auto" style="padding-left:5rem">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            {{menuName}}
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <a class="dropdown-item" href="#" v-on:click="menuSelect='edit'">Редактировать профиль</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="#" v-on:click="exit">Выход</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="w-75 mx-auto mt-3">
+
+            <!-- Запись на прием -->
+            <div id="session" v-if="menuSelect=='session'">
+                <div class="card text-center">
+                    <div class="card-header">
+                        Запись на прием
+                    </div>
+                    <div class="text-center" v-if="!session.loading">
+                        <div class="spinner-border text-primary my-3" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                    <div class="card-body" v-if="session.loading">
+
+                        <form id="addSession">
+                            <div class="form-group row">
+                                <label for="psychologist" class="col-sm-2 col-form-label">Психолог</label>
+                                <div class="col-sm-10">
+                                    <select class="form-control" v-model="session.psychologist" v-on:input="checkInput"
+                                        id="psychologist" v-on:change="psychChange" required>
+                                        <option v-for="(psych, index) in session.psychologistList"
+                                            :value="psych.pepl_id" :id="psych.pepl_id">
+                                            {{psych.pepl_second_name}} {{psych.pepl_first_name}}
+                                            {{psych.pepl_last_name}}</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
+                                <label for="recordDate" class="col-sm-2 col-form-label">Дата</label>
+                                <div class="col-sm-10">
+                                    <select class="form-control" v-model="session.recordDate" v-on:input="checkInput"
+                                        id="recordDate" v-on:change="recordDateChange" required>
+                                        <option v-for="rec in session.recordList" :value="rec.wd_date" :id="rec.wd_id">
+                                            {{rec.wd_date}}</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
+                                <label for="recordTime" class="col-sm-2 col-form-label">Время</label>
+                                <div class="col-sm-10">
+                                    <select class="form-control" v-model="session.recordID" v-on:input="checkInput"
+                                        id="recordTime" required>
+                                        <option v-for="rec in session.recordTimeList" :value="rec.rec_id"
+                                            :id="rec.rec_id">
+                                            {{rec.rec_data.rec_time}}</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
+                                <label for="online" class="col-sm-2 col-form-label"></label>
+                                <div class="col-sm-10">
+                                    <button type="button" class="btn btn-block"
+                                        v-on:click="session.isOnline = !session.isOnline"
+                                        v-bind:class="{'btn-primary': session.isOnline, 'btn-secondary': !session.isOnline}">
+                                        Онлайн прием
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div v-if="session.isOnline">
+                                <div class="form-group row">
+                                    <label for="typeLink" class="col-sm-2 col-form-label">Тип связи</label>
+                                    <div class="col-sm-10">
+                                        <select class="form-control" v-model="session.typeLink" v-on:input="checkInput"
+                                            id="recordTime" required>
+                                            <option v-for="link in session.typeLinkList" :value="link" :id="link">
+                                                {{link}}</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="dataLink" class="col-sm-2 col-form-label">Контактные данные</label>
+                                    <div class="col-sm-10">
+                                        <input type="text" class="form-control" v-model="session.contact"
+                                            v-on:input="checkInput" id="dataLink" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-primary" v-on:click="makeSession">Записаться на прием</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Вывод доступных тестов для ученика -->
+            <div id="tests" v-if="menuSelect=='tests'">
+                <div class="card">
+                    <div class="card-header text-center">
+                        Тесты
+                    </div>
+                    <div class="text-center" v-if="!testLoading">
+                        <div class="spinner-border text-primary my-3" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                    <div class="card-body" v-if="testLoading">
+                    <div class="card my-1" v-for="(test, index) in testList">
+                        <div class="card-header">
+                            {{test.tst_name}}
+                            <span class="badge" v-bind:class="{'badge-success': test.tst_online, 'badge-danger': !test.tst_online}">{{test.tst_online?'Онлайн':'Оффлайн'}}</span>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title"></h5>
+                            <p class="card-text"></p>
+                        </div>
+                        <div class="card-footer text-center">
+                            <button class="btn btn-primary" :id="test.tst_id">Посмтотреть</button>
+                            <button class="btn btn-success" :id="test.tst_id">Загрузить ответы</button>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Редактирование личной информации -->
+            <div id="edit" v-if="menuSelect=='edit'">
+                <div class="card text-center">
+                    <div class="card-header">
+                        Данные пользователя
+                    </div>
+                    <div class="text-center" v-if="!editLoading">
+                        <div class="spinner-border text-primary my-3" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                    <div class="card-body" v-if="editLoading">
+                        <form id="updAdminData">
+                            <div class="form-group row">
+                                <label for="family" class="col-sm-2 col-form-label">Фамилия</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control"
+                                        v-model="editData.pepl_data.pepl_second_name" v-on:blur="checkInput" id="family"
+                                        required>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="name" class="col-sm-2 col-form-label">Имя</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control" v-model="editData.pepl_data.pepl_first_name"
+                                        v-on:blur="checkInput" id="name" required>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="secondname" class="col-sm-2 col-form-label">Отчество</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control" v-model="editData.pepl_data.pepl_last_name"
+                                        v-on:blur="checkInput" id="secondname" required>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="phone" class="col-sm-2 col-form-label">Телефон</label>
+                                <div class="input-group col-sm-10">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text">+7</div>
+                                    </div>
+                                    <input type="tel" class="form-control" v-model="editData.pepl_data.pepl_phone"
+                                        v-on:input="validPhone" maxlength="15" minlength="15" id="phone">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="email" class="col-sm-2 col-form-label">Email</label>
+                                <div class="col-sm-10">
+                                    <input type="email" class="form-control" v-model="editData.pepl_data.pepl_email"
+                                        id="email">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="sex" class="col-sm-2 col-form-label">Пол</label>
+                                <div class="col-sm-10">
+                                    <select class="form-control" v-model="editData.pepl_data.pepl_gender"
+                                        v-on:input="validPhone" id="sex" required>
+                                        <option value="true">Мужской</option>
+                                        <option value="false">Женский</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <!-- Поля для ученика -->
+                            <div class="form-group row">
+                                <label for="childclass" class="col-sm-2 col-form-label">Класс</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control" v-model="editData.std_data.std_class"
+                                        v-on:blur="checkInput" id="childclass" minlength="2" maxlength="3" required>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="childstayed" class="col-sm-2 col-form-label">Сколько раз оствался на 2-й
+                                    год</label>
+                                <div class="col-sm-10">
+                                    <input type="number" class="form-control"
+                                        v-model="editData.std_data.std_stayed_two_year" v-on:blur="checkInput"
+                                        id="childstayed" required>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="childissue" class="col-sm-2 col-form-label">Год выпуска</label>
+                                <div class="col-sm-10">
+                                    <input type="date" class="form-control" v-model="editData.std_data.std_date_issue"
+                                        v-on:blur="checkInput" id="childissue" required>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="old_pass" class="col-sm-2 col-form-label">Старый пароль</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control" v-model="editData.pepl_old_pass"
+                                        id="old_pass" required>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="new_pass" class="col-sm-2 col-form-label">Новый пароль</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control" v-model="editData.pepl_new_pass"
+                                        id="new_pass" required>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="card-footer" v-if="editLoading">
+                        <button class="btn btn-primary" v-on:submit="updData">Сохранить измения</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="js/jquery-3.3.1.slim.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+
+    <script src="js/app.js"></script>
+    <script src="js/vue.js"></script>
+    <script>
+        var app = new Vue({
+            el: '#app',
+            data: {
+                menuSelect: 'session',
+                menuName: '',
+                session: {
+                    psychologistList: [],
+                    psychologist: 0,
+                    recordList: [],
+                    recordID: 0,
+                    recordDate: '',
+                    recordTimeList: [],
+                    recordTime: '',
+                    isOnline: false,
+                    typeLinkList: [],
+                    typeLink: '',
+                    contact: '',
+                    result: [],
+                    loading: false,
+                },
+                testLoading: false,
+                testList:{},
+                my_id: 0,
+                editData: {},
+                editLoading: false,
+                orderData: {},
+                orderLoading: false,
+            },
+
+            watch: {
+                menuSelect: function (selecter) {
+
+                    if (selecter == "tests") {
+                        
+                    var tmpData = this;
+                    getTests().then(
+                        function (data) {
+                            console.log(data);
+                            if (data.status != "OK") { return; }
+                            tmpData.testList = data.payload;
+                            tmpData.testLoading = true;
+                        },
+                        function (err) {
+                            console.error(err);
+                            alert(`Fulfilled: ${err}`)
+                        }
+                    );
+                    } else { this.testLoading = false; }
+
+                    if (selecter == "edit") {
+                        var tmpData = this;
+                        // Загружаем персональные данные
+                        getPersonalData().then(
+                            function (data) {
+                                console.log(data);
+                                if (data.status != "OK") { return; }
+                                data.payload.pepl_data.pepl_birthday = data.payload.pepl_data.pepl_birthday.substring(10, -10);
+                                data.payload.std_data.std_date_issue = data.payload.std_data.std_date_issue.substring(10, -10);
+                                tmpData.editData = data.payload;
+                                tmpData.editData.pepl_old_pass = "";
+                                tmpData.editData.pepl_new_pass = "";
+                                tmpData.editLoading = true;
+                            },
+                            function (err) {
+                                console.error(err);
+                                alert(`Fulfilled: ${err}`)
+                            }
+                        );
+                    } else { this.editLoading = false; }
+
+                    if (selecter == "session") {
+                        this.loadPsychologistList();
+                    } else { this.session.loading = false; }
+                }
+            },
+
+            methods: {
+                // Функции для записи к психологу
+                loadPsychologistList: function () {
+                    this.session.loading = false;
+                    var tmpData = this;
+                        getPersonsToBeRec().then(
+                            function (data) {
+                                console.log(data);
+                                if (data.status != "OK") { return; }
+                                tmpData.session.psychologistList = data.payload;
+                                tmpData.session.loading = true;
+                            },
+                            function (err) {
+                                console.error(err);
+                                alert(`Fulfilled: ${err}`)
+                            }
+                        );
+                },
+
+                psychChange: function () {
+                    for (var i = 0; i < this.session.psychologistList.length; i++) {
+                        if (this.session.psychologistList[i].pepl_id == this.session.psychologist) {
+                            this.session.typeLinkList = this.session.psychologistList[i].available_cont;
+                            break;
+                        }
+                    }
+                    var tmpData = this;
+                    getEmpGraphic({ 'emp_id': this.session.psychologist }).then(
+                        function (data) {
+                            console.log(data);
+                            if (data.status != "OK") { return; }
+                            tmpData.session.recordList = data.payload;
+                        },
+                        function (err) {
+                            console.error(err);
+                            alert(`Fulfilled: ${err}`)
+                        }
+                    );
+                },
+
+                recordDateChange: function () {
+                    for (var i = 0; i < this.session.recordList.length; i++) {
+                        if (this.session.recordList[i].wd_date == this.session.recordDate) {
+                            this.session.recordTimeList = this.session.recordList[i].rec_array.sort((a, b) => a.rec_time > b.rec_time);
+                            return;
+                        }
+                    }
+                },
+
+                makeSession: function () {
+                    var formData = document.getElementById("addSession");
+                    var inData = formData.getElementsByClassName('form-control');
+                    var check = false;
+                    for (var i = 0; i < inData.length; i++) {
+                        if (((inData[i].value == "" || inData[i].value.length < inData[i].minLength) && inData[i].attributes.getNamedItem('required') != null) || inData[i].classList.contains("is-invalid")) {
+                            inData[i].classList.remove("is-valid");
+                            inData[i].classList.add("is-invalid");
+                            check = true;
+                            break;
+                        }
+                    };
+
+                    if (check) {
+                        alert("Заполните данные");
+                        return;
+                    }
+                    var inData = {
+                        "rec_id": this.session.recordID,
+                        "rec_online": this.session.isOnline,
+                        "cont_name": this.session.typeLink,
+                        "cont_value": this.session.contact
+                    };
+
+                    this.setToRecord(inData).then(
+                        function (data) {
+                            console.log(data);
+                            if (data.status != "OK") { return; }
+                            $('#exampleModalCenter').modal('show');
+                        },
+                        function (err) {
+                            console.error(err);
+                            alert(`Fulfilled: ${err}`)
+                        }
+                    );
+                },
+                // Проверка полей ввода данных
+                checkForm: function () {
+                    var formData = document.getElementById("addPep");
+                    var inData = formData.getElementsByClassName('form-control');
+                    var check = false;
+                    for (var i = 0; i < inData.length; i++) {
+                        if (((inData[i].value == "" || inData[i].value.length < inData[i].minLength) && inData[i].attributes.getNamedItem('required') != null) || inData[i].classList.contains("is-invalid")) {
+                            inData[i].classList.remove("is-valid");
+                            inData[i].classList.add("is-invalid");
+                            check = true;
+                            break;
+                        }
+                    };
+                },
+
+                checkInput: function (target) {
+                    obj = target.target;
+                    if (obj.value == "" || obj.value.length < obj.minLength) {
+                        obj.classList.remove("is-valid");
+                        obj.classList.add("is-invalid");
+                    } else {
+                        obj.classList.remove("is-invalid");
+                        obj.classList.add("is-valid");
+                    }
+                },
+                // Обновлние личной информации
+                updData: function () {
+                    editLoading = false;
+                    tmpData = this;
+                    updPersonalData(this.editData).then(
+                        function (data) {
+                            console.log(data);
+                            if (data.status != "OK") { return; }
+                            tmpData.editData = data.payload;
+                            tmpData.editLoading = true;
+                        },
+                        function (err) {
+                            console.error(err);
+                            alert(`Fulfilled: ${err}`)
+                        }
+                    );
+                },
+
+                sendData: function () {
+                    window.event.preventDefault();
+                    var formData = document.getElementById("addPep");
+                    var inData = formData.getElementsByClassName('form-control');
+                    var check = false;
+                    for (var i = 0; i < inData.length; i++) {
+                        if (((inData[i].value == "" || inData[i].value.length < inData[i].minLength) && inData[i].attributes.getNamedItem('required') != null) || inData[i].classList.contains("is-invalid")) {
+                            inData[i].classList.remove("is-valid");
+                            inData[i].classList.add("is-invalid");
+                            check = true;
+                            break;
+                        }
+                    };
+
+                    if (check) {
+                        alert("Заполните данные");
+                        return;
+                    }
+                    var ph = "";
+                    if (this.addPeople.phone != "(") {
+                        ph = this.addPeople.phone;
+                        ph = ph.replace(new RegExp("-", 'g'), "");
+                        ph = ph.replace("(", "");
+                        ph = ph.replace(")", "");
+                    }
+                    var regData = {
+                        "role_array": [this.addPeople.typeUser == 0 ? "Teacher" : "Student"
+                            /*{
+                                "role_id": this.addPeople.typeUser == 0 ? 4 : 3
+                            }*/
+                        ],
+                        "pepl_data": {
+                            "pepl_second_name": this.addPeople.family,
+                            "pepl_first_name": this.addPeople.name,
+                            "pepl_last_name": this.addPeople.secondname,
+                            "pepl_gender": this.addPeople.sex,
+                            "pepl_birthday": this.addPeople.birthday,
+                            "pepl_phone": ph,
+                            "pepl_email": this.addPeople.email
+                        }
+                    }
+                    if (this.addPeople.typeUser == 0) {
+                        var ph = "";
+                        if (this.addPeople.emp.viber != "(") {
+                            ph = this.addPeople.emp.viber;
+                            ph = ph.replace(new RegExp("-", 'g'), "");
+                            ph = ph.replace("(", "");
+                            ph = ph.replace(")", "");
+                        }
+                        regData.emp_data = {
+                            "pst_arr": [
+                                {
+                                    "pst_id": this.addPeople.typeUser == 0 ? 4 : 3
+                                }
+                            ],
+                            "emp_skype": this.addPeople.emp.skype,
+                            "emp_discord": this.addPeople.emp.discord,
+                            "emp_hangouts": this.addPeople.emp.hangouts,
+                            "emp_viber": ph,
+                            "emp_vk": this.addPeople.emp.vkontakte,
+                            "emp_date_enrollment": this.addPeople.emp.enrollment
+                        }
+                    } else {
+                        regData.std_data = {
+                            "emp_id": this.addPeople.std.class_teach,
+                            "std_class": this.addPeople.std.class_at_school.toUpperCase()
+                        }
+                    }
+                    var apd = this;
+                    fetch('https://api-ps18.herokuapp.com/signup', {
+                        method: 'POST',
+                        headers: { "Authorization": localStorage.getItem('token') },
+                        body: regData
+                    })
+                        .then(function (response) {
+                            if (response.status == 200)
+                                return response.json();
+                            else alert(response.statusText);
+                        })
+                        .then(function (data) {
+                            console.log(data);
+                            if (data.status == "OK") {
+                                apd.req = data;
+                            } else {
+                                alert("Данные неверны. Попробуйте еще раз");
+                            }
+                        })
+                        .catch(alert);
+                },
+
+                authCheck: function (token) {
+                    fetch('https://api-ps18.herokuapp.com/login', {
+                        method: 'POST',
+                        headers: { "Authorization": token }
+                    })
+                        .then(function (response) {
+                            if (response.status == 200)
+                                return response.json();
+                            else alert(response.statusText);
+                        })
+                        .then(function (data) {
+                            console.log(data);
+                            if (data.status == "OK") {
+
+                            } else {
+                                alert("Неверные учетные данные. Попробуйте еще раз");
+                            }
+                        })
+                        .catch(alert);
+                },
+                // Проверка и форматироваие телефона
+                validPhone: function (target) {
+
+                    obj = target.target;
+
+                    var curLen = this.addPeople.phone.length;
+
+                    if (curLen == 1) {
+                        obj.classList.remove("is-invalid");
+                        obj.classList.add("is-valid");
+                    }
+
+                    if (curLen == 0)
+                        this.addPeople.phone = "(";
+
+                    if (curLen < this.old) {
+                        this.old--;
+                        return;
+                    }
+
+                    if (curLen == 4)
+                        this.addPeople.phone = this.addPeople.phone + ")-";
+
+                    if (curLen == 9)
+                        this.addPeople.phone = this.addPeople.phone + "-";
+
+                    if (curLen == 12)
+                        this.addPeople.phone = this.addPeople.phone + "-";
+
+                    this.old++;
+                },
+
+                orderDecision: function (elem, id, choice) {
+                    var child = new Array();
+                    for (var i = 0; i < this.orderData[elem].cr_array.length; i++) {
+                        child.push(this.orderData[elem].cr_array.auto_check_data.std_id);
+                    }
+                    this.confirmParentReg(id, choice, child).then(
+                        function (data) {
+                            console.log(data);
+                            if (data.status != "OK") { return; }
+                            this.orderData.splice(elem, 1);
+                        },
+                        function (err) {
+                            console.error(err);
+                            alert(`Fulfilled: ${err}`)
+                        }
+                    );
+                },
+
+                exit: function () {
+                    localStorage.removeItem('token');
+                    document.location.replace("/");
+                }
+            },
+            mounted: function () {
+                var tmpData = this;
+                getPersonalData().then(
+                    function (data) {
+                        if (data.status != "OK") { return; }
+                        tmpData.menuName = data.payload.pepl_data.pepl_second_name + " " + data.payload.pepl_data.pepl_first_name;
+                        tmpData.my_id = data.payload.pepl_login;
+                    },
+                    function (err) {
+                        console.error(err);
+                        alert(`Fulfilled: ${err}`)
+                    }
+                );
+                this.loadPsychologistList();
+                return;
+                var tok = localStorage.getItem('token');
+                if (tok != "" && tok != null)
+                    this.authCheck(tok, true);
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,921 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    
+    <!-- Bootstrap CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <style type="text/css">
+        label {
+            text-align: right;
+        }
+    </style>
+    <title>Администратор</title>
+</head>
+
+<body>
+    <div id="app">
+
+        <!-- Modal -->
+        <div class="modal fade" id="searchUserInfo" tabindex="-1" role="dialog" aria-labelledby="searchUserInfoTitle"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content" v-if="search.peopleEdit != undefined">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLongTitle">Редактирование личных данных</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        {{search.peopleEdit.pepl_data.pepl_second_name}} {{search.peopleEdit.pepl_data.pepl_first_name}}
+                        {{search.peopleEdit.pepl_data.pepl_last_name}}<br>
+                        <b>Пол:</b> {{search.peopleEdit.pepl_data.pepl_gender?'Мужской':'Женский'}}<br>
+                        <b>Дата рождения:</b> {{search.peopleEdit.pepl_data.pepl_birthday}}<br>
+                        <b>Телефон:</b> +7 {{search.peopleEdit.pepl_data.pepl_phone}}<br>
+                        <b>Email:</b> {{search.peopleEdit.pepl_data.pepl_email}}<br>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+                        <button type="button" class="btn btn-primary">Сохранить изменения</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand" href="#">СПС</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <div class="navbar-nav w-100">
+                    <a class="nav-item nav-link" href="#" @click="menuSelect='search'">
+                        Поиск
+                    </a>
+                    <a class="nav-item nav-link" href="#" @click="menuSelect='add_people'">
+                        Добавить пользователя
+                    </a>
+                    <a class="nav-item nav-link" href="#" @click="menuSelect='orders'">
+                        Заявки на регистрацию
+                    </a>
+
+                    <div class="nav-item dropdown ml-auto" style="padding-left:5rem">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            {{menuName}}
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <a class="dropdown-item" href="#" @click="menuSelect='edit'">Редактировать профиль</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="#" @click="exit">Выход</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="w-75 mx-auto mt-3">
+
+            <!-- Поиск людей -->
+            <div id="search" v-if="menuSelect=='search'">
+                <div class="card text-center">
+                    <div class="card-header">
+                        Поиск пользователей
+                    </div>
+                    <div class="card-body">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Имя и Фамилия</span>
+                            </div>
+                            <input type="text" aria-label="First name" v-model="search.name" class="form-control">
+                            <input type="text" aria-label="Last name" v-model="search.secondname" class="form-control">
+                            <select class="custom-select" v-if="search.type == 1" v-model="search.class_num">
+                                <option value=""> </option>
+                                <option v-for="n in 11">{{n}}</option>
+                            </select>
+                            <select class="custom-select" v-if="search.type == 1" v-model="search.class_letter">
+                                <option value=""> </option>
+                                <option v-for="n in 32">{{String.fromCharCode(n+1039)}}</option>
+                            </select>
+                            <select class="custom-select" v-model="search.type">
+                                <option value="0">Роль</option>
+                                <option value="1">Ученики</option>
+                                <option value="2">Родители</option>
+                                <option value="3">Учителя</option>
+                                <option value="4">Сотрудники</option>
+                            </select>
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" type="button" @click="searchClick"
+                                    v-if="(search.name != '' || search.secondname != '') && search.type != '0' || (search.type == '1' && search.class_num != '' && search.class_letter != '')">Поиск</button>
+                            </div>
+                        </div>
+                        <h5 class="card-title mt-1">Результаты поиска</h5>
+
+                        <div class="text-center" v-if="!search.loading">
+                            <div class="spinner-border text-primary my-3" role="status">
+                                <span class="sr-only">Loading...</span>
+                            </div>
+                        </div>
+
+                        <div class="card mb-3 text-left" v-if="search.loading"
+                            v-for="(people, index) in search.peopleList">
+                            <div class="card-header">
+                                <button class="btn btn-link" @click="searchUserShow(index)">
+                                    {{people.pepl_data.pepl_second_name}} {{people.pepl_data.pepl_first_name}}
+                                    {{people.pepl_data.pepl_last_name}}</button>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">
+                                    <b>Пол:</b> {{people.pepl_data.pepl_gender?'Мужской':'Женский'}}<br>
+                                    <b>Дата рождения:</b> {{people.pepl_data.pepl_birthday}}<br>
+                                    <b>Телефон:</b> +7 {{people.pepl_data.pepl_phone}}<br>
+                                    <b>Email:</b> {{people.pepl_data.pepl_email}}<br>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Добавление пользователей -->
+            <div id="add_people" v-if="menuSelect=='add_people'">
+                <div class="card text-center">
+
+                    <div class="card-header">
+                        Регистрационные данные пользователя
+                    </div>
+                    <div class="card-body" id="userDataForm">
+                        <p class="card-text">Выберете тип пользователя</p>
+                        <select class="form-control" v-model="addPeople.typeUser" id="selectPeople">
+                            <option value="0">Работник</option>
+                            <option value="1">Ученик</option>
+                        </select>
+                        <hr>
+                        <div class="form-group row">
+                            <label for="family" class="col-sm-2 col-form-label">Фамилия</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" v-model="addPeople.family" id="family"
+                                    placeholder="Фамилия" required>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="name" class="col-sm-2 col-form-label">Имя</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" v-model="addPeople.name" id="name"
+                                    placeholder="Имя" required>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="secondname" class="col-sm-2 col-form-label">Отчество</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" v-model="addPeople.secondname" id="secondname"
+                                    placeholder="Отчество" required>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="phone" class="col-sm-2 col-form-label">Телефон</label>
+                            <div class="input-group col-sm-10">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text">+7</div>
+                                </div>
+                                <input type="tel" class="form-control" v-model="addPeople.phone" @input="validPhone"
+                                    maxlength="15" minlength="15" id="phone" placeholder="Телефон">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="email" class="col-sm-2 col-form-label">Email</label>
+                            <div class="col-sm-10">
+                                <input type="email" class="form-control" v-model="addPeople.email" id="email"
+                                    placeholder="Email">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="birthday" class="col-sm-2 col-form-label">Дата рождения</label>
+                            <div class="col-sm-10">
+                                <input type="date" class="form-control" v-model="addPeople.birthday" id="birthday"
+                                    placeholder="Дата рождения" required>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="sex" class="col-sm-2 col-form-label">Пол</label>
+                            <div class="col-sm-10">
+                                <select class="form-control" v-model="addPeople.sex" @input="validPhone" id="sex"
+                                    required>
+                                    <option value="true">Мужской</option>
+                                    <option value="false">Женский</option>
+                                </select>
+                            </div>
+                        </div>
+                        <!-- Поля для сотрудника -->
+                        <div v-if="addPeople.typeUser==0">
+                            <div class="form-group row">
+                                <label for="viber" class="col-sm-2 col-form-label">Viber</label>
+                                <div class="input-group col-sm-10">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text">+7</div>
+                                    </div>
+                                    <input type="tel" class="form-control" v-model="addPeople.emp.viber"
+                                        @input="validPhone" maxlength="15" minlength="15" id="viber"
+                                        placeholder="Телефон">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="vkontakte" class="col-sm-2 col-form-label">Вконтакте</label>
+                                <div class="input-group col-sm-10">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text">https://vk.com/</div>
+                                    </div>
+                                    <input type="text" class="form-control" v-model="addPeople.emp.vkontakte"
+                                        id="vkontakte" placeholder="idExample">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="skype" class="col-sm-2 col-form-label">Skype</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control" v-model="addPeople.emp.skype" id="skype"
+                                        placeholder="Example">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="discord" class="col-sm-2 col-form-label">Discord</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control" v-model="addPeople.emp.discord" id="discord"
+                                        placeholder="Example#1111">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="hangouts" class="col-sm-2 col-form-label">Hangouts</label>
+                                <div class="col-sm-10">
+                                    <input type="email" class="form-control" v-model="addPeople.emp.hangouts"
+                                        id="hangouts" placeholder="Example@gmail.com">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="enrollment" class="col-sm-2 col-form-label">Дата начала работы</label>
+                                <div class="col-sm-10">
+                                    <input type="date" class="form-control" v-model="addPeople.emp.enrollment"
+                                        id="enrollment">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="birthday" class="col-sm-2 col-form-label">Роль</label>
+                                <div class="col-sm-10">
+                                    <div class="btn-group btn-group-toggle" id="roleList">
+                                        <label class="btn btn-secondary" v-for="(role, index) in addPeople.listRole">
+                                            <input type="checkbox" :value="role" @click="setActive"
+                                                v-model="addPeople.selectedRole">{{role}}
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Поля для ученика -->
+                        <div v-if="addPeople.typeUser==1">
+                            <div class="form-group row">
+                                <label for="class_teach" class="col-sm-2 col-form-label">Классный
+                                    руководитель</label>
+                                <div class="col-sm-10">
+                                    <select class="form-control" v-model="addPeople.std.class_teach"
+                                        @change="teacherChange" id="class_teach" required>
+                                        <option v-for="(teach, index) in addPeople.teachList" :value="teach.pepl_id"
+                                            :id="teach.pepl_id">
+                                            {{teach.pepl_data.pepl_second_name}} {{teach.pepl_data.pepl_first_name}}
+                                            {{teach.pepl_data.pepl_last_name}}</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="classschool" class="col-sm-2 col-form-label">Класс</label>
+                                <div class="col">
+                                    <select class="form-control" v-model="addPeople.std.class_at_school"
+                                        id="class_teach" v-if="addPeople.class_arr != null">
+                                        <option v-for="classT in addPeople.class_arr" :value="classT" :id="classT">
+                                            {{classT}}</option>
+                                    </select>
+                                </div>
+                                <div class="col">или</div>
+                                <div class="col">
+                                    <select id="classschool" class="form-control">
+                                        <option> </option>
+                                        <option v-for="n in 11">{{n}}</option>
+                                    </select>
+                                </div>
+                                <div class="col">
+                                    <select id="classschool" class="form-control">
+                                        <option> </option>
+                                        <option v-for="n in 32">{{String.fromCharCode(n+1039)}}</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer text-muted">
+                        <button class="btn btn-primary" @click="sendData('userDataForm')">Добавить</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Заявки от родителей -->
+            <div id="orders" v-if="menuSelect=='orders'">
+
+                <div class="text-center" v-if="!orderLoading">
+                    <div class="spinner-border text-primary my-3" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </div>
+
+                <div class="card my-3" v-if="orderLoading" v-for="(order, index) in orderData">
+                    <div class="card-header">
+                        Заявка #{{index+1}}
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">{{order.pepl_data.pepl_second_name}} {{order.pepl_data.pepl_first_name}}
+                            {{order.pepl_data.pepl_last_name}}</h5>
+                        <p class="card-text">
+                            <b>Пол:</b> {{order.pepl_data.pepl_gender?'Мужской':'Женский'}}<br>
+                            <b>Дата рождения:</b> {{order.pepl_data.pepl_birthday}}<br>
+                            <b>Телефон:</b> +7 {{order.pepl_data.pepl_phone}}<br>
+                            <b>Email:</b> {{order.pepl_data.pepl_email}}<br>
+                            <b>Адрес:</b> г. {{order.prnt_data.prnt_city}}, ул.
+                            {{order.prnt_data.prnt_street}}, дом {{order.prnt_data.prnt_home}}, кв.
+                            {{order.prnt_data.prnt_flat}}<br><br>
+                            <b>Информация о детях</b><br>
+                        </p>
+                        <p class="card-text" v-for="child in order.cr_array">
+                            <b>ФИО: </b> {{child.cr_second_child}} {{child.cr_first_child}} {{child.cr_last_child}}<br>
+                            <b>Класс: </b> {{child.cr_class}}<br>
+                            <b>Классный руководитель: </b> {{child.cr_second_teacher}} {{child.cr_first_teacher}}
+                            {{child.cr_last_teacher}}
+                        </p>
+                    </div>
+                    <div class="card-footer text-center">
+                        <div class="container">
+                            <div class="row justify-content-between">
+                                <div class="col-6">
+                                    <button class="btn btn-danger"
+                                        @click="orderDecision(index, order.prnt_id, 2)">Отклонить</button>
+                                </div>
+                                <div class="col-6">
+                                    <button class="btn btn-success"
+                                        @click="orderDecision(index, order.prnt_id, 1)">Принять</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Редактирование личной информации -->
+            <div id="edit" v-if="menuSelect=='edit'">
+                <div class="card text-center">
+                    <div class="card-header">
+                        Данные пользователя
+                    </div>
+                    <div class="text-center" v-if="!editLoading">
+                        <div class="spinner-border text-primary my-3" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                    <div class="card-body" v-if="editLoading" id="editDataForm">
+                        <div class="form-group row">
+                            <label for="family" class="col-sm-2 col-form-label">Фамилия</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" v-model="editData.pepl_data.pepl_second_name"
+                                    id="family" required>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="name" class="col-sm-2 col-form-label">Имя</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" v-model="editData.pepl_data.pepl_first_name"
+                                    id="name" required>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="secondname" class="col-sm-2 col-form-label">Отчество</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" v-model="editData.pepl_data.pepl_last_name"
+                                    id="secondname" required>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="phone" class="col-sm-2 col-form-label">Телефон</label>
+                            <div class="input-group col-sm-10">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text">+7</div>
+                                </div>
+                                <input type="tel" class="form-control" v-model="editData.pepl_data.pepl_phone"
+                                    @input="validPhone" maxlength="15" minlength="15" id="phone">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="email" class="col-sm-2 col-form-label">Email</label>
+                            <div class="col-sm-10">
+                                <input type="email" class="form-control" v-model="editData.pepl_data.pepl_email"
+                                    id="email">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="sex" class="col-sm-2 col-form-label">Пол</label>
+                            <div class="col-sm-10">
+                                <select class="form-control" v-model="editData.pepl_data.pepl_gender"
+                                    @input="validPhone" id="sex" required>
+                                    <option value="true">Мужской</option>
+                                    <option value="false">Женский</option>
+                                </select>
+                            </div>
+                        </div>
+                        <!-- Поля для сотрудника -->
+                        <div class="form-group row">
+                            <label for="viber" class="col-sm-2 col-form-label">Viber</label>
+                            <div class="input-group col-sm-10">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text">+7</div>
+                                </div>
+                                <input type="tel" class="form-control" v-model="editData.emp_data.main_data.emp_viber"
+                                    @input="validPhone" maxlength="15" minlength="15" id="viber">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="vkontakte" class="col-sm-2 col-form-label">Вконтакте</label>
+                            <div class="input-group col-sm-10">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text">https://vk.com/</div>
+                                </div>
+                                <input type="text" class="form-control" v-model="editData.emp_data.main_data.emp_vk"
+                                    id="vkontakte">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="skype" class="col-sm-2 col-form-label">Skype</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" v-model="editData.emp_data.main_data.emp_skype"
+                                    id="skype">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="discord" class="col-sm-2 col-form-label">Discord</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control"
+                                    v-model="editData.emp_data.main_data.emp_discord" id="discord">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="hangouts" class="col-sm-2 col-form-label">Hangouts</label>
+                            <div class="col-sm-10">
+                                <input type="email" class="form-control"
+                                    v-model="editData.emp_data.main_data.emp_hangouts" id="hangouts">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="login" class="col-sm-2 col-form-label">Логин</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" v-model="editData.pepl_login" id="login"
+                                    required>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="old_pass" class="col-sm-2 col-form-label">Старый пароль</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" v-model="editData.pepl_old_pass" id="old_pass">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="new_pass" class="col-sm-2 col-form-label">Новый пароль</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" v-model="editData.pepl_new_pass" id="new_pass">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer" v-if="editLoading">
+                        <button class="btn btn-primary" @click="updData('editDataForm')">Сохранить измения</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="js/jquery-3.3.1.slim.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+
+    <script src="js/app.js"></script>
+    <script src="js/vue.js"></script>
+    <script>
+        var app = new Vue({
+            el: '#app',
+            data: {
+                menuSelect: 'search',
+                menuName: '',
+                search: {
+                    name: '',
+                    secondname: 'Тарасов',
+                    peopleList: {},
+                    type: 0,
+                    class_num: '',
+                    class_letter: '',
+                    loading: true,
+                    peopleEdit: undefined
+                },
+                addPeople: {
+                    typeUser: 0,
+                    family: 'Иванов',
+                    name: 'Иван',
+                    secondname: 'Иванович',
+                    phone: '9568734554',//'(',
+                    email: 'admin@mail.ru',
+                    birthday: '1977-01-19',
+                    sex: true,
+                    emp: {
+                        viber: '(',
+                        vkontakte: '',
+                        skype: '',
+                        discord: '',
+                        hangouts: '',
+                        enrollment: '2000-03-30'
+                    },
+                    std: {
+                        class_at_school: '',
+                        class_teach: ''
+                    },
+                    listRole: ["Работник", "Учитель", "Психолог"],
+                    selectedRole: [],
+                    teachList: [{}],
+                    teachClass: 0,
+                    old: 0,
+                    req: {}
+                },
+                editData: {},
+                editLoading: false,
+                orderData: {},
+                orderLoading: false,
+            },
+            watch: {
+                menuSelect: function (selecter) {
+
+                    if (selecter == "add_people") {
+                        var tmpData = this;
+                        /*getRoles().then(
+                            function (data) {
+                                console.log(data);
+                                if (data.status != "OK") { return; }
+                                tmpData.addPeople.listRole = data.payload;
+                            },
+                            function (err) {
+                                console.error(err);
+                                alert(`Fulfilled: ${err}`)
+                            }
+                        );*/
+                        getTeachers().then(
+                            function (data) {
+                                console.log(data);
+                                if (data.status != "OK") { return; }
+                                tmpData.addPeople.teachList = data.payload;
+                            },
+                            function (err) {
+                                console.error(err);
+                                alert(`Fulfilled: ${err}`)
+                            }
+                        );
+                    }
+
+                    if (selecter == "edit") {
+                        var tmpData = this;
+                        // Загружаем персональные данные
+                        getPersonalData().then(
+                            function (data) {
+                                console.log(data);
+                                if (data.status != "OK") { return; }
+                                data.payload.pepl_data.pepl_birthday = data.payload.pepl_data.pepl_birthday.substring(10, -10);
+                                data.payload.emp_data.main_data.emp_date_enrollment = data.payload.emp_data.main_data.emp_date_enrollment.substring(10, -10);
+                                tmpData.editData = data.payload;
+                                tmpData.editData.pepl_old_pass = "";
+                                tmpData.editData.pepl_new_pass = "";
+                                tmpData.editLoading = true;
+                            },
+                            function (err) {
+                                console.error(err);
+                                alert(`Fulfilled: ${err}`)
+                            }
+                        );
+                    } else { this.editLoading = false; }
+
+                    if (selecter == "orders") {
+                        var tmpData = this;
+                        getListConfirmReg().then(
+                            function (data) {
+                                console.log(data);
+                                if (data.status != "OK") {tmpData.orderLoading = true; return; }
+                                tmpData.orderData = data.payload;
+                                tmpData.orderLoading = true;
+                            },
+                            function (err) {
+                                console.error(err);
+                                alert(`Fulfilled: ${err}`)
+                            }
+                        );
+                    } else { this.orderLoading = false; }
+                }
+            },
+            methods: {
+                searchUserShow: function (index) {
+                    this.search.peopleEdit = this.search.peopleList[index];
+                    $('#searchUserInfo').modal('show');
+                },
+
+                searchClick: function () {
+                    var dataSearch = {};
+                    if (this.search.name != '') {
+                        dataSearch["pepl_first_name"] = this.search.name;
+                    }
+                    if (this.search.secondname != '') {
+                        dataSearch["pepl_second_name"] = this.search.secondname;
+                    }
+                    if (this.search.class_num != '' && this.search.class_letter != '' && this.search.type == '1') {
+                        dataSearch["std_parallel"] = Number.parseInt(this.search.class_num);
+                        dataSearch["std_class_letter"] = this.search.class_letter;
+                    }
+                    this.search.peopleList = {};
+                    this.search.loading = false;
+                    var tmpData = this;
+                    console.log(this.search.type);
+                    switch (this.search.type) {
+                        case "1":
+                            getStudents(dataSearch).then(
+                                function (data) {
+                                    console.log(data);
+                                    if (data.status != "OK") { return; }
+                                    tmpData.search.peopleList = data.payload;
+                                    tmpData.search.loading = true;
+                                },
+                                function (err) {
+                                    tmpData.search.loading = true;
+                                    /*console.error(err);
+                                    alert(`Fulfilled: ${err}`)*/
+                                }
+                            );
+                            break;
+                        case "2":
+                            getParents(dataSearch).then(
+                                function (data) {
+                                    console.log(data);
+                                    if (data.status != "OK") { return; }
+                                    tmpData.search.peopleList = data.payload;
+                                    tmpData.search.loading = true;
+                                },
+                                function (err) {
+                                    tmpData.search.loading = true;
+                                    /*console.error(err);
+                                    alert(`Fulfilled: ${err}`);*/
+                                }
+                            );
+                            break;
+                        case "3":
+                            dataSearch["role_array"] = ["Teacher"];
+                            getEmployees(dataSearch).then(
+                                function (data) {
+                                    console.log(data);
+                                    if (data.status != "OK") { return; }
+                                    tmpData.search.peopleList = data.payload;
+                                    tmpData.search.loading = true;
+                                },
+                                function (err) {
+                                    tmpData.search.loading = true;
+                                    /*console.error(err);
+                                    alert(`Fulfilled: ${err}`);*/
+                                }
+                            );
+                            break;
+                        case "4":
+                            //dataSearch["role_array"] = ["Teacher"];
+                            getEmployees(dataSearch).then(
+                                function (data) {
+                                    console.log(data);
+                                    if (data.status != "OK") { return; }
+                                    tmpData.search.peopleList = data.payload;
+                                    tmpData.search.loading = true;
+                                },
+                                function (err) {
+                                    tmpData.search.loading = true;
+                                    /*console.error(err);
+                                    alert(`Fulfilled: ${err}`)*/
+                                }
+                            );
+                            break;
+
+                        default:
+                            tmpData.search.loading = true;
+                            break;
+                    }
+                },
+
+                setActive: function (target) {
+                    obj = target.target;
+                    if (obj.checked) {
+                        obj.parentNode.classList.remove("btn-secondary");
+                        obj.parentNode.classList.add("btn-primary");
+                    } else {
+                        obj.parentNode.classList.remove("btn-primary");
+                        obj.parentNode.classList.add("btn-secondary");
+                    }
+                },
+
+                checkInput: function (target) {
+                    var form = document.getElementById(target);
+                    var elem = form.getElementsByClassName('form-control');
+                    var isGood = true;
+                    for (var i = 0; i < elem.length; i++) {
+                        if ((elem[i].value == "" || elem[i].value.length < elem[i].minLength) && elem[i].required) {
+                            //elem[i].classList.remove("is-valid");
+                            elem[i].classList.add("is-invalid");
+                            isGood = false;
+                        } else {
+                            elem[i].classList.remove("is-invalid");
+                            //elem[i].classList.add("is-valid");
+                        }
+                    };
+                    return isGood;
+                },
+
+                teacherChange: function () {
+                    for (var i = 0; i < this.addPeople.teachList.length; i++) {
+                        if (this.addPeople.teachList[i].pepl_id == this.addPeople.std.class_teach) {
+                            this.addPeople.class_arr =
+                                this.addPeople.teachList[i].class_arr.length != 0 ?
+                                    this.addPeople.teachList[i].class_arr :
+                                    null;
+                            console.log(this.addPeople.class_arr);
+                            break;
+                        }
+                    }
+                },
+
+                updData: function (form) {
+                    if (!this.checkInput(form)) { return; };
+                    editLoading = false;
+                    tmpData = this;
+                    updPersonalData(this.editData).then(
+                        function (data) {
+                            console.log(data);
+                            if (data.status != "OK") { return; }
+                            tmpData.editData = data.payload;
+                            tmpData.editLoading = true;
+                            tmpData.menuName = data.payload.pepl_data.pepl_second_name + " " + data.payload.pepl_data.pepl_first_name;
+                        },
+                        function (err) {
+                            console.error(err);
+                            //alert(`Fulfilled: ${err}`)
+                        }
+                    );
+                },
+
+                sendData: function (form) {
+                    if (!this.checkInput(form)) { return; };
+                    if (this.addPeople.selectedRole.length == 0) { alert("Выберете хотя бы одну роль"); return; }
+                    var ph = "";
+                    if (this.addPeople.phone != "(") {
+                        ph = this.addPeople.phone;
+                        ph = ph.replace(new RegExp("-", 'g'), "");
+                        ph = ph.replace("(", "");
+                        ph = ph.replace(")", "");
+                    }
+                    var regData = {
+                        "selectedRole": [this.addPeople.typeUser == 0 ? "Teacher" : "Student"
+                            /*{
+                                "role_id": this.addPeople.typeUser == 0 ? 4 : 3
+                            }*/
+                        ],
+                        "pepl_data": {
+                            "pepl_second_name": this.addPeople.family,
+                            "pepl_first_name": this.addPeople.name,
+                            "pepl_last_name": this.addPeople.secondname,
+                            "pepl_gender": this.addPeople.sex,
+                            "pepl_birthday": this.addPeople.birthday,
+                            "pepl_phone": ph,
+                            "pepl_email": this.addPeople.email
+                        }
+                    }
+                    if (this.addPeople.typeUser == 0) {
+                        var ph = "";
+                        if (this.addPeople.emp.viber != "(") {
+                            ph = this.addPeople.emp.viber;
+                            ph = ph.replace(new RegExp("-", 'g'), "");
+                            ph = ph.replace("(", "");
+                            ph = ph.replace(")", "");
+                        }
+                        regData.emp_data = {
+                            "pst_arr": [
+                                {
+                                    "pst_id": this.addPeople.typeUser == 0 ? 4 : 3
+                                }
+                            ],
+                            "emp_skype": this.addPeople.emp.skype,
+                            "emp_discord": this.addPeople.emp.discord,
+                            "emp_hangouts": this.addPeople.emp.hangouts,
+                            "emp_viber": ph,
+                            "emp_vk": this.addPeople.emp.vkontakte,
+                            "emp_date_enrollment": this.addPeople.emp.enrollment
+                        }
+                    } else {
+                        regData.std_data = {
+                            "emp_id": this.addPeople.std.class_teach,
+                            "std_class": this.addPeople.std.class_at_school.toUpperCase()
+                        }
+                    }
+                    var apd = this;
+                    tmpData = this;
+                    signup(regData).then(
+                        function (data) {
+                            console.log(data);
+                            if (data.status != "OK") { return; }
+                            tmpData.req = data;
+                        },
+                        function (err) {
+                            console.error(err);
+                            alert(`Fulfilled: ${err}`)
+                        }
+                    );
+                },
+
+                validPhone: function (target) {
+
+                    obj = target.target;
+
+                    var curLen = this.addPeople.phone.length;
+
+                    if (curLen == 1) {
+                        obj.classList.remove("is-invalid");
+                        obj.classList.add("is-valid");
+                    }
+
+                    if (curLen == 0)
+                        this.addPeople.phone = "(";
+
+                    if (curLen < this.old) {
+                        this.old--;
+                        return;
+                    }
+
+                    if (curLen == 4)
+                        this.addPeople.phone = this.addPeople.phone + ")-";
+
+                    if (curLen == 9)
+                        this.addPeople.phone = this.addPeople.phone + "-";
+
+                    if (curLen == 12)
+                        this.addPeople.phone = this.addPeople.phone + "-";
+
+                    this.old++;
+                },
+
+                orderDecision: function (elem, id, choice) {
+                    var child = new Array();
+                    for (var i = 0; i < this.orderData[elem].cr_array.length; i++) {
+                        child.push(this.orderData[elem].cr_array[i].auto_check_data.std_id);
+                    }
+                    confirmParentReg(id, choice, child).then(
+                        function (data) {
+                            console.log(data);
+                            if (data.status != "OK") { return; }
+                            this.orderData.splice(elem, 1);
+                        },
+                        function (err) {
+                            console.error(err);
+                            alert(`Fulfilled: ${err}`)
+                        }
+                    );
+                },
+
+                exit: function () {
+                    localStorage.removeItem('token');
+                    document.location.replace("/");
+                }
+            },
+            mounted: function () {
+                var tmpData = this;
+                getPersonalData().then(
+                    function (data) {
+                        if (data.status != "OK") { return; }
+                        tmpData.menuName = data.payload.pepl_data.pepl_second_name + " " + data.payload.pepl_data.pepl_first_name;
+                    },
+                    function (err) {
+                        console.error(err);
+                        alert(`Fulfilled: ${err}`)
+                    }
+                )
+                return;
+                var tok = localStorage.getItem('token');
+                if (tok != "" && tok != null)
+                    login(tok, true);
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="ru">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <!--link rel="icon" href="../../../../favicon.ico"-->
+
+    <title>Регистрация родителя</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <style type="text/css">
+        label {
+            text-align: right;
+        }
+    </style>
+</head>
+
+<body class="d-flex justify-content-center m-3">
+        <!-- Modal -->
+        <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog"
+            aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLongTitle">Сообщение системы</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        Ваши данные будут проверяться в течении 48 часов. После этого времени попробуйте авторизоваться если это не произойдёт, возможно, что ваши данные оказались некорректными.
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <div class="card text-center w-75" id="app">
+        <div class="card-header">
+            Регистрационные данные родителя
+        </div>
+        <div class="card-body">
+            <form id="regParent">
+                <div class="form-group row">
+                    <label for="family" class="col-sm-2 col-form-label">Фамилия</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" v-model="family" v-on:blur="checkInput" id="family"
+                            placeholder="Фамилия" required>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="name" class="col-sm-2 col-form-label">Имя</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" v-model="name" v-on:blur="checkInput" id="name"
+                            placeholder="Имя" required>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="secondname" class="col-sm-2 col-form-label">Отчество</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" v-model="secondname" v-on:blur="checkInput"
+                            id="secondname" placeholder="Отчество" required>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="phone" class="col-sm-2 col-form-label">Телефон</label>
+                    <div class="input-group col-sm-10">
+                        <div class="input-group-prepend">
+                            <div class="input-group-text">+7</div>
+                        </div>
+                        <input type="tel" class="form-control" v-model="phone" v-on:input="telForm" maxlength="15"
+                            minlength="15" id="phone" placeholder="Телефон">
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="email" class="col-sm-2 col-form-label">Email</label>
+                    <div class="col-sm-10">
+                        <input type="email" class="form-control" v-model="email" id="email"
+                            placeholder="Email">
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="birthday" class="col-sm-2 col-form-label">Дата рождения</label>
+                    <div class="col-sm-10">
+                        <input type="date" class="form-control" v-model="birthday" v-on:blur="checkInput" id="birthday"
+                            placeholder="Дата рождения" required>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="sex" class="col-sm-2 col-form-label">Пол</label>
+                    <div class="col-sm-10">
+                        <select class="form-control" v-model="sex" v-on:blur="checkInput" id="sex" required>
+                            <option value="true">Мужской</option>
+                            <option value="false">Женский</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="city" class="col-sm-2 col-form-label">Город</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" v-model="city" v-on:blur="checkInput" id="city"
+                            placeholder="Город" required>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="street" class="col-sm-2 col-form-label">Улица</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" v-model="street" v-on:blur="checkInput" id="street"
+                            placeholder="Улица" required>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-sm-2"></div>
+                    <div class="col">
+                        <label for="house" class="col-form-label">Дом</label>
+                        <div class="">
+                            <input type="text" class="form-control" v-model="house" v-on:blur="checkInput" id="house"
+                                placeholder="Дом" required>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <label for="flat" class="col-form-label">Квартира</label>
+                        <div class="">
+                            <input type="number" class="form-control" v-model="flat" id="flat" placeholder="Квартира">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="login" class="col-sm-2 col-form-label">Придумайте логин</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" v-model="login" v-on:blur="checkInput" id="login"
+                        minlength="6" placeholder="Логин" required>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="password" class="col-sm-2 col-form-label">Придумайте пароль</label>
+                    <div class="col-sm-10">
+                        <input type="password" class="form-control" v-model="password" v-on:blur="checkInput"
+                            id="password" minlength="6" placeholder="Пароль" required>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="checkpassword" class="col-sm-2 col-form-label">Подтвердите пароль</label>
+                    <div class="col-sm-10">
+                        <input type="password" class="form-control" v-model="checkpassword" v-on:blur="checkInput"
+                            id="checkpassword" minlength="6" placeholder="Повторите пароль" required>
+                    </div>
+                </div>
+            </form>
+            <h5 class="card-title">Информация о детях</h5>
+            <div class="form-group row">
+                <div class="col-sm-2">
+                    <button type="button" class="btn btn-primary" v-on:click="addChild">Добавить ребенка</button>
+                </div>
+                <div class="col-sm-10">
+                    <button type="button" class="btn m-1" v-for="(child, index) in childList" v-on:click="selChild(index)"
+                        v-bind:class="{'btn-primary': childNumber == index, 'btn-secondary': childNumber != index}">{{child.child_name!=''?child.child_name:index + 1}}
+                        <span class="badge badge-pill badge-danger" v-if="index != 0" v-on:click="delChild(index)">X</span>
+                    </button>
+                </div>
+            </div>
+            <form>
+                <div class="form-group row">
+                    <label for="childfamily" class="col-sm-2 col-form-label">Фамилия</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" v-model="childList[childNumber].child_family"
+                            v-on:blur="checkInput" id="childfamily" placeholder="Фамилия" required>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="childname" class="col-sm-2 col-form-label">Имя</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" v-model="childList[childNumber].child_name"
+                            v-on:blur="checkInput" id="childname" placeholder="Имя" required>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="childsecondname" class="col-sm-2 col-form-label">Отчество</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" v-model="childList[childNumber].child_secondname"
+                            v-on:blur="checkInput" id="childsecondname" placeholder="Отчество" required>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="childclass" class="col-sm-2 col-form-label">Класс</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" v-model="childList[childNumber].child_class"
+                            v-on:blur="checkInput" id="childclass" minlength="2" maxlength="3" placeholder="Класс" required>
+                    </div>
+                </div>
+                <h5 class="card-title">Информация о классном руководителе</h5>
+                <div class="form-group row">
+                    <label for="childteachfamily" class="col-sm-2 col-form-label">Фамилия</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" v-model="childList[childNumber].child_teach_family"
+                            id="childteachfamily" placeholder="Фамилия">
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="childteachname" class="col-sm-2 col-form-label">Имя</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" v-model="childList[childNumber].child_teach_name"
+                            id="childteachname" placeholder="Имя">
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="childteachsecondname" class="col-sm-2 col-form-label">Отчество</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" v-model="childList[childNumber].child_teach_secondname"
+                            id="childteachsecondname" placeholder="Отчество">
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="card-footer text-muted">
+            <button class="btn btn-primary" v-on:click="sendData" data-toggle="modal" data-target="#exampleModalCenter">Регистрация</button>
+        </div>
+    </div>
+    <script src="js/vue.js"></script>
+    <script>
+        function getCookie(name) {
+            var r = document.cookie.match("(^|;) ?" + name + "=([^;]*)(;|$)");
+            if (r) return r[2];
+            else return "";
+        }
+        var app = new Vue({
+            el: '#app',
+            data: {
+                family: '1',
+                name: '1',
+                secondname: '1',
+                phone: '(',
+                email: '',
+                birthday: '2019-03-30',
+                sex: true,
+                city: '1',
+                street: '1',
+                house: '1',
+                flat: '',
+                login: '111111',
+                password: '111111',
+                checkpassword: '111111',
+                childList: [{
+                    child_name: '111',
+                    child_secondname: '111',
+                    child_family: '111',
+                    child_class: '11А',
+                    child_teach_name: '',
+                    child_teach_secondname: '',
+                    child_teach_family: ''
+                }],
+                childNumber: 0,
+                old: 0
+            },
+            methods: {
+                checkInput: function (target) {
+                    obj = target.target;
+                    if (obj.value == "" || obj.value.length < obj.minLength) {
+                        obj.classList.remove("is-valid");
+                        obj.classList.add("is-invalid");
+                    } else {
+                        obj.classList.remove("is-invalid");
+                        obj.classList.add("is-valid");
+                    }
+                },
+
+                sendData: function () {
+                    if (this.password != this.checkpassword) {
+                        alert("Пароли не совпадают!");
+                        return;
+                    };
+                    var formData = document.getElementById("regParent");
+                    var inData = formData.getElementsByTagName('input');
+                    var check = false;
+                    for (var i = 0; i < inData.length; i++) {
+                        if (((inData[i].value == "" || inData[i].value.length < inData[i].minLength) && inData[i].attributes.getNamedItem('required') != null) || inData[i].classList.contains("is-invalid")) {
+                            inData[i].classList.remove("is-valid");
+                            inData[i].classList.add("is-invalid");
+                            check = true;
+                            break;
+                        }
+                    };
+
+                    if (check) {
+                        alert("Заполните данные");
+                        return;
+                    }
+                    check = false;
+
+                    var child = new Array();
+
+                    for (var i = 0; i < this.childList.length; i++) {
+                        if (
+                            this.childList[i].child_family == "" ||
+                            this.childList[i].child_name == "" ||
+                            this.childList[i].child_secondname == "" ||
+                            this.childList[i].child_class == ""
+                        ) {
+                            this.childNumber = i;
+                            check = true;
+                            break;
+                        }
+                        child.push({
+                            "cr_second_child": this.childList[i].child_family,
+                            "cr_first_child": this.childList[i].child_name,
+                            "cr_last_child": this.childList[i].child_secondname,
+                            "cr_second_teacher": this.childList[i].child_teach_family,
+                            "cr_first_teacher": this.childList[i].child_teach_name,
+                            "cr_last_teacher": this.childList[i].child_teach_secondname,
+                            "cr_class": this.childList[i].child_class
+                        });
+                    };
+
+                    if (check) {
+                        alert("Заполните данные о ребенке");
+                        return;
+                    }
+
+                    if (this.phone) {
+                        var ph = this.phone;
+                        ph = ph.replace(new RegExp("-", 'g'), "");
+                        ph = ph.replace("(", "");
+                        ph = ph.replace(")", "");
+                    }
+
+                    var regData = {
+                        "pepl_login": this.login,
+                        "pepl_pass": this.password,
+                        "role_array": [
+                            {
+                                "role_id": 2
+                            }
+                        ],
+                        "pepl_data": {
+                            "pepl_second_name": this.family,
+                            "pepl_first_name": this.name,
+                            "pepl_last_name": this.secondname,
+                            "pepl_gender": this.sex,
+                            "pepl_birthday": this.birthday,
+                            "pepl_phone": ph,
+                            "pepl_email": this.email
+                        },
+                        "prnt_data": {
+                            "cr_array": child,
+                            "prnt_data": {
+                                "prnt_city": this.city,
+                                "prnt_street": this.street,
+                                "prnt_home": this.house,
+                                "prnt_flat": this.flat
+                            }
+                        }
+                    }
+
+                    fetch('https://api-ps18.herokuapp.com/signup', {
+                        method: 'POST',
+                        body: regData
+                    })
+                        .then(function (response) {
+                            if(response.status==200)
+                            return response.json();
+                            else alert(response.statusText);
+                        })
+                        .then(function (data) {
+                            console.log(data);
+                            if (data.status == "OK") {
+
+                            } else {
+                                alert("Неверные учетные данные. Попробуйте еще раз");
+                            }
+                        })
+                        .catch(alert);
+                    // отправяем данные
+                },
+
+                addChild: function () {
+                    this.childList.push({
+                        child_name: '',
+                        child_secondname: '',
+                        child_family: '',
+                        child_class: '',
+                        child_teach_name: '',
+                        child_teach_secondname: '',
+                        child_teach_family: ''
+                    });
+                },
+
+                selChild: function (n) {
+                    this.childNumber = n;
+                },
+
+                delChild: function (n) {
+                    if (n == 0) return;
+                    this.childNumber = n - 1;
+                    this.childList.splice(n, 1);
+                },
+
+                telForm: function (target) {
+                    obj = target.target;
+
+                    var curLen = this.phone.length;
+
+                    if (curLen == 0)
+                        this.phone = "(";
+
+                    if (curLen < this.old) {
+                        this.old--;
+                        return;
+                    }
+
+                    if (curLen == 4)
+                        this.phone = this.phone + ")-";
+
+                    if (curLen == 9)
+                        this.phone = this.phone + "-";
+
+                    if (curLen == 12)
+                        this.phone = this.phone + "-";
+
+                    this.old++;
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

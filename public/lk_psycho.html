@@ -1,0 +1,1335 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <style type="text/css">
+        label {
+            text-align: right;
+        }
+
+        #receptionForm > table,
+        td,
+        tr {
+            border: 1px solid black;
+            width: auto;
+        }
+
+        #receptionForm > table {
+            width: 250%;
+        }
+    </style>
+    <title>Психолог</title>
+</head>
+
+<body>
+    <div id="app">
+
+        <!-- Modal -->
+        <div class="modal fade" id="searchUserInfo" tabindex="-1" role="dialog" aria-labelledby="searchUserInfoTitle"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content" v-if="search.peopleEdit != undefined">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLongTitle">Редактирование личных данных</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        {{search.peopleEdit.pepl_data.pepl_second_name}} {{search.peopleEdit.pepl_data.pepl_first_name}}
+                        {{search.peopleEdit.pepl_data.pepl_last_name}}
+                        <b>Пол:</b> {{search.peopleEdit.pepl_data.pepl_gender?'Мужской':'Женский'}}<br>
+                        <b>Дата рождения:</b> {{search.peopleEdit.pepl_data.pepl_birthday}}<br>
+                        <b>Телефон:</b> +7 {{search.peopleEdit.pepl_data.pepl_phone}}<br>
+                        <b>Email:</b> {{search.peopleEdit.pepl_data.pepl_email}}<br>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+                        <button type="button" class="btn btn-primary">Сохранить изменения</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand" href="#">СПС</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <div class="navbar-nav w-100">
+                    <a class="nav-item nav-link" href="#" @click="menuSelect='methods'">
+                        Методики
+                    </a>
+                    <a class="nav-item nav-link" href="#" @click="menuSelect='clients'">
+                        Клиенты
+                    </a>
+                    <a class="nav-item nav-link" href="#" @click="menuSelect='reception'">
+                        Журнал приема
+                    </a>
+                    <a class="nav-item nav-link" href="#" @click="menuSelect='schedule'">
+                        Расписание записи
+                    </a>
+                    <a class="nav-item nav-link" href="#" @click="menuSelect='record'">
+                        Журнал записи
+                    </a>
+                    <a class="nav-item nav-link" href="#" @click="menuSelect='results'">
+                        Результаты диагностики
+                    </a>
+
+                    <div class="nav-item dropdown ml-auto" style="padding-left:5rem">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            {{menuName}}
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <a class="dropdown-item" href="#" @click="menuSelect='edit'">Редактировать профиль</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="#" @click="exit">Выход</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="w-75 mx-auto mt-3">
+
+            <div id="methods" v-if="menuSelect=='methods'">
+                <div class="card text-center">
+                    <div class="card-header">
+                        Методики
+                    </div>
+                    <div class="card-body">
+
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-4">
+                                    <h5 class="card-title">Добавить методику</h5>
+                                    <form>
+                                        <div class="form-group">
+                                            <label for="testName">Имя теста</label>
+                                            <input type="text" class="form-control" id="testName"
+                                                placeholder="Тест по ..." v-model="methods.testName">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="testFiles">Выберете файлы теста</label>
+                                            <input type="file" class="form-control-file" id="testFiles"
+                                                accept=".txt, .pdf, .doc, .docx" @change="onFileChange" multiple>
+                                        </div>
+                                        <button class="btn btn-primary" type="button"
+                                            @click="addNewTest">Добавить</button>
+                                    </form>
+                                </div>
+                                <div class="col-8">
+                                    <h5 class="card-title">Список методик</h5>
+                                    <div class="text-center" v-if="!methods.testLoading">
+                                        <div class="spinner-border text-primary my-3" role="status">
+                                            <span class="sr-only">Loading...</span>
+                                        </div>
+                                    </div>
+                                    <div class="input-group mb-3" v-if="methods.testRename">
+                                        <input type="text" class="form-control" placeholder="Новое имя"
+                                            v-model="methods.testNewName">
+                                        <div class="input-group-append">
+                                            <button class="btn btn-outline-secondary" type="button"
+                                                @click="renameTestName">Переименовать</button>
+                                        </div>
+                                    </div>
+                                    <ul class="list-group" v-if="methods.testLoading">
+                                        <li class="list-group-item d-flex justify-content-between align-items-center"
+                                            v-for="(test, index) in methods.testList"
+                                            v-bind:class="{'list-group-item-success': test.tst_online, 'list-group-item-warning': test.tst_id == methods.testRenameId}">
+
+                                            <button class="btn btn-link" @click="renameTest(test.tst_id, test.tst_name)"
+                                                title="Переименовать">
+                                                {{test.tst_name}}
+                                            </button>
+
+                                            <button class="badge btn-danger" :id="test.tst_id"
+                                                @click="deleteTest(index, test.tst_id)">X</button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="clients" v-if="menuSelect=='clients'">
+                <div class="card text-center">
+                    <div class="card-header">
+                        Клиенты
+                    </div>
+                    <div class="card-body">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Имя и Фамилия</span>
+                            </div>
+                            <input type="text" aria-label="First name" v-model="search.name" class="form-control">
+                            <input type="text" aria-label="Last name" v-model="search.secondname" class="form-control">
+                            <select class="custom-select" v-if="search.type == 1" v-model="search.class_num">
+                                <option value=""> </option>
+                                <option v-for="n in 11">{{n}}</option>
+                            </select>
+                            <select class="custom-select" v-if="search.type == 1" v-model="search.class_letter">
+                                <option value=""> </option>
+                                <option v-for="n in 32">{{String.fromCharCode(n+1039)}}</option>
+                            </select>
+                            <select class="custom-select" v-model="search.type">
+                                <option value="0">Роль</option>
+                                <option value="1">Ученики</option>
+                                <option value="2">Родители</option>
+                                <option value="3">Учителя</option>
+                                <option value="4">Сотрудники</option>
+                            </select>
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" type="button" @click="searchClick"
+                                    v-if="(search.name != '' || search.secondname != '') && search.type != '0' || (search.type == '1' && search.class_num != '' && search.class_letter != '')">Поиск</button>
+                            </div>
+                        </div>
+                        <h5 class="card-title mt-1">Результаты поиска</h5>
+
+                        <div class="text-center" v-if="!search.loading">
+                            <div class="spinner-border text-primary my-3" role="status">
+                                <span class="sr-only">Loading...</span>
+                            </div>
+                        </div>
+
+                        <div class="card mb-3 text-left" v-if="search.loading"
+                            v-for="(people, index) in search.peopleList">
+                            <div class="card-header">
+                                <button class="btn btn-link" @click="searchUserShow(index)">
+                                    {{people.pepl_data.pepl_second_name}} {{people.pepl_data.pepl_first_name}}
+                                    {{people.pepl_data.pepl_last_name}}</button>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">
+                                    <b>Пол:</b> {{people.pepl_data.pepl_gender?'Мужской':'Женский'}}<br>
+                                    <b>Дата рождения:</b> {{people.pepl_data.pepl_birthday}}<br>
+                                    <b>Телефон:</b> +7 {{people.pepl_data.pepl_phone}}<br>
+                                    <b>Email:</b> {{people.pepl_data.pepl_email}}<br>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="reception" v-if="menuSelect=='reception'">
+                <div class="card text-center">
+                    <div class="card-header">
+                        Журнал приема
+                    </div>
+                    <div class="card-body">
+
+                        <div class="container">
+                            <div class="row justify-content-center">
+                                <div class="col-auto">
+                                    <p class="card-text">Выбор даты</p>
+                                </div>
+                                <div class="col-auto">
+                                    <div class="form-group">
+                                        <input type="date" class="form-control" placeholder="Дата"
+                                            v-model="reception.data" @change="getReceptionJournal">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row justify-content-center">
+                                <div class="text-center" v-if="reception.loading">
+                                    <div class="spinner-border text-primary my-3" role="status">
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+                                </div>
+                                <div style="overflow-x: scroll;" v-if="!reception.loading">
+                                    <table>
+                                        <tr>
+                                            <td rowspan="2">Дата</td>
+                                            <td rowspan="2">Время</td>
+                                            <td colspan="3">Консультируемый</td>
+                                            <td rowspan="2">Повод обращения</td>
+                                            <td rowspan="2">Проблема</td>
+                                            <td rowspan="2">Результат консультирования</td>
+                                            <td rowspan="2">Консультант</td>
+                                            <td rowspan="2">Изменить</td>
+                                            <td rowspan="2">Удалить</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Возраст</td>
+                                            <td>Пол</td>
+                                            <td>Имя</td>
+                                        </tr>
+                                        <tr>
+                                            <td v-for="n in 9">{{n}}</td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr v-for="(rec, index) in reception.receptionList">
+                                                <td>{{rec.vst_dt.slice(0, 10)}}</td>
+                                                <td>{{rec.vst_dt.slice(11, 16)}}</td>
+                                                <td>{{rec.vst_age}}</td>
+                                                <td>{{rec.vst_gender?'Мужской':'Женский'}}</td>
+                                                <td>{{rec.vst_name}}</td>
+                                                <td>{{rec.vst_reason}}</td>
+                                                <td>{{rec.vst_problem}}</td>
+                                                <td>{{rec.vst_result}}</td>
+                                                <td>{{rec.vst_consultant}}</td>
+                                                <td><button class="btn btn-warning" @click="updateReceptionRecordChange(index)" data-toggle="collapse" data-target="#collapseAdder" aria-expanded="false" aria-controls="collapseAdder">Изменить</button></td>
+                                                <td><button class="btn btn-danger" @click="deleteReceptionRecord(rec.vst_id, index)">Удалить</button></td>
+                                        </tr>
+                                    </table>
+                                    
+                                </div>
+                                <button type="button" class="my-3 btn btn-primary" data-toggle="collapse" data-target="#collapseAdder" aria-expanded="false" aria-controls="collapseAdder">Добавить прием</button>
+                                    
+                            <div class="row justify-content-center collapse" id="collapseAdder">
+                                <h5 class="card-title">Добавить прием</h5>
+                                <div style="overflow-x: scroll;" id="receptionForm">
+                                    <table>
+                                        <tr>
+                                            <td rowspan="2">Дата</td>
+                                            <td rowspan="2">Время</td>
+                                            <td colspan="3">Консультируемый</td>
+                                            <td rowspan="2">Повод обращения</td>
+                                            <td rowspan="2">Проблема</td>
+                                            <td rowspan="2">Результат консультирования</td>
+                                            <td rowspan="2">Консультант</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Возраст</td>
+                                            <td>Пол</td>
+                                            <td>Имя</td>
+                                        </tr>
+                                        <tr>
+                                            <td v-for="n in 9">{{n}}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><input type="date" class="form-control"
+                                                    v-model="reception.receptionObj.date" required></td>
+                                            <td><input type="time" class="form-control"
+                                                    v-model="reception.receptionObj.time" required></td>
+                                            <td><input type="number" class="form-control"
+                                                    v-model="reception.receptionObj.age" required></td>
+                                            <td>
+                                                <select class="form-control" v-model="reception.receptionObj.gender" required>
+                                                    <option value="true">Мужской</option>
+                                                    <option value="false">Женский</option>
+                                                </select>
+                                            </td>
+                                            <td><input type="text" class="form-control"
+                                                    v-model="reception.receptionObj.name" required></td>
+                                            <td><textarea class="form-control" rows="4" col="15"
+                                                    v-model="reception.receptionObj.reason" required></textarea></td>
+                                            <td><textarea class="form-control" rows="4" col="15"
+                                                    v-model="reception.receptionObj.problem" required></textarea></td>
+                                            <td><textarea class="form-control" rows="4" col="15"
+                                                    v-model="reception.receptionObj.result" required></textarea></td>
+                                            <td><input type="text" class="form-control"
+                                                    v-model="reception.receptionObj.consultant" required></td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <button class="btn btn-success btn-block my-3" v-if="reception.receptionID == null" @click="addReceptionRecord('receptionForm')">Добавить</button>
+                                <button class="btn btn-warning btn-block mt-3" v-if="reception.receptionID != null" @click="updateReceptionRecord('receptionForm')">Изменить
+                                </button>
+                                <button class="btn btn-danger btn-block mb-3" v-if="reception.receptionID != null" @click="reception.receptionID = null">Отмена
+                                </button>
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="schedule" v-if="menuSelect=='schedule'">
+                <div class="card text-center">
+                    <div class="card-header">
+                        Расписание
+                    </div>
+                    <div class="card-body">
+                        <div class="container" id="scheduleForm">
+                            <div class="row justify-content-around">
+                                <div class="col col-4">
+                                    Выберете начало периода
+                                    <input type="date" class="form-control" v-model="schedule.dateRecordBegin" required>
+                                </div>
+                                <div class="col col-4">
+                                    Выберете конец периода
+                                    <input type="date" class="form-control" v-model="schedule.dateRecordEnd" required>
+                                </div>
+                            </div>
+                            <div class="row my-2 justify-content-around">
+                                <div class="col col-4">
+                                    Время начала работы
+                                    <input type="time" class="form-control" v-model="schedule.timeBegin" required>
+                                </div>
+                                <div class="col col-4">
+                                    Время окончания работы
+                                    <input type="time" class="form-control" v-model="schedule.timeEnd" required>
+                                </div>
+                            </div>
+                            <div class="row my-2 justify-content-center">
+                                <div class="col col-4">
+                                    Время приема
+                                    <input type="time" class="form-control" v-model="schedule.timeDuration" required>
+                                </div>
+                            </div>
+                            <div class="row my-3">
+                                <button type="button" class="btn btn-block"
+                                    v-on:click="schedule.isBreake = !schedule.isBreake"
+                                    v-bind:class="{'btn-primary': schedule.isBreake, 'btn-secondary': !schedule.isBreake}">
+                                    Перерыв
+                                </button>
+                            </div>
+                            <div class="row my-2 justify-content-around" v-if="schedule.isBreake">
+                                <div class="col col-4">
+                                    Время начала перерыва
+                                    <input type="time" class="form-control" v-model="schedule.timeBreakBegin" required>
+                                </div>
+                                <div class="col col-4">
+                                    Время окончания перерыва
+                                    <input type="time" class="form-control" v-model="schedule.timeBreakEnd" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="container">
+                            <div class="row justify-content-around">
+                                <div class="col col-3">
+                                    <button type="button" class="btn btn-block btn-warning"
+                                        @click="records('scheduleForm' ,'upd')">
+                                        Изменить
+                                    </button>
+                                </div>
+                                <div class="col col-3">
+                                    <button type="button" class="btn btn-block btn-success"
+                                        @click="records('scheduleForm' ,'add')">
+                                        Сохранить
+                                    </button>
+                                </div>
+                                <div class="col col-3">
+                                    <button type="button" class="btn btn-block btn-danger"
+                                        @click="records('scheduleForm' ,'del')">
+                                        Удалить
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="record" v-if="menuSelect=='record'">
+                <div class="card text-center">
+                    <div class="card-header">
+                        Журнал записи
+                    </div>
+                    <div class="card-body">
+
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-4">
+                                    <h5 class="card-title">Выбор даты</h5>
+                                    <div class="form-group">
+                                        <input type="date" class="form-control" placeholder="Дата"
+                                            v-model="record.dateBegin" @change="getPersonalRecords()">
+                                    </div>
+                                </div>
+                                <div class="col-8">
+                                    <h5 class="card-title">Список приемов</h5>
+                                    <div class="text-center" v-if="!record.loading">
+                                        <div class="spinner-border text-primary my-3" role="status">
+                                            <span class="sr-only">Loading...</span>
+                                        </div>
+                                    </div>
+                                    <ul class="list-group" v-if="record.loading">
+                                        <li class="list-group-item d-flex justify-content-between align-items-center"
+                                            v-for="(note, index) in record.recordList"
+                                            v-bind:class="{'list-group-item-success': test.tst_online, 'list-group-item-warning': test.tst_id == methods.testRenameId}">
+
+                                            <button class="btn btn-link" @click="renameTest(test.tst_id, test.tst_name)"
+                                                title="Переименовать">
+                                                {{test.tst_name}}
+                                            </button>
+
+                                            <button class="badge btn-danger" :id="test.tst_id"
+                                                @click="deleteTest(index, test.tst_id)">X</button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="results" v-if="menuSelect=='results'">
+                {{search.peopleEdit.pepl_data.pepl_second_name}} {{search.peopleEdit.pepl_data.pepl_first_name}}
+                {{search.peopleEdit.pepl_data.pepl_last_name}}
+                <b>Пол:</b> {{search.peopleEdit.pepl_data.pepl_gender?'Мужской':'Женский'}}<br>
+                <b>Дата рождения:</b> {{search.peopleEdit.pepl_data.pepl_birthday}}<br>
+                <b>Телефон:</b> +7 {{search.peopleEdit.pepl_data.pepl_phone}}<br>
+                <b>Email:</b> {{search.peopleEdit.pepl_data.pepl_email}}<br>
+            </div>
+
+            <div id="edit" v-if="menuSelect=='edit'">
+                <div class="card text-center">
+                    <div class="card-header">
+                        Данные пользователя
+                    </div>
+                    <div class="text-center" v-if="!editLoading">
+                        <div class="spinner-border text-primary my-3" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                    <div class="card-body" v-if="editLoading">
+                        <form id="updAdminData">
+                            <div class="form-group row">
+                                <label for="family" class="col-sm-2 col-form-label">Фамилия</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control"
+                                        v-model="editData.pepl_data.pepl_second_name" @input="checkInput" id="family"
+                                        required>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="name" class="col-sm-2 col-form-label">Имя</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control" v-model="editData.pepl_data.pepl_first_name"
+                                        @input="checkInput" id="name" required>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="secondname" class="col-sm-2 col-form-label">Отчество</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control" v-model="editData.pepl_data.pepl_last_name"
+                                        @input="checkInput" id="secondname" required>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="phone" class="col-sm-2 col-form-label">Телефон</label>
+                                <div class="input-group col-sm-10">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text">+7</div>
+                                    </div>
+                                    <input type="tel" class="form-control" v-model="editData.pepl_data.pepl_phone"
+                                        @input="validPhone" maxlength="15" minlength="15" id="phone">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="email" class="col-sm-2 col-form-label">Email</label>
+                                <div class="col-sm-10">
+                                    <input type="email" class="form-control" v-model="editData.pepl_data.pepl_email"
+                                        id="email">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="sex" class="col-sm-2 col-form-label">Пол</label>
+                                <div class="col-sm-10">
+                                    <select class="form-control" v-model="editData.pepl_data.pepl_gender"
+                                        @input="validPhone" id="sex" required>
+                                        <option value="true">Мужской</option>
+                                        <option value="false">Женский</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <!-- Поля для сотрудника -->
+                            <div class="form-group row">
+                                <label for="viber" class="col-sm-2 col-form-label">Viber</label>
+                                <div class="input-group col-sm-10">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text">+7</div>
+                                    </div>
+                                    <input type="tel" class="form-control"
+                                        v-model="editData.emp_data.main_data.emp_viber" @input="validPhone"
+                                        maxlength="15" minlength="15" id="viber">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="vkontakte" class="col-sm-2 col-form-label">Вконтакте</label>
+                                <div class="input-group col-sm-10">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text">https://vk.com/</div>
+                                    </div>
+                                    <input type="text" class="form-control" v-model="editData.emp_data.main_data.emp_vk"
+                                        id="vkontakte">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="skype" class="col-sm-2 col-form-label">Skype</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control"
+                                        v-model="editData.emp_data.main_data.emp_skype" id="skype">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="discord" class="col-sm-2 col-form-label">Discord</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control"
+                                        v-model="editData.emp_data.main_data.emp_discord" id="discord">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="hangouts" class="col-sm-2 col-form-label">Hangouts</label>
+                                <div class="col-sm-10">
+                                    <input type="email" class="form-control"
+                                        v-model="editData.emp_data.main_data.emp_hangouts" id="hangouts">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="login" class="col-sm-2 col-form-label">Логин</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control" v-model="editData.pepl_login" id="login"
+                                        required>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="old_pass" class="col-sm-2 col-form-label">Старый пароль</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control" v-model="editData.pepl_old_pass"
+                                        id="old_pass" required>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="new_pass" class="col-sm-2 col-form-label">Новый пароль</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control" v-model="editData.pepl_new_pass"
+                                        id="new_pass" required>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="card-footer" v-if="editLoading">
+                        <button class="btn btn-primary" @click="updData">Сохранить измения</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="js/jquery-3.3.1.slim.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+
+    <script src="js/app.js"></script>
+    <script src="js/vue.js"></script>
+    <script>
+        var app = new Vue({
+            el: '#app',
+            data: {
+                menuSelect: 'methods',
+                menuName: '',
+                methods: {
+                    testLoading: false,
+                    testList: {},
+                    testName: '',
+                    testFiles: {},
+                    testRename: false,
+                    testNewName: '',
+                    testRenameId: ''
+                },
+                search: {
+                    name: '',
+                    secondname: 'Тарасов',
+                    peopleList: {},
+                    type: 0,
+                    class_num: '',
+                    class_letter: '',
+                    loading: true,
+                    peopleEdit: undefined
+                },
+                schedule: {
+                    dateRecordBegin: 0,
+                    dateRecordEnd: 0,
+                    timeBegin: 0,
+                    timeEnd: 0,
+                    isBreake: false,
+                    timeDuration: 0,
+                    timeBreakBegin: 0,
+                    timeBreakEnd: 0,
+                },
+                reception: {
+                    date: "2019-07-25",
+                    receptionID: null,
+                    receptionList: [],
+                    receptionObj: {
+                        id: 2,
+                        date: "2019-07-25",
+                        time: "10:00",
+                        age: 15,
+                        sex: "Мужской",
+                        name: "Максим",
+                        reason: "Неадекватное поведение",
+                        problem: "Агрессия",
+                        result: "Выздоровление",
+                        consultant: "Бородин Н.И."
+                    },
+                    loading: false,
+                },
+                record: {
+                    dateBegin: 0,
+                    dateEnd: 0,
+                    period: 0,
+                    loading: true,
+                    recordList: []
+                },
+                editData: {},
+                editLoading: false,
+                orderData: {},
+                orderLoading: false,
+            },
+            watch: {
+
+                menuSelect: function (selecter) {
+
+                    if (selecter == "methods") {
+                        var tmpData = this;
+                        getTests().then(
+                            function (data) {
+                                console.log(data);
+                                if (data.status != "OK") { return; }
+                                tmpData.methods.testList = data.payload;
+                                tmpData.methods.testLoading = true;
+                            },
+                            function (err) {
+                                console.error(err);
+                                alert(`Fulfilled: ${err}`)
+                            }
+                        );
+                    } else { this.methods.testLoading = false; }
+
+                    if (selecter == "record") {
+                        this.record.dateBegin = new Date();
+                        var m = this.record.dateBegin.getMonth() + 1;
+                        var d = this.record.dateBegin.getDate();
+                        this.record.dateBegin = `${this.record.dateBegin.getFullYear()}-${(m > 9 ? '' : '0') + m}-${(d > 9 ? '' : '0') + d}`;
+                        this.getPersonalRecords();
+                    }
+
+                    if (selecter == "edit") {
+                        var tmpData = this;
+                        // Загружаем персональные данные
+                        getPersonalData().then(
+                            function (data) {
+                                console.log(data);
+                                if (data.status != "OK") { return; }
+                                data.payload.pepl_data.pepl_birthday = data.payload.pepl_data.pepl_birthday.substring(10, -10);
+                                data.payload.emp_data.main_data.emp_date_enrollment = data.payload.emp_data.main_data.emp_date_enrollment.substring(10, -10);
+                                tmpData.editData = data.payload;
+                                tmpData.editData.pepl_old_pass = "";
+                                tmpData.editData.pepl_new_pass = "";
+                                tmpData.editLoading = true;
+                            },
+                            function (err) {
+                                console.error(err);
+                                alert(`Fulfilled: ${err}`)
+                            }
+                        );
+                    } else { this.editLoading = false; }
+
+                    if (selecter == "orders") {
+                        var tmpData = this;
+                        this.getListConfirmReg().then(
+                            function (data) {
+                                console.log(data);
+                                if (data.status != "OK") { return; }
+                                tmpData.orderData = data.payload;
+                                tmpData.orderLoading = true;
+                            },
+                            function (err) {
+                                console.error(err);
+                                alert(`Fulfilled: ${err}`)
+                            }
+                        );
+                    } else { this.orderLoading = false; }
+                }
+            },
+            methods: {
+                // Фунция для подсветки чекбоксов
+                setActive: function (target) {
+                    obj = target.target;
+                    if (obj.checked) {
+                        obj.parentNode.classList.remove("btn-secondary");
+                        obj.parentNode.classList.add("btn-primary");
+                    } else {
+                        obj.parentNode.classList.remove("btn-primary");
+                        obj.parentNode.classList.add("btn-secondary");
+                    }
+                },
+                //********************** ВКЛАДКА ТЕСТЫ **********************//
+                // Записываем файлы в переменную
+                onFileChange(e) {
+                    var files = e.target.files || e.dataTransfer.files;
+                    if (!files.length) return;
+                    if (files.length > 10) alert("Количество фалов должно быть меньше 10!");
+                    this.methods.testFiles = files;
+                    console.log(files);
+                },
+
+                // !!!Добавляем тест
+                addNewTest: function () {
+                    if (this.methods.testFiles.length == 0 || this.methods.testFiles.length == undefined) {
+                        alert("Выберете файлы!");
+                        return;
+                    }
+                    if (this.methods.testName == '') {
+                        alert("Заполните имя теста!");
+                        return;
+                    }
+                    let inData = new FormData();
+                    inData.append("tst_name", this.methods.testName);
+                    for (let i = 0; i < this.methods.testFiles; i++) {
+                        inData.append('file' + (i + 1), this.methods.testFiles[i]);
+                        inData.append('file' + (i + 1), JSON.stringify({
+                            file_name: 'file_name' + i,//this.methods.testFiles[i].name,
+                            file_path: '/file_path' + i
+                        }));
+                    }
+                    console.log(inData);
+                    var tmpData = this;
+                    addTest(inData).then(
+                        function (data) {
+                            console.log(data);
+                            if (data.status != "OK") { return; }
+                            alert("Тест добавлен");
+                        },
+                        function (err) {
+                            console.error(err);
+                            alert(`Fulfilled: ${err}`)
+                        }
+                    );
+                    console.log(this.methods.testFiles);
+                },
+
+                // Открытие поля для переименования теста
+                renameTest: function (id, name) {
+                    this.methods.testRename = !this.methods.testRename;
+                    if (this.methods.testRename) {
+                        this.methods.testNewName = name;
+                        this.methods.testRenameId = id;
+                    } else {
+                        this.methods.testNewName = '';
+                        this.methods.testRenameId = ''
+                    }
+                },
+
+                // Переименовываем тест
+                renameTestName: function () {
+                    var tmpData = this;
+                    changeTestName({ "tst_id": this.methods.testRenameId, "tst_name": this.methods.testNewName }).then(
+                        function (data) {
+                            console.log(data);
+                            if (data.status != "OK") { return; }
+                            for (var i = 0; i < tmpData.methods.testList.length; i++)
+                                if (tmpData.methods.testList[i].tst_id == tmpData.methods.testRenameId) {
+                                    tmpData.methods.testList[i].tst_name = tmpData.methods.testNewName;
+                                }
+                            tmpData.renameTest(0, '');
+                        },
+                        function (err) {
+                            console.error(err);
+                            alert(`Fulfilled: ${err}`)
+                        }
+                    );
+                },
+
+                // Удалаяем тест
+                deleteTest: function (i, id) {
+                    return;
+                    delTest({ "tst_id": id }).then(
+                        function (data) {
+                            console.log(data);
+                            if (data.status != "OK") { return; }
+                            tmpData.methods.teachList.splice(i, 1);
+                        },
+                        function (err) {
+                            console.error(err);
+                            alert(`Fulfilled: ${err}`)
+                        }
+                    );
+                },
+
+
+                //********************** ВКЛАДКА ПОИСК **********************//
+                // !!!--- ПОИСК ---!!!
+                searchUserShow: function (index) {
+                    this.search.peopleEdit = this.search.peopleList[index];
+                    this.menuSelect = 'results';
+                    //$('#searchUserInfo').modal('show');
+                },
+
+                searchClick: function () {
+                    var dataSearch = {};
+                    if (this.search.name != '') {
+                        dataSearch["pepl_first_name"] = this.search.name;
+                    }
+                    if (this.search.secondname != '') {
+                        dataSearch["pepl_second_name"] = this.search.secondname;
+                    }
+                    if (this.search.class_num != '' && this.search.class_letter != '' && this.search.type == '1') {
+                        dataSearch["std_parallel"] = Number.parseInt(this.search.class_num);
+                        dataSearch["std_class_letter"] = this.search.class_letter;
+                    }
+                    this.search.peopleList = {};
+                    this.search.loading = false;
+                    var tmpData = this;
+                    console.log(this.search.type);
+                    switch (this.search.type) {
+                        case "1":
+                            getStudents(dataSearch).then(
+                                function (data) {
+                                    console.log(data);
+                                    if (data.status != "OK") { return; }
+                                    tmpData.search.peopleList = data.payload;
+                                    tmpData.search.loading = true;
+                                },
+                                function (err) {
+                                    tmpData.search.loading = true;
+                                    /*console.error(err);
+                                    alert(`Fulfilled: ${err}`)*/
+                                }
+                            );
+                            break;
+                        case "2":
+                            getParents(dataSearch).then(
+                                function (data) {
+                                    console.log(data);
+                                    if (data.status != "OK") { return; }
+                                    tmpData.search.peopleList = data.payload;
+                                    tmpData.search.loading = true;
+                                },
+                                function (err) {
+                                    tmpData.search.loading = true;
+                                    /*console.error(err);
+                                    alert(`Fulfilled: ${err}`);*/
+                                }
+                            );
+                            break;
+                        case "3":
+                            dataSearch["role_array"] = ["Teacher"];
+                            getEmployees(dataSearch).then(
+                                function (data) {
+                                    console.log(data);
+                                    if (data.status != "OK") { return; }
+                                    tmpData.search.peopleList = data.payload;
+                                    tmpData.search.loading = true;
+                                },
+                                function (err) {
+                                    tmpData.search.loading = true;
+                                    /*console.error(err);
+                                    alert(`Fulfilled: ${err}`);*/
+                                }
+                            );
+                            break;
+                        case "4":
+                            //dataSearch["role_array"] = ["Teacher"];
+                            getEmployees(dataSearch).then(
+                                function (data) {
+                                    console.log(data);
+                                    if (data.status != "OK") { return; }
+                                    tmpData.search.peopleList = data.payload;
+                                    tmpData.search.loading = true;
+                                },
+                                function (err) {
+                                    tmpData.search.loading = true;
+                                    /*console.error(err);
+                                    alert(`Fulfilled: ${err}`)*/
+                                }
+                            );
+                            break;
+
+                        default:
+                            tmpData.search.loading = true;
+                            break;
+                    }
+                },
+
+                //********************** ВКЛАДКА ЖУРНАЛ ПОСЕЩЕНИЙ **********************//
+                getReceptionJournal: function (){
+                    var tmpData = this;
+                    tmpData.reception.loading = true;
+                    getJournal({ "byDate": {
+                        "vst_date_begin": tmpData.reception.data,
+                        "vst_date_end": tmpData.reception.data
+                    } }).then(
+                        function (data) {
+                            console.log(data);
+                            if (data.status != "OK") { return; }
+                            tmpData.reception.receptionList = data.payload;
+                            tmpData.reception.loading = false;
+                        },
+                        function (err) {
+                            console.error(err);
+                            tmpData.reception.receptionList = {};
+                            tmpData.reception.loading = false;
+                            //alert(`Fulfilled: ${err}`)
+                        }
+                    );
+                },
+
+                addReceptionRecord: function (form){
+                    if (!this.checkInput(form)) {
+                        return;
+                    }
+                    var data = {"vst_arr_add": [{
+                        "vst_reason": this.reception.receptionObj.reason,
+                        "vst_problem": this.reception.receptionObj.problem,
+                        "vst_result": this.reception.receptionObj.result,
+                        "vst_data": {
+                            "vst_dt": this.reception.receptionObj.date + "T" + this.reception.receptionObj.time + ":00.000Z",
+                            "vst_age": this.reception.receptionObj.age,
+                            "vst_gender": Boolean(this.reception.receptionObj.gender),
+                            "vst_name": this.reception.receptionObj.name,
+                            "vst_consultant": this.reception.receptionObj.consultant
+                        }
+                    }]};
+
+                    setJournal(data).then(
+                        function (data) {
+                            console.log(data);
+                            if (data.status != "OK") { return; }
+                            alert("Прием добавлен");
+                        },
+                        function (err) {
+                            console.error(err);
+                            alert(`Fulfilled: ${err}`)
+                        }
+                    );
+                    
+                    //this.reception.receptionList.push(JSON.parse(JSON.stringify(this.reception.receptionObj)));
+                },
+
+                updateReceptionRecordChange: function (index){
+                    console.log(index);
+                    this.reception.receptionObj.reason = this.reception.receptionList[index].vst_reason;
+                    this.reception.receptionObj.problem = this.reception.receptionList[index].vst_problem;
+                    this.reception.receptionObj.result = this.reception.receptionList[index].vst_result;
+                    this.reception.receptionObj.date = this.reception.receptionList[index].vst_dt.slice(0, 10);
+                    this.reception.receptionObj.time = this.reception.receptionList[index].vst_dt.slice(11, 16);
+                    this.reception.receptionObj.age = this.reception.receptionList[index].vst_age;
+                    this.reception.receptionObj.gender = this.reception.receptionList[index].vst_gender;
+                    this.reception.receptionObj.name = this.reception.receptionList[index].vst_name;
+                    this.reception.receptionObj.consultant = this.reception.receptionList[index].vst_consultant;
+                    this.reception.receptionID = this.reception.receptionList[index].vst_id;
+                    //this.reception.receptionObj = this.reception.receptionList[index];
+                },
+
+                updateReceptionRecord: function (form){
+                    if (!this.checkInput(form)) {
+                        return;
+                    }
+                    var data = {"vst_arr_upd": [{
+                        "vst_id": this.reception.receptionID,
+                        "vst_reason": this.reception.receptionObj.reason,
+                        "vst_problem": this.reception.receptionObj.problem,
+                        "vst_result": this.reception.receptionObj.result,
+                        "vst_data": {
+                            "vst_dt": this.reception.receptionObj.date + "T" + this.reception.receptionObj.time + ":00.000Z",
+                            "vst_age": this.reception.receptionObj.age,
+                            "vst_gender": Boolean(this.reception.receptionObj.gender),
+                            "vst_name": this.reception.receptionObj.name,
+                            "vst_consultant": this.reception.receptionObj.consultant
+                        }
+                    }]};
+
+                    setJournal(data).then(
+                        function (data) {
+                            console.log(data);
+                            if (data.status != "OK") { return; }
+                            alert("Прием изменен");
+                        },
+                        function (err) {
+                            console.error(err);
+                            alert(`Fulfilled: ${err}`)
+                        }
+                    );
+                    this.reception.receptionID = null;
+                    //var tmr = setTimeout(this.getReceptionJournal(), 1000);
+                    //this.reception.receptionList.splice(index, 1, JSON.parse(JSON.stringify(this.reception.receptionObj)));
+                },
+
+                deleteReceptionRecord: function (id, index){
+                    var data = {"vst_arr_del": [
+                                {
+                                "vst_id": id
+                                }
+                            ]};
+
+                    setJournal(data).then(
+                        function (data) {
+                            console.log(data);
+                            if (data.status != "OK") { return; }
+                            alert("Прием удален");
+                        },
+                        function (err) {
+                            console.error(err);
+                            alert(`Fulfilled: ${err}`)
+                        }
+                    );
+                    console.log(id);
+                    this.reception.receptionList.splice(index, 1);
+                },
+
+                //********************** ВКЛАДКА ЖУРНАЛ ПОСЕЩЕНИЙ **********************//
+                records: function (form, com) {
+                    if (!this.checkInput(form)) {
+                        return;
+                    }
+                },
+
+                getPersonalRecords: function () {
+                    this.record.loading = false;
+                    var tmpData = this;
+                    this.record.dateEnd = new Date(this.record.dateBegin);
+                    this.record.dateEnd.setDate(new Date(this.record.dateBegin).getDate() + 1);
+                    var m = this.record.dateEnd.getMonth() + 1;
+                    var d = this.record.dateEnd.getDate();
+                    var inData = {
+                        "wd_history": false,
+                        "wd_period_fix": "week",
+                        "wd_period_begin": this.record.dateBegin,
+                        "wd_period_end": `${this.record.dateEnd.getFullYear()}-${(m > 9 ? '' : '0') + m}-${(d > 9 ? '' : '0') + d}`
+                    }
+                    /*{
+                        "byDate": {
+                            "vst_date_begin": this.record.dateBegin,
+                            "vst_date_end": `${this.record.dateEnd.getFullYear()}-${(m>9?'':'0') + m}-${(d>9?'':'0') + d}`//this.record.dateEnd.format("yyyy-mm-dd")
+                        },
+                        "inCount": {
+                            "vst_N": 50,
+                            "vst_F": 0
+                        }
+                    };*/
+
+                    getPersonalRecords(inData).then(
+                        function (data) {
+                            console.log(data);
+                            if (data.status != "OK") { return; }
+                            tmpData.record.recordList = data.payload;
+                            tmpData.record.loading = false;
+                        },
+                        function (err) {
+                            console.error(err);
+                            /* TEST */
+                            var data =
+                            {
+                                "status": "OK",
+                                "payload": [
+                                    {
+                                        "wd_id": 1,
+                                        "wd_date": "2019-03-03",
+                                        "rec_array": [
+                                            {
+                                                "rec_id": 7,
+                                                "emp_fullname": "Иванов Иван Иванович",
+                                                "rec_data": {
+                                                    "pepl_id": 3,
+                                                    "rec_time": "11:00:00",
+                                                    "rec_online": true,
+                                                    "rec_not_come": false,
+                                                    "cont_name": "skype",
+                                                    "cont_value": "student132"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                ]
+                            };
+                            /*{
+                                "status": "OK",
+                                "payload": [
+                                    {
+                                        "vst_id": 1,
+                                        "emp_id": 4,
+                                        "rec_id": 7,
+                                        "vst_dt": "2019-03-03T11:00:00.000Z",
+                                        "vst_age": 13,
+                                        "vst_gender": true,
+                                        "vst_name": "Тарасов Семен Львович",
+                                        "vst_reason": "Стресс",
+                                        "vst_problem": "Угнетение учениками",
+                                        "vst_result": "Стресс",
+                                        "vst_consultant": "Иванов Иван иванович"
+                                    }
+                                ]
+                            };*/
+                            tmpData.record.recordList = data.payload;
+                            /* TEST */
+                            //alert(`Fulfilled: ${err}`)
+                            tmpData.record.loading = false;
+                        }
+                    );
+                },
+
+                checkForm: function () {
+                    var formData = document.getElementById("addPep");
+                    var inData = formData.getElementsByClassName('form-control');
+                    var check = false;
+                    for (var i = 0; i < inData.length; i++) {
+                        if (((inData[i].value == "" || inData[i].value.length < inData[i].minLength) && inData[i].attributes.getNamedItem('required') != null) || inData[i].classList.contains("is-invalid")) {
+                            inData[i].classList.remove("is-valid");
+                            inData[i].classList.add("is-invalid");
+                            check = true;
+                            break;
+                        }
+                    };
+                },
+
+                checkInput: function (target) {
+                    var form = document.getElementById(target);
+                    var elem = form.getElementsByClassName('form-control');
+                    var isGood = true;
+                    for (i = 0; i < elem.length; i++) {
+                        if ((elem[i].value == "" || elem[i].value.length < elem[i].minLength) && elem[i].required) {
+                            //elem[i].classList.remove("is-valid");
+                            elem[i].classList.add("is-invalid");
+                            isGood = false;
+                        } else {
+                            elem[i].classList.remove("is-invalid");
+                            //elem[i].classList.add("is-valid");
+                        }
+                    };
+                    return isGood;
+                },
+
+                roleClick: function (target) {
+                    obj = target.target;
+                    console.log(obj);
+                },
+
+                teacherChange: function () {
+                    for (var i = 0; i < this.addPeople.teachList.length; i++) {
+                        if (this.addPeople.teachList[i].pepl_id == this.addPeople.std.class_teach) {
+                            this.addPeople.class_arr =
+                                this.addPeople.teachList[i].class_arr.length != 0 ?
+                                    this.addPeople.teachList[i].class_arr :
+                                    null;
+                            console.log(this.addPeople.class_arr);
+                            break;
+                        }
+                    }
+                },
+
+                updData: function () {
+                    editLoading = false;
+                    tmpData = this;
+                    updPersonalData(this.editData).then(
+                        function (data) {
+                            console.log(data);
+                            if (data.status != "OK") { return; }
+                            tmpData.editData = data.payload;
+                            tmpData.editLoading = true;
+                        },
+                        function (err) {
+                            console.error(err);
+                            alert(`Fulfilled: ${err}`)
+                        }
+                    );
+                },
+
+                authCheck: function (token) {
+                    fetch('https://api-ps18.herokuapp.com/login', {
+                        method: 'POST',
+                        headers: { "Authorization": token }
+                    })
+                        .then(function (response) {
+                            if (response.status == 200)
+                                return response.json();
+                            else alert(response.statusText);
+                        })
+                        .then(function (data) {
+                            console.log(data);
+                            if (data.status == "OK") {
+
+                            } else {
+                                alert("Неверные учетные данные. Попробуйте еще раз");
+                            }
+                        })
+                        .catch(alert);
+                },
+
+                validPhone: function (target) {
+
+                    obj = target.target;
+
+                    var curLen = this.addPeople.phone.length;
+
+                    if (curLen == 1) {
+                        obj.classList.remove("is-invalid");
+                        obj.classList.add("is-valid");
+                    }
+
+                    if (curLen == 0)
+                        this.addPeople.phone = "(";
+
+                    if (curLen < this.old) {
+                        this.old--;
+                        return;
+                    }
+
+                    if (curLen == 4)
+                        this.addPeople.phone = this.addPeople.phone + ")-";
+
+                    if (curLen == 9)
+                        this.addPeople.phone = this.addPeople.phone + "-";
+
+                    if (curLen == 12)
+                        this.addPeople.phone = this.addPeople.phone + "-";
+
+                    this.old++;
+                },
+
+                orderDecision: function (elem, id, choice) {
+                    var child = new Array();
+                    for (var i = 0; i < this.orderData[elem].cr_array.length; i++) {
+                        child.push(this.orderData[elem].cr_array[i].auto_check_data.std_id);
+                    }
+                    this.confirmParentReg(id, choice, child).then(
+                        function (data) {
+                            console.log(data);
+                            if (data.status != "OK") { return; }
+                            this.orderData.splice(elem, 1);
+                        },
+                        function (err) {
+                            console.error(err);
+                            alert(`Fulfilled: ${err}`)
+                        }
+                    );
+                },
+
+                exit: function () {
+                    localStorage.removeItem('token');
+                    document.location.replace("/");
+                }
+            },
+            mounted: function () {
+                var tmpData = this;
+                getPersonalData().then(
+                    function (data) {
+                        if (data.status != "OK") { return; }
+                        tmpData.menuName = data.payload.pepl_data.pepl_second_name + " " + data.payload.pepl_data.pepl_first_name;
+                    },
+                    function (err) {
+                        console.error(err);
+                        alert(`Fulfilled: ${err}`)
+                    }
+                )
+                return;
+                var tok = localStorage.getItem('token');
+                if (tok != "" && tok != null)
+                    this.authCheck(tok, true);
+            }
+        });
+    </script>
+</body>
+
+</html>
