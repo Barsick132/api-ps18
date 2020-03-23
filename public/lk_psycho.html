@@ -986,7 +986,7 @@
                         "vst_data": {
                             "vst_dt": this.reception.receptionObj.date + "T" + this.reception.receptionObj.time + ":00.000Z",
                             "vst_age": parseInt(this.reception.receptionObj.age),
-                            "vst_gender": this.reception.receptionObj.gender,
+                            "vst_gender": this.reception.receptionObj.gender=="true"?true:false,
                             "vst_name": this.reception.receptionObj.name,
                             "vst_consultant": this.reception.receptionObj.consultant
                         }
