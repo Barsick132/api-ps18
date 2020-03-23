@@ -12,6 +12,7 @@
 
     <!-- Bootstrap core CSS -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
+    <script src="js/vue.js"></script>
     <style type="text/css">
         label {
             text-align: right;
@@ -32,7 +33,7 @@
                         </button>
                     </div>
                     <div class="modal-body">
-                        Ваши данные будут проверяться в течении 48 часов. После этого времени попробуйте авторизоваться если это не произойдёт, возможно, что ваши данные оказались некорректными.
+                        Ваши данные будут проверяться в течение 48 часов. Повторно авторизуйтесь по окончании этого времени.
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -221,7 +222,7 @@
             <button class="btn btn-primary" v-on:click="sendData" data-toggle="modal" data-target="#exampleModalCenter">Регистрация</button>
         </div>
     </div>
-    <script src="js/vue.js"></script>
+    <script src="js/app.js"></script>
     <script>
         function getCookie(name) {
             var r = document.cookie.match("(^|;) ?" + name + "=([^;]*)(;|$)");
