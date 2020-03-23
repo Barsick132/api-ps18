@@ -25,7 +25,7 @@ function login(inData) {
 };
 
 // Регистрация родителя
-function singup(inData) {
+function signup(inData) {
   return new Promise(function (succeed, fail) {
     fetch(url + 'signup', {
       headers: { 'Content-type': 'application/json; charset=utf-8' },
