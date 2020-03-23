@@ -777,7 +777,7 @@
 
                 sendData: function (form) {
                     if (!this.checkInput(form)) { return; };
-                    if (this.addPeople.selectedRole.length == 0) { alert("Выберете хотя бы одну роль"); return; }
+                    if (this.addPeople.selectedRole.length == 0 && this.addPeople.typeUser == 0) { alert("Выберете хотя бы одну роль"); return; }
                     var ph = "";
                     if (this.addPeople.phone != "(") {
                         ph = this.addPeople.phone;
