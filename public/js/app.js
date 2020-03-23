@@ -40,8 +40,9 @@ function signup(inData) {
       .then(function (data) {
         if (data.status == "OK") {
           succeed(data);
+        } if (data.status == "LOGIN_BUSY") {
+          fail(new Error("Пользователь с указанным логином уже зарегистрирован"));
         } else {
-          
           fail(new Error("Неверные данные. Попробуйте еще раз"));
         }
       })
