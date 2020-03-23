@@ -253,30 +253,6 @@
                                     </select>
                                 </div>
                             </div>
-                            <!-- Поля для ученика -->
-                            <div class="form-group row">
-                                <label for="childclass" class="col-sm-2 col-form-label">Класс</label>
-                                <div class="col-sm-10">
-                                    <input type="text" class="form-control" v-model="editData.std_data.std_class"
-                                        v-on:blur="checkInput" id="childclass" minlength="2" maxlength="3" required>
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <label for="childstayed" class="col-sm-2 col-form-label">Сколько раз оствался на 2-й
-                                    год</label>
-                                <div class="col-sm-10">
-                                    <input type="number" class="form-control"
-                                        v-model="editData.std_data.std_stayed_two_year" v-on:blur="checkInput"
-                                        id="childstayed" required>
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <label for="childissue" class="col-sm-2 col-form-label">Год выпуска</label>
-                                <div class="col-sm-10">
-                                    <input type="date" class="form-control" v-model="editData.std_data.std_date_issue"
-                                        v-on:blur="checkInput" id="childissue" required>
-                                </div>
-                            </div>
                             <div class="form-group row">
                                 <label for="old_pass" class="col-sm-2 col-form-label">Старый пароль</label>
                                 <div class="col-sm-10">
