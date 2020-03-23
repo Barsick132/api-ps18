@@ -365,7 +365,6 @@
                                 console.log(data);
                                 if (data.status != "OK") { return; }
                                 data.payload.pepl_data.pepl_birthday = data.payload.pepl_data.pepl_birthday.substring(10, -10);
-                                data.payload.std_data.std_date_issue = data.payload.std_data.std_date_issue.substring(10, -10);
                                 tmpData.editData = data.payload;
                                 tmpData.editData.pepl_old_pass = "";
                                 tmpData.editData.pepl_new_pass = "";
