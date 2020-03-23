@@ -320,8 +320,8 @@
                                                     v-model="reception.receptionObj.age" required></td>
                                             <td>
                                                 <select class="form-control" v-model="reception.receptionObj.gender" required>
-                                                    <option value="true">Мужской</option>
-                                                    <option value="false">Женский</option>
+                                                    <option value=true>Мужской</option>
+                                                    <option value=false>Женский</option>
                                                 </select>
                                             </td>
                                             <td><input type="text" class="form-control"
@@ -986,7 +986,7 @@
                         "vst_data": {
                             "vst_dt": this.reception.receptionObj.date + "T" + this.reception.receptionObj.time + ":00.000Z",
                             "vst_age": parseInt(this.reception.receptionObj.age),
-                            "vst_gender": Boolean(this.reception.receptionObj.gender),
+                            "vst_gender": this.reception.receptionObj.gender,
                             "vst_name": this.reception.receptionObj.name,
                             "vst_consultant": this.reception.receptionObj.consultant
                         }
