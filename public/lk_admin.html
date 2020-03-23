@@ -830,7 +830,8 @@
                     }
                     var apd = this;
                     tmpData = this;
-                    signup(regData).then(
+                    if(this.addPeople.typeUser == 0){
+                    singupEmployee(regData).then(
                         function (data) {
                             console.log(data);
                             if (data.status != "OK") { return; }
@@ -841,6 +842,20 @@
                             alert(`Fulfilled: ${err}`)
                         }
                     );
+                    }
+                    if(this.addPeople.typeUser == 1){
+                    singupStudent(regData).then(
+                        function (data) {
+                            console.log(data);
+                            if (data.status != "OK") { return; }
+                            tmpData.req = data;
+                        },
+                        function (err) {
+                            console.error(err);
+                            alert(`Fulfilled: ${err}`)
+                        }
+                    );
+                    }
                 },
 
                 validPhone: function (target) {
