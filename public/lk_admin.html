@@ -577,9 +577,9 @@
                                         case 'Teacher':
                                             name = 'Учитель';
                                             break;
-                                        case 'Employee':
-                                            name = 'Пользователь';
-                                            break;                                    
+                                        /*case 'Employee':
+                                            name = 'Сотрудник';
+                                            break;*/                                    
                                         default:
                                             name = '';
                                             break;
@@ -811,11 +811,7 @@
                         ph = ph.replace(")", "");
                     }
                     var regData = {
-                        "selectedRole": [this.addPeople.typeUser == 0 ? "Teacher" : "Student"
-                            /*{
-                                "role_id": this.addPeople.typeUser == 0 ? 4 : 3
-                            }*/
-                        ],
+                        "selectedRole": this.addPeople.selectedRole.push('Employee'),
                         "pepl_data": {
                             "pepl_second_name": this.addPeople.family,
                             "pepl_first_name": this.addPeople.name,
