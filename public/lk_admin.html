@@ -810,8 +810,9 @@
                         ph = ph.replace("(", "");
                         ph = ph.replace(")", "");
                     }
+                    this.addPeople.selectedRole.push('Employee');
                     var regData = {
-                        "selectedRole": this.addPeople.selectedRole.push('Employee'),
+                        "selectedRole": this.addPeople.selectedRole,
                         "pepl_data": {
                             "pepl_second_name": this.addPeople.family,
                             "pepl_first_name": this.addPeople.name,

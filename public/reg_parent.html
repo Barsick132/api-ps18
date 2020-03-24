@@ -11,13 +11,19 @@
     <title>Регистрация родителя</title>
 
     <!-- Bootstrap core CSS -->
-    <link href="css/bootstrap.min.css" rel="stylesheet">
-    <script src="js/vue.js"></script>
+    <link href="css/bootstrap.min.css" rel="stylesheet">=
     <style type="text/css">
         label {
             text-align: right;
         }
     </style>
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="js/jquery-3.3.1.slim.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+
+    <script src="js/app.js"></script>
+    <script src="js/vue.js"></script>
 </head>
 
 <body class="d-flex justify-content-center m-3">
@@ -222,12 +228,6 @@
             <button class="btn btn-primary" v-on:click="sendData" data-toggle="modal" data-target="#exampleModalCenter">Регистрация</button>
         </div>
     </div>
-    <!-- Optional JavaScript -->
-    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-    <script src="js/jquery-3.3.1.slim.min.js"></script>
-    <script src="js/bootstrap.min.js"></script>
-    
-    <script src="js/app.js"></script>
     <script>
         function getCookie(name) {
             var r = document.cookie.match("(^|;) ?" + name + "=([^;]*)(;|$)");
