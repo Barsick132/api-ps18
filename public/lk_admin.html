@@ -268,8 +268,8 @@
                                 <div class="col-sm-10">
                                     <div class="btn-group btn-group-toggle" id="roleList">
                                         <label class="btn btn-secondary" v-for="(role, index) in addPeople.listRole">
-                                            <input type="checkbox" :value="role" @click="setActive"
-                                                v-model="addPeople.selectedRole">{{role}}
+                                            <input type="checkbox" :value="role.id" @click="setActive"
+                                                v-model="addPeople.selectedRole">{{role.name}}
                                         </label>
                                     </div>
                                 </div>
@@ -544,7 +544,7 @@
                         class_at_school: '',
                         class_teach: ''
                     },
-                    listRole: ["Работник", "Учитель", "Психолог"],
+                    listRole: [],
                     selectedRole: [],
                     teachList: [{}],
                     teachClass: 0,
@@ -561,17 +561,42 @@
 
                     if (selecter == "add_people") {
                         var tmpData = this;
-                        /*getRoles().then(
+                        getRoles().then(
                             function (data) {
                                 console.log(data);
                                 if (data.status != "OK") { return; }
-                                tmpData.addPeople.listRole = data.payload;
+                                let name = '';
+                                for(var i=0;i<data.payload;i++){
+                                    switch (data.payload[i]) {
+                                        case 'Admin':
+                                            name = 'Администратор';
+                                            break;
+                                        case 'Psychologist':
+                                            name = 'Психолог';
+                                            break;
+                                        case 'Teacher':
+                                            name = 'Учитель';
+                                            break;
+                                        case 'Employee':
+                                            name = 'Пользователь';
+                                            break;                                    
+                                        default:
+                                            name = '';
+                                            break;
+                                    }
+                                    if(name != '')
+                                    tmpData.addPeople.listRole.add({
+                                        name: name,
+                                        id: data.payload[i]
+                                    });
+                                    name = '';
+                                }
                             },
                             function (err) {
                                 console.error(err);
                                 alert(`Fulfilled: ${err}`)
                             }
-                        );*/
+                        );
                         getTeachers().then(
                             function (data) {
                                 console.log(data);
@@ -810,11 +835,7 @@
                             ph = ph.replace(")", "");
                         }
                         regData.emp_data = {
-                            "pst_arr": [
-                                {
-                                    "pst_id": this.addPeople.typeUser == 0 ? 4 : 3
-                                }
-                            ],
+                            "pst_arr": this.addPeople.typeUser == 0[this.addPeople.typeUser == 0 ? 4 : 3],
                             "emp_skype": this.addPeople.emp.skype,
                             "emp_discord": this.addPeople.emp.discord,
                             "emp_hangouts": this.addPeople.emp.hangouts,
