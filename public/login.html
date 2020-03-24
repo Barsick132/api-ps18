@@ -86,6 +86,7 @@
                   localStorage.removeItem('token');
                 }
                 var url = "";
+                data.payload.role_array.sort();
                 switch (data.payload.role_array[0]) {
                   case "Admin": url = "/lk_admin.html"; break;
                   case "Parent": url = "/lk_parent.html"; break;
