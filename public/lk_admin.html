@@ -566,7 +566,7 @@
                                 console.log(data);
                                 if (data.status != "OK") { return; }
                                 let name = '';
-                                for(var i=0;i<data.payload;i++){
+                                for(var i=0;i<data.payload.length;i++){
                                     switch (data.payload[i]) {
                                         case 'Admin':
                                             name = 'Администратор';
