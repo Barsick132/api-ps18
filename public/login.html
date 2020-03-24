@@ -86,15 +86,18 @@
                   localStorage.removeItem('token');
                 }
                 var url = "";
-                data.payload.role_array.sort();
-                switch (data.payload.role_array[0]) {
-                  case "Admin": url = "/lk_admin.html"; break;
-                  case "Parent": url = "/lk_parent.html"; break;
-                  case "Student": url = "/lk_learner.html"; break;
-                  case "Teacher": url = "/lk_teacher.html"; break;
-                  case "Employee": url = "/lk_employee.html"; break;
-                  case "Psychologist": url = "/lk_psycho.html"; break;
-                  default: break;
+                if(data.payload.role_array.find('Admin') != undefined){
+                  url = "/lk_admin.html";
+                } else if (data.payload.role_array.find('Psychologist') != undefined) {
+                  url = "/lk_psycho.html";
+                } else if (data.payload.role_array.find('Teacher') != undefined) {
+                  url = "/lk_teacher.html";
+                } else if (data.payload.role_array.find('Parent') != undefined) {
+                  url = "/lk_parent.html";
+                } else if (data.payload.role_array.find('Student') != undefined) {
+                  url = "/lk_learner.html";
+                } else if (data.payload.role_array.find('Employee') != undefined) {
+                  url = "/lk_employee.html";
                 }
                 // переадресация
                 document.location.replace(url);
